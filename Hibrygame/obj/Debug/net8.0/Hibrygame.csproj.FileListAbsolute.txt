@@ -1,0 +1,12 @@
+C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Hibrygame\bin\Debug\net8.0\Hibrygame.deps.json
+C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Hibrygame\bin\Debug\net8.0\Hibrygame.dll
+C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Hibrygame\bin\Debug\net8.0\Hibrygame.pdb
+C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Hibrygame\obj\Debug\net8.0\Hibrygame.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Hibrygame\obj\Debug\net8.0\Hibrygame.AssemblyInfoInputs.cache
+C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Hibrygame\obj\Debug\net8.0\Hibrygame.AssemblyInfo.cs
+C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Hibrygame\obj\Debug\net8.0\Hibrygame.csproj.CoreCompileInputs.cache
+C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Hibrygame\obj\Debug\net8.0\Hibrygame.sourcelink.json
+C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Hibrygame\obj\Debug\net8.0\Hibrygame.dll
+C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Hibrygame\obj\Debug\net8.0\refint\Hibrygame.dll
+C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Hibrygame\obj\Debug\net8.0\Hibrygame.pdb
+C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Hibrygame\obj\Debug\net8.0\ref\Hibrygame.dll

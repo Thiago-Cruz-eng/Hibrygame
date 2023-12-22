@@ -1,12 +1,11 @@
-﻿using System.Runtime.InteropServices.JavaScript;
+﻿namespace Hibrygame;
 
-namespace ClassLibrary1;
-
-public class Hook : Piece
+public class Rook : Piece
 {
-    public Hook(ColorEnum color) : base(color)
+    public Rook(ColorEnum color) : base(color)
     {
         Color = color;
+        Type = PieceEnum.Rook;
     }
     public List<Position> GetMovesHook(Board board, Position pos)
     {
@@ -24,7 +23,7 @@ public class Hook : Piece
             break; 
         }
         
-        for (var row = initialPosition.row - 1; row >= 0; row--)
+        for (var row = initialPosition.row - 1; row >= 8; row--)
         {
             var newPosition = new Position(row, initialPosition.column);
             if (Common.IsValidMove(board, newPosition)) possibleMoves.Add(newPosition);

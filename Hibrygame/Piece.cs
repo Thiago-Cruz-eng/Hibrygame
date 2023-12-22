@@ -1,4 +1,4 @@
-﻿namespace ClassLibrary1;
+﻿namespace Hibrygame;
 
 public class Piece(ColorEnum color)
 {

@@ -1,10 +1,8 @@
-﻿using System.Security.AccessControl;
-
-namespace ClassLibrary1;
+﻿namespace Hibrygame;
 
 public class Board
 {
-    public Position[,] positions { get; set; }
+    public Position[,] positions { get; set; } = new Position[8, 8];
 
     public List<Position> StartBoard()
     {
@@ -18,7 +16,7 @@ public class Board
             }
         }
 
-        positions[0, 2].piece = new Hook(ColorEnum.Black);
+        positions[0, 2].piece = new Rook(ColorEnum.Black);
         positions[5, 5].piece = new King(ColorEnum.White);
         return pos;
     }
@@ -26,7 +24,7 @@ public class Board
 
 public class Position(int row, int column)
 {
-    public ColorEnum squareColor { get; set; }
+    public ColorEnum squareColor { get; set; } = ColorEnum.None;
     public Piece piece { get; set; }
     public int row { get; set; } = row;
     public int column { get; set; } = column;

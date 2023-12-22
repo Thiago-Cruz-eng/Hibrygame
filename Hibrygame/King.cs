@@ -1,10 +1,11 @@
-﻿namespace ClassLibrary1;
+﻿namespace Hibrygame;
 
 public class King : Piece
 {
     public King(ColorEnum color) : base(color)
     {
         Color = color;
+        Type = PieceEnum.King;
     }
     
     public List<Position> GetMovesKing(Board board, Position pos)

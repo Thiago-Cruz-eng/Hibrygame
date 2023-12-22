@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hibrygame", "Hibrygame\Hibrygame.csproj", "{ECFA88E7-3619-42AE-A730-03A01AA8F8C0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hibrygame.Test", "Hibrygame.Test\Hibrygame.Test.csproj", "{87ED30D7-2739-462C-BB9B-5D45EA21A9EB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{ECFA88E7-3619-42AE-A730-03A01AA8F8C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ECFA88E7-3619-42AE-A730-03A01AA8F8C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ECFA88E7-3619-42AE-A730-03A01AA8F8C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87ED30D7-2739-462C-BB9B-5D45EA21A9EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87ED30D7-2739-462C-BB9B-5D45EA21A9EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87ED30D7-2739-462C-BB9B-5D45EA21A9EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87ED30D7-2739-462C-BB9B-5D45EA21A9EB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
