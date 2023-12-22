@@ -1,7 +1,7 @@
 ﻿namespace ClassLibrary1;
 
-public class Piece
+public class Piece(ColorEnum color)
 {
-    public PieceEnum type { get; set; } 
-    public ColorEnum color { get; set; }
+    public PieceEnum Type { get; set; } 
+    public ColorEnum Color { get; set; } = color;
 }

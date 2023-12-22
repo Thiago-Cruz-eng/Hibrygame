@@ -18,8 +18,8 @@ public class Board
             }
         }
 
-        positions[0, 2].piece = new Hook();
-
+        positions[0, 2].piece = new Hook(ColorEnum.Black);
+        positions[5, 5].piece = new King(ColorEnum.White);
         return pos;
     }
 }
