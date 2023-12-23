@@ -20,6 +20,17 @@ public class Board
         positions[5, 5].piece = new King(ColorEnum.White);
         return pos;
     }
+
+    public List<Position> GetPositionsPlaced()
+    {
+        var pos = new List<Position>();
+        foreach (var position in positions)
+        {
+            pos.Add(position);
+        }
+
+        return pos;
+    }
 }
 
 public class Position(int row, int column)
