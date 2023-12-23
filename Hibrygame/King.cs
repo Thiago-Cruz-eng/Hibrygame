@@ -2,7 +2,7 @@
 
 public class King : Piece
 {
-    public King(ColorEnum color) : base(color)
+    public King(ColorEnum color)
     {
         Color = color;
         Type = PieceEnum.King;

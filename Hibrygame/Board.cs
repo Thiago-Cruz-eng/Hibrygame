@@ -26,7 +26,10 @@ public class Board
         var pos = new List<Position>();
         foreach (var position in positions)
         {
-            pos.Add(position);
+            if (position.piece?.Type != null)
+            {
+                pos.Add(position);
+            }        
         }
 
         return pos;
@@ -86,7 +89,8 @@ public enum PieceEnum
     Knight,
     Rook,
     Queen,
-    King
+    King,
+    None
 }
 
 public enum ColorEnum

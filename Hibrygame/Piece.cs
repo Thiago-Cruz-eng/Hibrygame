@@ -1,7 +1,7 @@
 ﻿namespace Hibrygame;
 
-public class Piece(ColorEnum color)
+public class Piece
 {
-    public PieceEnum Type { get; set; } 
-    public ColorEnum Color { get; set; } = color;
+    public PieceEnum Type { get; set; } = PieceEnum.None;
+    public ColorEnum Color { get; set; } = ColorEnum.None;
 }

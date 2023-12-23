@@ -2,7 +2,7 @@
 
 public class Rook : Piece
 {
-    public Rook(ColorEnum color) : base(color)
+    public Rook(ColorEnum color)
     {
         Color = color;
         Type = PieceEnum.Rook;
