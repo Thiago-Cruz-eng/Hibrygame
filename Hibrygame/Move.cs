@@ -7,7 +7,7 @@ public static class Move
         {
             var possibleMoves = new List<Position>();
             var initialState = board.GetPositionsPlaced();
-            var initialPosition = initialState.FirstOrDefault(x => x.Equals(pos));
+            var initialPosition = initialState.FirstOrDefault(x => x.row == pos.row && x.column == pos.column);
 
             if (initialPosition == null) return possibleMoves;
 
