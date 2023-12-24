@@ -6,6 +6,9 @@
     &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests.GetMovesKing_Alone_Correctly&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests.GetMovesKing_WhenAnotherIsInWay_Correctly&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests.GetMovesKing_WithNoPossibleMoves_Correctly&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.CommonTests.GetOpponentPositions_Correctly&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.CommonTests.GetOpponentWhitePositions_Correctly&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.CommonTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=dcd73127_002De15d_002D4666_002Dafa0_002D0a1bede451dd/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="StartBoard_Initializes_Correctly #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;

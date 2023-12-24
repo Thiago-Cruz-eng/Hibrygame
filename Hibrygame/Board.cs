@@ -27,11 +27,8 @@ public class Board
         foreach (var position in positions)
         {
             if (position.piece?.Type != null)
-            {
                 pos.Add(position);
-            }        
         }
-
         return pos;
     }
 }
