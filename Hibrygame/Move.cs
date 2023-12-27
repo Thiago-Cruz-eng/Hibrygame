@@ -12,22 +12,25 @@ public static class Move
             if (initialPosition == null) return possibleMoves;
             foreach (var actualDir in dir)
             {
-                var hasLimit = false;
+                var previousEnemyPosition = new List<Position>();
                 for (var i = 1; i <= squares; i++)
                 { 
-                    var newPosition = CalculateNewPosition(board,initialPosition, actualDir, i);
+                    var newPosition = CalculateNewPosition(board, initialPosition, actualDir, i);
                     
                     if (board.positions[newPosition.row, newPosition.column].piece?.Color ==
                         initialPosition.piece?.Color)
                         break;
                     
-                    // if (board.positions[newPosition.row, newPosition.column].piece == null)
-                    // {
-                    //     break;
-                    // } 
-              
-                    if (Common.IsValidMove(board, newPosition, initialPosition) && !hasLimit)
+                    if (board.positions[newPosition.row, newPosition.column].piece != null && newPosition.piece?.Color != initialPosition.piece?.Color)
+                    {
+                        previousEnemyPosition.Add(newPosition);
+                    } 
+
+                    if (Common.IsValidMove(board, newPosition, initialPosition))
+                    {
                         possibleMoves.Add(newPosition);
+                        if(previousEnemyPosition.Any()) break;
+                    }
                 }
             }
             return possibleMoves;
@@ -52,7 +55,7 @@ public static class Move
                 {
                     if (!Common.IsInsideTheBoard(new Position(initialPosition.row, initialPosition.column + steps)))
                         return initialPosition;
-                    var newPosition = board.positions[initialPosition.row - steps, initialPosition.column];
+                    var newPosition = board.positions[initialPosition.row, initialPosition.column + steps];
                     if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
                     return newPosition;
                 }
@@ -79,7 +82,7 @@ public static class Move
                 {           
                     if (!Common.IsInsideTheBoard(new Position(initialPosition.row + steps, initialPosition.column - steps)))
                         return initialPosition;
-                    var newPosition = board.positions[initialPosition.row + steps, initialPosition.column + steps];
+                    var newPosition = board.positions[initialPosition.row + steps, initialPosition.column - steps];
                     if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
                     return newPosition;
                 }
@@ -88,7 +91,7 @@ public static class Move
                 {
                     if (!Common.IsInsideTheBoard(new Position(initialPosition.row + steps, initialPosition.column + steps)))
                         return initialPosition;
-                    var newPosition = board.positions[initialPosition.row - steps, initialPosition.column + steps];
+                    var newPosition = board.positions[initialPosition.row + steps, initialPosition.column + steps];
                     if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
                     return newPosition;
                 }
@@ -97,7 +100,7 @@ public static class Move
                 {
                     if (!Common.IsInsideTheBoard(new Position(initialPosition.row - steps, initialPosition.column - steps)))
                         return initialPosition;
-                    var newPosition = board.positions[initialPosition.row + steps, initialPosition.column - steps];
+                    var newPosition = board.positions[initialPosition.row - steps, initialPosition.column - steps];
                     if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
                     return newPosition;
                 }
@@ -106,7 +109,7 @@ public static class Move
                 {
                     if (!Common.IsInsideTheBoard(new Position(initialPosition.row - steps, initialPosition.column + steps)))
                         return initialPosition;
-                    var newPosition = board.positions[initialPosition.row - steps, initialPosition.column - steps];
+                    var newPosition = board.positions[initialPosition.row - steps, initialPosition.column + steps];
                     if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
                     return newPosition;
                 }

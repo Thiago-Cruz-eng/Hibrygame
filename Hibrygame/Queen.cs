@@ -5,7 +5,7 @@ public class Queen : Piece
     public Queen(ColorEnum color)
     {
         Color = color;
-        Type = PieceEnum.King;
+        Type = PieceEnum.Queen;
     }
     
     public List<Position> GetMovesQueen(Board board, Position pos)
