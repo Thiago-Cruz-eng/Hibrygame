@@ -1,11 +1,11 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=216b519d_002De6cf_002D4851_002D895b_002Df70c8f166905/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetMovesKing_WithPossibleMoves_Correctly" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=216b519d_002De6cf_002D4851_002D895b_002Df70c8f166905/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="GetMovesKing_WithPossibleMoves_Correctly" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.QueenTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=990a545e_002Dc02a_002D4443_002D96b5_002Dcb322847d7e6/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="KingTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=990a545e_002Dc02a_002D4443_002D96b5_002Dcb322847d7e6/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="KingTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.QueenTests&lt;/TestId&gt;

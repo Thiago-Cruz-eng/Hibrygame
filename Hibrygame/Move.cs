@@ -41,16 +41,16 @@ public static class Move
             {
                 case Direction.North:
                 {
-                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row + steps, initialPosition.column)))
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row, initialPosition.column - steps)))
                         return initialPosition;
-                    var newPosition = board.positions[initialPosition.row + steps, initialPosition.column];
+                    var newPosition = board.positions[initialPosition.row, initialPosition.column - steps];
                     if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
                     return newPosition;
                 }
 
                 case Direction.South:
                 {
-                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row - steps, initialPosition.column)))
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row, initialPosition.column + steps)))
                         return initialPosition;
                     var newPosition = board.positions[initialPosition.row - steps, initialPosition.column];
                     if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
@@ -59,25 +59,25 @@ public static class Move
 
                 case Direction.East:
                 {
-                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row, initialPosition.column + steps)))
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row + steps, initialPosition.column)))
                         return initialPosition;
-                    var newPosition = board.positions[initialPosition.row, initialPosition.column + steps];
+                    var newPosition = board.positions[initialPosition.row + steps, initialPosition.column];
                     if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
                     return newPosition;
                 }
 
                 case Direction.West:
                 {
-                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row, initialPosition.column - steps)))
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row - steps, initialPosition.column)))
                         return initialPosition;
-                    var newPosition = board.positions[initialPosition.row, initialPosition.column - steps];
+                    var newPosition = board.positions[initialPosition.row - steps, initialPosition.column];
                     if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
                     return newPosition;
                 }
 
                 case Direction.NorthEast:
                 {           
-                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row + steps, initialPosition.column + steps)))
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row + steps, initialPosition.column - steps)))
                         return initialPosition;
                     var newPosition = board.positions[initialPosition.row + steps, initialPosition.column + steps];
                     if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
@@ -86,7 +86,7 @@ public static class Move
 
                 case Direction.SouthEast:
                 {
-                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row - steps, initialPosition.column + steps)))
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row + steps, initialPosition.column + steps)))
                         return initialPosition;
                     var newPosition = board.positions[initialPosition.row - steps, initialPosition.column + steps];
                     if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
@@ -95,7 +95,7 @@ public static class Move
 
                 case Direction.NorthWest:
                 {
-                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row + steps, initialPosition.column - steps)))
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row - steps, initialPosition.column - steps)))
                         return initialPosition;
                     var newPosition = board.positions[initialPosition.row + steps, initialPosition.column - steps];
                     if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
@@ -104,7 +104,7 @@ public static class Move
 
                 case Direction.SouthWest:
                 {
-                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row - steps, initialPosition.column - steps)))
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row - steps, initialPosition.column + steps)))
                         return initialPosition;
                     var newPosition = board.positions[initialPosition.row - steps, initialPosition.column - steps];
                     if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
