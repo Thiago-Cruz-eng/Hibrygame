@@ -10,13 +10,25 @@ public static class Move
             var initialPosition = initialState.FirstOrDefault(x => x.row == pos.row && x.column == pos.column);
 
             if (initialPosition == null) return possibleMoves;
-
             foreach (var actualDir in dir)
             {
+                var hasLimit = false;
                 for (var i = 1; i <= squares; i++)
-                {
+                { 
                     var newPosition = CalculateNewPosition(board,initialPosition, actualDir, i);
-                    if (Common.IsValidMove(board, newPosition, initialPosition))
+                    
+                    if (board.positions[newPosition.row, newPosition.column].piece?.Color ==
+                        initialPosition.piece?.Color)
+                        break;
+
+                    
+                    if (board.positions[newPosition.row, newPosition.column].piece == null)
+                    {
+                        
+                        break;
+                    } 
+              
+                    if (Common.IsValidMove(board, newPosition, initialPosition) && !hasLimit)
                         possibleMoves.Add(newPosition);
                 }
             }

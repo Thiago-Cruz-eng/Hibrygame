@@ -2,7 +2,7 @@ using Xunit;
 
 namespace Hibrygame.Test.Hibrygame;
 
-public class KingTests
+public class QueenTests
 {
     [Fact]
     public void GetMovesKing_Alone_Correctly()
@@ -10,15 +10,15 @@ public class KingTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[5,5].piece = new King(ColorEnum.White);
+        board.positions[5, 5].piece = new Queen(ColorEnum.White);
 
         // Act
-        var piece = new King(ColorEnum.Black);
-        var result = piece.GetMovesKing(board, new Position(5,5));
+        var piece = new Queen(ColorEnum.Black);
+        var result = piece.GetMovesQueen(board, new Position(5,5));
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(8, result.Count);
+        Assert.Equal(25, result.Count);
     }
     
     [Fact]
@@ -28,16 +28,16 @@ public class KingTests
         var board = new Board();
         board.StartBoard();
         board.positions[4, 5].piece = new Rook(ColorEnum.White);
-        board.positions[5,5].piece = new King(ColorEnum.White);
+        board.positions[5, 5].piece = new Queen(ColorEnum.White);
 
 
         // Act
-        var piece = new King(ColorEnum.Black);
-        var result = piece.GetMovesKing(board, new Position(5,5));
+        var piece = new Queen(ColorEnum.Black);
+        var result = piece.GetMovesQueen(board, new Position(5,5));
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(7, result.Count);
+        Assert.Equal(20, result.Count);
     }
     
     [Fact]
@@ -53,8 +53,8 @@ public class KingTests
 
 
         // Act
-        var piece = new King(ColorEnum.Black);
-        var result = piece.GetMovesKing(board, new Position(7,7));
+        var piece = new Queen(ColorEnum.Black);
+        var result = piece.GetMovesQueen(board, new Position(7,7));
 
         // Assert
         Assert.NotNull(result);
@@ -70,11 +70,11 @@ public class KingTests
         board.positions[6,6].piece = new Rook(ColorEnum.Black);
         board.positions[7,6].piece = new Rook(ColorEnum.Black);
         board.positions[6,7].piece = new Rook(ColorEnum.Black);
-        board.positions[7,7].piece = new King(ColorEnum.White);
+        board.positions[7,7].piece = new Queen(ColorEnum.White);
 
         // Act
-        var piece = new King(ColorEnum.White);
-        var result = piece.GetMovesKing(board, new Position(7,7));
+        var piece = new Queen(ColorEnum.White);
+        var result = piece.GetMovesQueen(board, new Position(7,7));
 
         // Assert
         Assert.NotNull(result);
@@ -90,11 +90,11 @@ public class KingTests
         board.positions[6,6].piece = new Rook(ColorEnum.Black);
         board.positions[7,6].piece = new Rook(ColorEnum.Black);
         board.positions[6,7].piece = new Rook(ColorEnum.White);
-        board.positions[7,7].piece = new King(ColorEnum.White);
+        board.positions[7,7].piece = new Queen(ColorEnum.White);
 
         // Act
-        var piece = new King(ColorEnum.White);
-        var result = piece.GetMovesKing(board, new Position(7,7));
+        var piece = new Queen(ColorEnum.White);
+        var result = piece.GetMovesQueen(board, new Position(7,7));
 
         // Assert
         Assert.NotNull(result);

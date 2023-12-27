@@ -13,7 +13,7 @@ public static class Common
     public static bool IsValidMove(Board board, Position newPosition, Position initialPosition)
     {
         if (!IsInsideTheBoard(newPosition)) return false;
-
+        
         if (board.positions[newPosition.row, newPosition.column].piece?.Type == null) return true;
         return board.positions[newPosition.row, newPosition.column].piece?.Color != initialPosition.piece?.Color;
     }
