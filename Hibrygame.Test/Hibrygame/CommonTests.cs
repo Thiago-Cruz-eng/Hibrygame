@@ -19,7 +19,7 @@ public class CommonTests
         var result = Common.GetOpponentPositions(board, ColorEnum.Black);
 
         //Assert
-        Assert.Equal(4, result.Count);
+        Assert.Equal(3, result.Count);
     }
     
     [Fact]
@@ -34,9 +34,9 @@ public class CommonTests
         board.positions[2, 5].piece = piece;
         
         // Act
-        var result = Common.GetOpponentPositions(board, ColorEnum.White);
+        var result = Common.GetOpponentPositions(board, ColorEnum.Black);
 
         //Assert
-        Assert.Equal(1, result.Count);
+        Assert.Equal(3, result.Count);
     }
 }

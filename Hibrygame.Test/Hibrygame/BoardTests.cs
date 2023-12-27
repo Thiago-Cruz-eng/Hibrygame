@@ -12,7 +12,8 @@ public class BoardTests
 
         // Act
         var result = board.StartBoard();
-        board.positions[5, 3].piece = new King(ColorEnum.White);
+        board.positions[0, 2].piece = new Rook(ColorEnum.Black);
+        board.positions[5, 5].piece = new King(ColorEnum.White);
 
         // Assert
         Assert.NotNull(result);
@@ -35,6 +36,7 @@ public class BoardTests
         // Act
         board.StartBoard();
         board.positions[4, 1].piece = new Rook(ColorEnum.White); 
+        board.positions[0, 2].piece = new Rook(ColorEnum.Black);
         var result = board.GetPositionsPlaced();
 
         // Assert
@@ -44,6 +46,6 @@ public class BoardTests
         Assert.IsType<Rook>(board.positions[4,1].piece);
         Assert.Equal(ColorEnum.White, board.positions[4,1].piece.Color);
         Assert.Equal(ColorEnum.None, board.positions[0, 3].squareColor);
-        Assert.Equal(3, result.Count);
+        Assert.Equal(2, result.Count);
     }
 }

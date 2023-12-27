@@ -15,9 +15,6 @@ public class Board
                 pos.Add(positions[r, c]);
             }
         }
-
-        positions[0, 2].piece = new Rook(ColorEnum.Black);
-        positions[5, 5].piece = new King(ColorEnum.White);
         return pos;
     }
 
@@ -36,7 +33,7 @@ public class Board
 public class Position(int row, int column)
 {
     public ColorEnum squareColor { get; set; } = ColorEnum.None;
-    public Piece piece { get; set; }
+    public Piece? piece { get; set; }
     public int row { get; set; } = row;
     public int column { get; set; } = column;
 }

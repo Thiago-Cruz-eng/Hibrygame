@@ -10,34 +10,116 @@ public static class Move
             var initialPosition = initialState.FirstOrDefault(x => x.row == pos.row && x.column == pos.column);
 
             if (initialPosition == null) return possibleMoves;
-
             foreach (var actualDir in dir)
             {
+                var hasLimit = false;
                 for (var i = 1; i <= squares; i++)
-                {
-                    var newPosition = CalculateNewPosition(initialPosition, actualDir, i);
-                    if (Common.IsValidMove(board, newPosition))
+                { 
+                    var newPosition = CalculateNewPosition(board,initialPosition, actualDir, i);
+                    
+                    if (board.positions[newPosition.row, newPosition.column].piece?.Color ==
+                        initialPosition.piece?.Color)
+                        break;
+                    
+                    // if (board.positions[newPosition.row, newPosition.column].piece == null)
+                    // {
+                    //     break;
+                    // } 
+              
+                    if (Common.IsValidMove(board, newPosition, initialPosition) && !hasLimit)
                         possibleMoves.Add(newPosition);
-                    break;
                 }
             }
             return possibleMoves;
         }
     }
-    private static Position CalculateNewPosition(Position initialPosition, Direction direction, int steps)
+    private static Position CalculateNewPosition(Board board, Position initialPosition, Direction direction, int steps)
     {
-        return direction switch
+        try
         {
-            Direction.North => new Position(initialPosition.row + steps, initialPosition.column),
-            Direction.South => new Position(initialPosition.row - steps, initialPosition.column),
-            Direction.East => new Position(initialPosition.row, initialPosition.column + steps),
-            Direction.West => new Position(initialPosition.row, initialPosition.column - steps),
-            Direction.NorthEast => new Position(initialPosition.row + steps, initialPosition.column + steps),
-            Direction.SouthEast => new Position(initialPosition.row - steps, initialPosition.column + steps),
-            Direction.NorthWest => new Position(initialPosition.row + steps, initialPosition.column - steps),
-            Direction.SouthWest => new Position(initialPosition.row - steps, initialPosition.column - steps),
-            _ => initialPosition 
-        };
+            switch (direction)
+            {
+                case Direction.North:
+                {
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row + steps, initialPosition.column)))
+                        return initialPosition;
+                    var newPosition = board.positions[initialPosition.row + steps, initialPosition.column];
+                    if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
+                    return newPosition;
+                }
+
+                case Direction.South:
+                {
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row - steps, initialPosition.column)))
+                        return initialPosition;
+                    var newPosition = board.positions[initialPosition.row - steps, initialPosition.column];
+                    if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
+                    return newPosition;
+                }
+
+                case Direction.East:
+                {
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row, initialPosition.column + steps)))
+                        return initialPosition;
+                    var newPosition = board.positions[initialPosition.row, initialPosition.column + steps];
+                    if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
+                    return newPosition;
+                }
+
+                case Direction.West:
+                {
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row, initialPosition.column - steps)))
+                        return initialPosition;
+                    var newPosition = board.positions[initialPosition.row, initialPosition.column - steps];
+                    if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
+                    return newPosition;
+                }
+
+                case Direction.NorthEast:
+                {           
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row + steps, initialPosition.column + steps)))
+                        return initialPosition;
+                    var newPosition = board.positions[initialPosition.row + steps, initialPosition.column + steps];
+                    if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
+                    return newPosition;
+                }
+
+                case Direction.SouthEast:
+                {
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row - steps, initialPosition.column + steps)))
+                        return initialPosition;
+                    var newPosition = board.positions[initialPosition.row - steps, initialPosition.column + steps];
+                    if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
+                    return newPosition;
+                }
+
+                case Direction.NorthWest:
+                {
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row + steps, initialPosition.column - steps)))
+                        return initialPosition;
+                    var newPosition = board.positions[initialPosition.row + steps, initialPosition.column - steps];
+                    if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
+                    return newPosition;
+                }
+
+                case Direction.SouthWest:
+                {
+                    if (!Common.IsInsideTheBoard(new Position(initialPosition.row - steps, initialPosition.column - steps)))
+                        return initialPosition;
+                    var newPosition = board.positions[initialPosition.row - steps, initialPosition.column - steps];
+                    if (!Common.IsValidMove(board, newPosition, initialPosition)) return initialPosition;
+                    return newPosition;
+                }
+
+                default:
+                    return initialPosition;
+            }
+        }
+        catch (IndexOutOfRangeException e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }
 

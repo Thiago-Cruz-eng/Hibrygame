@@ -1,19 +1,21 @@
-﻿namespace Hibrygame;
+﻿using System.Net;
+
+namespace Hibrygame;
 
 public static class Common
 {
-    private static bool IsInsideTheBoard(Position newPosition)
+    public static bool IsInsideTheBoard(Position newPosition)
     {
-        return newPosition.row >= 0 || newPosition.row < 8 ||
-               newPosition.column >= 0 || newPosition.column < 8;
+        return newPosition.row is >= 0 and < 8 &&
+                 newPosition.column is >= 0 and < 8;
     }
     
-    public static bool IsValidMove(Board board, Position newPosition)
+    public static bool IsValidMove(Board board, Position newPosition, Position initialPosition)
     {
         if (!IsInsideTheBoard(newPosition)) return false;
         
-        return board.positions[newPosition.row, newPosition.column].piece?.Type == null && 
-               board.positions[newPosition.row, newPosition.column].piece?.Color != newPosition.squareColor;
+        if (board.positions[newPosition.row, newPosition.column].piece?.Type == null) return true;
+        return board.positions[newPosition.row, newPosition.column].piece?.Color != initialPosition.piece?.Color;
     }
 
     public static List<Position> GetOpponentPositions(Board board, ColorEnum opponent)
