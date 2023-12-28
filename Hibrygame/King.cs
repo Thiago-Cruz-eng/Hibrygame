@@ -22,6 +22,6 @@ public class King : Piece
             Direction.NorthWest,
         };
         
-        return Move.MakeMove(board, pos, direction, 1);
+        return Move.CalculatePossibleMove(board, pos, direction, 1);
     }
 }

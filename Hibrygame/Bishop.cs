@@ -18,6 +18,6 @@ public class Bishop : Piece
             Direction.NorthWest,
         };
         
-        return Move.MakeMove(board, pos, direction, 8);
+        return Move.CalculatePossibleMove(board, pos, direction, 8);
     }
 }

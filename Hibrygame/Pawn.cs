@@ -12,25 +12,12 @@ public class Pawn : Piece
     
     public List<Position> GetMovesPawn(Board board, Position pos)
     {
-        var squares = 2;
-        if (HasAlreadyOneMove) squares = 1;
-        var direction = new List<Direction>();
-        if (Color == ColorEnum.Black)
-            direction =
-            [
-                Direction.South,
-                Direction.SouthEast,
-                Direction.SouthWest
-            ];
-        else
-            direction =
-            [
-                Direction.North,
-                Direction.NorthEast,
-                Direction.NorthWest
-            ];
+        var squares = HasAlreadyOneMove ? 1 : 2;
+        var direction = Color == ColorEnum.Black
+            ? new List<Direction> { Direction.South, Direction.SouthEast, Direction.SouthWest }
+            : new List<Direction> { Direction.North, Direction.NorthEast, Direction.NorthWest };
         
-        var moves = Move.MakeMove(board, pos, direction, squares);
+        var moves = Move.CalculatePossibleMove(board, pos, direction, squares);
         HasAlreadyOneMove = true;
         return moves;
     }

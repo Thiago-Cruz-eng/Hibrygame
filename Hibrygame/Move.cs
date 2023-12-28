@@ -2,7 +2,7 @@ namespace Hibrygame;
 
 public static class Move
 {
-    public static List<Position> MakeMove(Board board, Position pos, List<Direction> dir, int squares)
+    public static List<Position> CalculatePossibleMove(Board board, Position pos, List<Direction> dir, int squares)
     {
         {
             var possibleMoves = new List<Position>();
@@ -16,7 +16,15 @@ public static class Move
                 for (var i = 1; i <= squares; i++)
                 { 
                     var newPosition = CalculateNewPosition(board, initialPosition, actualDir, i);
-                    
+                        
+                    if(initialPosition.piece?.Type == PieceEnum.Pawn && 
+                       (actualDir == Direction.NorthEast ||
+                       actualDir == Direction.NorthWest ||
+                       actualDir == Direction.SouthEast ||
+                       actualDir == Direction.SouthWest) &&
+                       newPosition.piece?.Color == null)
+                        break;
+                        
                     if (board.positions[newPosition.row, newPosition.column].piece?.Color ==
                         initialPosition.piece?.Color)
                         break;
@@ -77,7 +85,7 @@ public static class Move
             }
 
             case Direction.NorthEast:
-            {           
+            {         
                 if (!Common.IsInsideTheBoard(new Position(initialPosition.row + steps, initialPosition.column - steps)))
                     return initialPosition;
                 var newPosition = board.positions[initialPosition.row + steps, initialPosition.column - steps];
@@ -116,6 +124,7 @@ public static class Move
                 return initialPosition;
         }
     }
+    
 }
 
 public enum Direction

@@ -5,7 +5,7 @@ namespace Hibrygame.Test.Hibrygame;
 public class PawnTests
 {
     [Fact]
-    public void GetMovesBishop_Alone_Correctly()
+    public void GetMovesPawnWhite_AloneFirstMove_Correctly()
     {
         // Arrange
         var board = new Board();
@@ -13,92 +13,73 @@ public class PawnTests
         board.positions[3, 3].piece = new Pawn(ColorEnum.White);
 
         // Act
-        var piece = new Pawn(ColorEnum.Black);
+        var piece = new Pawn(ColorEnum.White);
         var result = piece.GetMovesPawn(board, new Position(3,3));
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(13, result.Count);
+        Assert.Equal(2, result.Count);
     }
-
+    
     [Fact]
-    public void GetMovesBishop_WhenAnotherIsInWay_Correctly()
+    public void GetMovesPawnWhite_AloneAfterFirstMove_Correctly()
     {
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[3, 3].piece = new Rook(ColorEnum.Black);
-        board.positions[5, 5].piece = new Bishop(ColorEnum.White);
-
-
+        board.positions[3, 3].piece = new Pawn(ColorEnum.White);
+        
+        
         // Act
-        var piece = new Bishop(ColorEnum.Black);
-        var result = piece.GetMovesBIshop(board, new Position(5, 5));
+        var piece = new Pawn(ColorEnum.White);
+        piece.HasAlreadyOneMove = true;
+        var result = piece.GetMovesPawn(board, new Position(3,3));
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(8, result.Count);
+        Assert.Equal(1, result.Count);
     }
 
     [Fact]
-    public void GetMovesBishop_WithNoPossibleMoves_Correctly()
+    public void GetMovesPawnWhite_WhenAnotherTwoIsInWay_Correctly()
     {
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[6, 6].piece = new Rook(ColorEnum.White);
-        board.positions[7, 6].piece = new Rook(ColorEnum.White);
-        board.positions[6, 7].piece = new Rook(ColorEnum.White);
-        board.positions[7, 7].piece = new King(ColorEnum.White);
+        board.positions[6, 4].piece = new Rook(ColorEnum.Black);
+        board.positions[4, 4].piece = new Rook(ColorEnum.Black);
+        board.positions[5, 5].piece = new Pawn(ColorEnum.White);
 
 
         // Act
-        var piece = new Queen(ColorEnum.Black);
-        var result = piece.GetMovesQueen(board, new Position(7, 7));
+        var piece = new Pawn(ColorEnum.White);
+        piece.HasAlreadyOneMove = true;
+        var result = piece.GetMovesPawn(board, new Position(5, 5));
 
         // Assert
         Assert.NotNull(result);
-        Assert.Empty(result);
+        Assert.Equal(3, result.Count);
     }
-
+    
     [Fact]
-    public void GetMovesBishop_WithPossibleWithAllOpponentAcrossMoves_Correctly()
+    public void GetMovesPawnBlack_WhenAnotherOneIsInWay_Correctly()
     {
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[7, 6].piece = new Rook(ColorEnum.Black);
-        board.positions[6, 7].piece = new Rook(ColorEnum.Black);
-        board.positions[7, 7].piece = new Bishop(ColorEnum.White);
+        board.positions[4, 2].piece = new Rook(ColorEnum.White);
+        board.positions[5, 2].piece = new Rook(ColorEnum.Black);
+        board.positions[6, 2].piece = new Rook(ColorEnum.White);
+        board.positions[5, 1].piece = new Pawn(ColorEnum.Black);
+
 
         // Act
-        var piece = new Bishop(ColorEnum.White);
-        var result = piece.GetMovesBIshop(board, new Position(7, 7));
+        var piece = new Pawn(ColorEnum.Black);
+        piece.HasAlreadyOneMove = true;
+        var result = piece.GetMovesPawn(board, new Position(5, 1));
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(7, result.Count);
-    }
-
-    [Fact]
-    public void GetMovesBishop_WithPossibleOpponentAcross_Correctly()
-    {
-        // Arrange
-        var board = new Board();
-        board.StartBoard();
-        board.positions[2, 2].piece = new Rook(ColorEnum.Black);
-        board.positions[4, 3].piece = new Rook(ColorEnum.Black);
-        board.positions[7, 1].piece = new Rook(ColorEnum.White);
-        board.positions[1, 7].piece = new Rook(ColorEnum.Black);
-        board.positions[7, 7].piece = new Queen(ColorEnum.White);
-        board.positions[4, 4].piece = new Bishop(ColorEnum.White);
-
-        // Act
-        var piece = new Bishop(ColorEnum.White);
-        var result = piece.GetMovesBIshop(board, new Position(4,4));
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(9, result.Count);
+        Assert.Equal(2, result.Count);
     }
 }
