@@ -14,7 +14,25 @@ public static class Move
             {
                 var previousEnemyPosition = new List<Position>();
                 for (var i = 1; i <= squares; i++)
-                { 
+                {
+                    if (initialPosition.piece?.Type == PieceEnum.Knight && i == squares )
+                    {
+                        var knightDir = new List<Direction>();
+                        if (actualDir == Direction.North || actualDir == Direction.South)
+                        {
+                            knightDir.Add(Direction.East);
+                            knightDir.Add(Direction.West);
+                            possibleMoves.Add(CalculateNewPosition(board, initialPosition, knightDir[0], i));
+                            possibleMoves.Add(CalculateNewPosition(board, initialPosition, knightDir[1], i));
+                            return possibleMoves;
+                        }
+                        knightDir.Add(Direction.South);
+                        knightDir.Add(Direction.North);
+                        possibleMoves.Add(CalculateNewPosition(board, initialPosition, knightDir[0], i));
+                        possibleMoves.Add(CalculateNewPosition(board, initialPosition, knightDir[1], i));
+                        return possibleMoves;
+                    }
+                    
                     var newPosition = CalculateNewPosition(board, initialPosition, actualDir, i);
                         
                     if(initialPosition.piece?.Type == PieceEnum.Pawn && 
@@ -24,21 +42,18 @@ public static class Move
                        actualDir == Direction.SouthWest) &&
                        newPosition.piece?.Color == null)
                         break;
-                        
-                    if (board.positions[newPosition.row, newPosition.column].piece?.Color ==
-                        initialPosition.piece?.Color)
+                    
+                    if (board.positions[newPosition.row, newPosition.column].piece?.Color == initialPosition.piece?.Color)
                         break;
                     
                     if (board.positions[newPosition.row, newPosition.column].piece != null && newPosition.piece?.Color != initialPosition.piece?.Color)
                     {
                         previousEnemyPosition.Add(newPosition);
                     } 
-
-                    if (Common.IsValidMove(board, newPosition, initialPosition))
-                    {
-                        possibleMoves.Add(newPosition);
-                        if(previousEnemyPosition.Any()) break;
-                    }
+                    
+                    possibleMoves.Add(newPosition);
+                    if(previousEnemyPosition.Any()) break;
+                    
                 }
             }
             return possibleMoves;
