@@ -21,6 +21,8 @@ public static class Common
     public static List<Position> GetOpponentPositions(Board board, ColorEnum opponent)
     {
         var pos = new List<Position>();
+        _ = opponent == ColorEnum.Black ? opponent = ColorEnum.White : opponent;
+        
         foreach (var position in board.positions)
         {
             if (position.piece?.Color == opponent)
@@ -29,4 +31,17 @@ public static class Common
 
         return pos;
     }
+    public static List<Position> GetByColorPositions(Board board, ColorEnum color)
+    {
+        var pos = new List<Position>();
+        
+        foreach (var position in board.positions)
+        {
+            if (position.piece?.Color == color)
+                pos.Add(position);
+        }
+
+        return pos;
+    }
+    
 }
