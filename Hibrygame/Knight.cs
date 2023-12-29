@@ -7,7 +7,8 @@ public class Knight : Piece
         Color = color;
         Type = PieceEnum.Knight;
     }
-    public List<Position> GetMovesKnight(Board board, Position pos)
+    
+    public override List<Position> GetPossibleMove(Board board, Position pos)
     {
         var direction = new List<Direction>
         {

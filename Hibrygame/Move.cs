@@ -65,6 +65,7 @@ public static class Move
             return possibleMoves;
         }
     }
+    
     private static Position CalculateNewPosition(Board board, Position initialPosition, Direction direction, int steps)
     {
         switch (direction)
@@ -144,6 +145,53 @@ public static class Move
             default:
                 return initialPosition;
         }
+    }
+
+    private static List<Position> VerifyKingMovimentationCheck(Board board, Position king)
+    {
+        var possibleMoveWithoutTreat = new List<Position>();
+        // se meu novo movimento tiver o rei inimigo como alvo então V
+        
+        // possiveis movimentos do rei em perigo
+        var possibleMoveKing = king.piece?.GetPossibleMove(board, king);
+
+        var piecesOfOpponent = Common.GetOpponentPositions(board, king.piece!.Color);
+        var possibleMoveOfOpponent = new List<Position>();
+        piecesOfOpponent.ForEach(x =>
+        {
+            var pos = x.piece!.GetPossibleMove(board, x);
+            possibleMoveOfOpponent.AddRange(pos);
+        });
+        
+        possibleMoveOfOpponent.ForEach(x =>
+        {
+            // verificar se nos possiveis novos movimentos das peças inimigas tem possibilidade de capturar o meu rei
+            if(!possibleMoveKing.Contains(x)) possibleMoveWithoutTreat.Add(x);
+        });
+        
+        // se nenhuma peça aliada puder capturar o rei em suas novas possiveis posições ou alguma validação acima for verdaira
+        // entao, somente check. caso 
+        // meu inimigo nao tenha peças para colocar na frente do meu movimento nem peças para capturar minha peça trigger 
+        // então check mate
+        return possibleMoveWithoutTreat;
+    }
+
+    private static List<Position> PossibleHelpersToKingCheck(Board board, Position enemyTrigger, Position king)
+    {
+        // e meu inimigo tenha peças para colocar na frente da rota da minha peça trigger
+        // e se existem peças inimigas que podem capturar minha peça trigger que armou o check
+        var possibleFriendsMove = new List<Position>();
+        var possibleMoveEnemyTrigger = enemyTrigger.piece!.GetPossibleMove(board, enemyTrigger);
+
+        var possibleMoveFriends = Common.GetByColorPositions(board, king.piece!.Color);
+
+        possibleMoveEnemyTrigger.ForEach(x =>
+        {
+            if (possibleMoveFriends.Contains(x))
+                possibleFriendsMove.Add(x);
+            
+        });
+        return possibleFriendsMove;
     }
     
 }

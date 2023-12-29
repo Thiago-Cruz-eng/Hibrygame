@@ -14,7 +14,7 @@ public class KnightTests
 
         // Act
         var piece = new Knight(ColorEnum.White);
-        var result = piece.GetMovesKnight(board, new Position(7,0));
+        var result = piece.GetPossibleMove(board, new Position(7,0));
 
         // Assert
         Assert.NotNull(result);
@@ -34,7 +34,7 @@ public class KnightTests
 
         // Act
         var piece = new Knight(ColorEnum.White);
-        var result = piece.GetMovesKnight(board, new Position(5, 5));
+        var result = piece.GetPossibleMove(board, new Position(5, 5));
 
         // Assert
         Assert.NotNull(result);
@@ -56,7 +56,7 @@ public class KnightTests
 
         // Act
         var piece = new Knight(ColorEnum.White);
-        var result = piece.GetMovesKnight(board, new Position(5, 5));
+        var result = piece.GetPossibleMove(board, new Position(5, 5));
 
         // Assert
         Assert.NotNull(result);
@@ -82,7 +82,7 @@ public class KnightTests
 
         // Act
         var piece = new Knight(ColorEnum.White);
-        var result = piece.GetMovesKnight(board, new Position(5, 5));
+        var result = piece.GetPossibleMove(board, new Position(5, 5));
 
         // Assert
         Assert.NotNull(result);
@@ -108,7 +108,7 @@ public class KnightTests
 
         // Act
         var piece = new Knight(ColorEnum.White);
-        var result = piece.GetMovesKnight(board, new Position(5, 5));
+        var result = piece.GetPossibleMove(board, new Position(5, 5));
 
         // Assert
         Assert.NotNull(result);

@@ -16,7 +16,7 @@ public class CommonTests
         board.positions[2, 5].piece = piece;
         
         // Act
-        var result = Common.GetOpponentPositions(board, ColorEnum.Black);
+        var result = Common.GetOpponentPositions(board, ColorEnum.White);
 
         //Assert
         Assert.Equal(3, result.Count);
@@ -28,7 +28,7 @@ public class CommonTests
         //Arrange
         var board = new Board();
         board.StartBoard();
-        var piece = new King(ColorEnum.Black);
+        var piece = new King(ColorEnum.White);
         board.positions[2, 3].piece = piece;
         board.positions[2, 4].piece = piece;
         board.positions[2, 5].piece = piece;
