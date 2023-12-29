@@ -7,8 +7,8 @@ public class Bishop : Piece
         Color = color;
         Type = PieceEnum.Bishop;
     }
-    
-    public List<Position> GetMovesBIshop(Board board, Position pos)
+
+    public override List<Position> GetPossibleMove(Board board, Position pos)
     {
         var direction = new List<Direction>
         {

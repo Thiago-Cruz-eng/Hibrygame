@@ -7,7 +7,8 @@ public class Rook : Piece
         Color = color;
         Type = PieceEnum.Rook;
     }
-    public List<Position> GetMovesHook(Board board, Position pos)
+    
+    public override List<Position> GetPossibleMove(Board board, Position pos)
     {
         var direction = new List<Direction>
         {

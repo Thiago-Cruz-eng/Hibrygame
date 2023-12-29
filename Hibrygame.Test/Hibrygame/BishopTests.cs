@@ -16,7 +16,7 @@ public class BishopTests
 
             // Act
             var piece = new Bishop(ColorEnum.Black);
-            var result = piece.GetMovesBIshop(board, new Position(3,3));
+            var result = piece.GetPossibleMove(board, new Position(3,3));
 
             // Assert
             Assert.NotNull(result);
@@ -35,7 +35,7 @@ public class BishopTests
 
             // Act
             var piece = new Bishop(ColorEnum.Black);
-            var result = piece.GetMovesBIshop(board, new Position(5, 5));
+            var result = piece.GetPossibleMove(board, new Position(5, 5));
 
             // Assert
             Assert.NotNull(result);
@@ -56,7 +56,7 @@ public class BishopTests
 
             // Act
             var piece = new Queen(ColorEnum.Black);
-            var result = piece.GetMovesQueen(board, new Position(7, 7));
+            var result = piece.GetPossibleMove(board, new Position(7, 7));
 
             // Assert
             Assert.NotNull(result);
@@ -75,7 +75,7 @@ public class BishopTests
 
             // Act
             var piece = new Bishop(ColorEnum.White);
-            var result = piece.GetMovesBIshop(board, new Position(7, 7));
+            var result = piece.GetPossibleMove(board, new Position(7, 7));
 
             // Assert
             Assert.NotNull(result);
@@ -97,7 +97,7 @@ public class BishopTests
 
             // Act
             var piece = new Bishop(ColorEnum.White);
-            var result = piece.GetMovesBIshop(board, new Position(4,4));
+            var result = piece.GetPossibleMove(board, new Position(4,4));
 
             // Assert
             Assert.NotNull(result);

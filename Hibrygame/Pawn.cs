@@ -9,8 +9,8 @@ public class Pawn : Piece
     }
 
     public bool HasAlreadyOneMove { get; set; }
-    
-    public List<Position> GetMovesPawn(Board board, Position pos)
+
+    public override List<Position> GetPossibleMove(Board board, Position pos)
     {
         var squares = HasAlreadyOneMove ? 1 : 2;
         var direction = Color == ColorEnum.Black

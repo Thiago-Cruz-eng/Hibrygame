@@ -14,7 +14,7 @@ public class PawnTests
 
         // Act
         var piece = new Pawn(ColorEnum.White);
-        var result = piece.GetMovesPawn(board, new Position(3,3));
+        var result = piece.GetPossibleMove(board, new Position(3,3));
 
         // Assert
         Assert.NotNull(result);
@@ -33,7 +33,7 @@ public class PawnTests
         // Act
         var piece = new Pawn(ColorEnum.White);
         piece.HasAlreadyOneMove = true;
-        var result = piece.GetMovesPawn(board, new Position(3,3));
+        var result = piece.GetPossibleMove(board, new Position(3,3));
 
         // Assert
         Assert.NotNull(result);
@@ -54,7 +54,7 @@ public class PawnTests
         // Act
         var piece = new Pawn(ColorEnum.White);
         piece.HasAlreadyOneMove = true;
-        var result = piece.GetMovesPawn(board, new Position(5, 5));
+        var result = piece.GetPossibleMove(board, new Position(5, 5));
 
         // Assert
         Assert.NotNull(result);
@@ -76,7 +76,7 @@ public class PawnTests
         // Act
         var piece = new Pawn(ColorEnum.Black);
         piece.HasAlreadyOneMove = true;
-        var result = piece.GetMovesPawn(board, new Position(5, 1));
+        var result = piece.GetPossibleMove(board, new Position(5, 1));
 
         // Assert
         Assert.NotNull(result);

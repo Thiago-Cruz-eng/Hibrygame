@@ -14,7 +14,7 @@ public class KingTests
 
         // Act
         var piece = new King(ColorEnum.Black);
-        var result = piece.GetMovesKing(board, new Position(5,5));
+        var result = piece.GetPossibleMove(board, new Position(5,5));
 
         // Assert
         Assert.NotNull(result);
@@ -33,7 +33,7 @@ public class KingTests
 
         // Act
         var piece = new King(ColorEnum.Black);
-        var result = piece.GetMovesKing(board, new Position(5,5));
+        var result = piece.GetPossibleMove(board, new Position(5,5));
 
         // Assert
         Assert.NotNull(result);
@@ -54,7 +54,7 @@ public class KingTests
 
         // Act
         var piece = new King(ColorEnum.Black);
-        var result = piece.GetMovesKing(board, new Position(7,7));
+        var result = piece.GetPossibleMove(board, new Position(7,7));
 
         // Assert
         Assert.NotNull(result);
@@ -74,7 +74,7 @@ public class KingTests
 
         // Act
         var piece = new King(ColorEnum.White);
-        var result = piece.GetMovesKing(board, new Position(7,7));
+        var result = piece.GetPossibleMove(board, new Position(7,7));
 
         // Assert
         Assert.NotNull(result);
@@ -94,7 +94,7 @@ public class KingTests
 
         // Act
         var piece = new King(ColorEnum.White);
-        var result = piece.GetMovesKing(board, new Position(7,7));
+        var result = piece.GetPossibleMove(board, new Position(7,7));
 
         // Assert
         Assert.NotNull(result);

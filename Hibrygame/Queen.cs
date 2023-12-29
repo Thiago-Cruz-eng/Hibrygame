@@ -7,8 +7,8 @@ public class Queen : Piece
         Color = color;
         Type = PieceEnum.Queen;
     }
-    
-    public List<Position> GetMovesQueen(Board board, Position pos)
+
+    public override List<Position> GetPossibleMove(Board board, Position pos)
     {
         var direction = new List<Direction>
         {

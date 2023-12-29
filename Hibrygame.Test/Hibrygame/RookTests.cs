@@ -14,7 +14,7 @@ public class RookTests
 
         // Act
         var piece = new Rook(ColorEnum.White);
-        var result = piece.GetMovesHook(board, new Position(3,3));
+        var result = piece.GetPossibleMove(board, new Position(3,3));
 
         // Assert
         Assert.NotNull(result);
@@ -34,7 +34,7 @@ public class RookTests
 
         // Act
         var piece = new Rook(ColorEnum.White);
-        var result = piece.GetMovesHook(board, new Position(7, 0));
+        var result = piece.GetPossibleMove(board, new Position(7, 0));
 
         // Assert
         Assert.NotNull(result);
@@ -53,7 +53,7 @@ public class RookTests
 
         // Act
         var piece = new Rook(ColorEnum.White);
-        var result = piece.GetMovesHook(board, new Position(7, 0));
+        var result = piece.GetPossibleMove(board, new Position(7, 0));
 
         // Assert
         Assert.NotNull(result);
@@ -76,7 +76,7 @@ public class RookTests
 
         // Act
         var piece = new Rook(ColorEnum.White);
-        var result = piece.GetMovesHook(board, new Position(3, 3));
+        var result = piece.GetPossibleMove(board, new Position(3, 3));
 
         // Assert
         Assert.NotNull(result);
