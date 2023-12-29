@@ -6,6 +6,7 @@ public static class Move
     {
         {
             var possibleMoves = new List<Position>();
+            var knightPossibleMoves = new List<Position>();
             var initialState = board.GetPositionsPlaced();
             var initialPosition = initialState.FirstOrDefault(x => x.row == pos.row && x.column == pos.column);
 
@@ -15,24 +16,6 @@ public static class Move
                 var previousEnemyPosition = new List<Position>();
                 for (var i = 1; i <= squares; i++)
                 {
-                    if (initialPosition.piece?.Type == PieceEnum.Knight && i == squares )
-                    {
-                        var knightDir = new List<Direction>();
-                        if (actualDir == Direction.North || actualDir == Direction.South)
-                        {
-                            knightDir.Add(Direction.East);
-                            knightDir.Add(Direction.West);
-                            possibleMoves.Add(CalculateNewPosition(board, initialPosition, knightDir[0], i));
-                            possibleMoves.Add(CalculateNewPosition(board, initialPosition, knightDir[1], i));
-                            return possibleMoves;
-                        }
-                        knightDir.Add(Direction.South);
-                        knightDir.Add(Direction.North);
-                        possibleMoves.Add(CalculateNewPosition(board, initialPosition, knightDir[0], i));
-                        possibleMoves.Add(CalculateNewPosition(board, initialPosition, knightDir[1], i));
-                        return possibleMoves;
-                    }
-                    
                     var newPosition = CalculateNewPosition(board, initialPosition, actualDir, i);
                         
                     if(initialPosition.piece?.Type == PieceEnum.Pawn && 
@@ -43,19 +26,42 @@ public static class Move
                        newPosition.piece?.Color == null)
                         break;
                     
+                    if (initialPosition.piece?.Type == PieceEnum.Knight && i == squares )
+                    {
+                        newPosition.piece = new Knight(initialPosition.piece.Color);
+                        var knightDir = new List<Direction>();
+                        if (actualDir == Direction.North || actualDir == Direction.South)
+                        {
+                            knightDir.Add(Direction.East);
+                            knightDir.Add(Direction.West);
+                            var eastPos = CalculateNewPosition(board, newPosition, knightDir[0], 1);
+                            if(eastPos != newPosition) knightPossibleMoves.Add(eastPos);
+                            var westPos = CalculateNewPosition(board, newPosition, knightDir[1], 1);
+                            if(westPos != newPosition) knightPossibleMoves.Add(westPos);
+                            break;
+                        }
+                        knightDir.Add(Direction.South);
+                        knightDir.Add(Direction.North);
+                        var southPos = CalculateNewPosition(board, newPosition, knightDir[0], 1);
+                        if(southPos != newPosition) knightPossibleMoves.Add(southPos);
+                        var northPos = CalculateNewPosition(board, newPosition, knightDir[1], 1);
+                        if(northPos != newPosition) knightPossibleMoves.Add(northPos);
+                        break;
+                    }
+                    
                     if (board.positions[newPosition.row, newPosition.column].piece?.Color == initialPosition.piece?.Color)
                         break;
                     
                     if (board.positions[newPosition.row, newPosition.column].piece != null && newPosition.piece?.Color != initialPosition.piece?.Color)
                     {
                         previousEnemyPosition.Add(newPosition);
-                    } 
-                    
+                    }
+
                     possibleMoves.Add(newPosition);
-                    if(previousEnemyPosition.Any()) break;
-                    
+                    if(initialPosition.piece?.Type != PieceEnum.Knight && previousEnemyPosition.Any()) break;
                 }
             }
+            if (initialPosition.piece?.Type == PieceEnum.Knight) return knightPossibleMoves;
             return possibleMoves;
         }
     }

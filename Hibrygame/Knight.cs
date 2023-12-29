@@ -17,6 +17,6 @@ public class Knight : Piece
             Direction.West,
         };
         
-        return Move.CalculatePossibleMove(board, pos, direction, 3);
+        return Move.CalculatePossibleMove(board, pos, direction, 2);
     }
 }
