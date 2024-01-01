@@ -100,4 +100,22 @@ public class KingTests
         Assert.NotNull(result);
         Assert.Equal(2, result.Count);
     }
+    
+    [Fact]
+    public void GetMovesKing_WhenIsInTreat_Correctly()
+    {
+        // Arrange
+        var board = new Board();
+        board.StartBoard();
+        board.positions[3,1].piece = new Rook(ColorEnum.Black);
+        board.positions[3,6].piece = new King(ColorEnum.White);
+
+        // Act
+        var piece = new Rook(ColorEnum.Black);
+        var result = piece.GetPossibleMove(board, new Position(3,1));
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(6, result.Count);
+    }
 }

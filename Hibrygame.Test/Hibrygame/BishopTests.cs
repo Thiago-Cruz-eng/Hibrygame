@@ -51,11 +51,11 @@ public class BishopTests
             board.positions[6, 6].piece = new Rook(ColorEnum.White);
             board.positions[7, 6].piece = new Rook(ColorEnum.White);
             board.positions[6, 7].piece = new Rook(ColorEnum.White);
-            board.positions[7, 7].piece = new King(ColorEnum.White);
+            board.positions[7, 7].piece = new Bishop(ColorEnum.White);
 
 
             // Act
-            var piece = new Queen(ColorEnum.Black);
+            var piece = new Bishop(ColorEnum.Black);
             var result = piece.GetPossibleMove(board, new Position(7, 7));
 
             // Assert

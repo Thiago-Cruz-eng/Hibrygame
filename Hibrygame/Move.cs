@@ -4,7 +4,6 @@ public static class Move
 {
     public static List<Position> CalculatePossibleMove(Board board, Position pos, List<Direction> dir, int squares)
     {
-        {
             var possibleMoves = new List<Position>();
             var knightPossibleMoves = new List<Position>();
             var initialState = board.GetPositionsPlaced();
@@ -58,12 +57,22 @@ public static class Move
                     }
 
                     possibleMoves.Add(newPosition);
+                    
+                    if (newPosition.piece?.Type != null && newPosition.piece?.Type == PieceEnum.King)
+                    {
+                        var kingMove = VerifyKingMovimentationCheck(board, newPosition);
+                        var helperMove = PossibleHelpersToKingCheck(board,initialPosition, newPosition);
+                        possibleMoves.AddRange(kingMove);
+                        possibleMoves.AddRange(helperMove);
+                        return possibleMoves;
+                    };
+                    
+                    
                     if(initialPosition.piece?.Type != PieceEnum.Knight && previousEnemyPosition.Any()) break;
                 }
             }
             if (initialPosition.piece?.Type == PieceEnum.Knight) return knightPossibleMoves;
             return possibleMoves;
-        }
     }
     
     private static Position CalculateNewPosition(Board board, Position initialPosition, Direction direction, int steps)
