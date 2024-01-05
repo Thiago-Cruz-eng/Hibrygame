@@ -108,6 +108,7 @@ public class KingTests
         var board = new Board();
         board.StartBoard();
         board.positions[3,1].piece = new Rook(ColorEnum.Black);
+        board.positions[0,6].piece = new Rook(ColorEnum.Black);
         board.positions[3,6].piece = new King(ColorEnum.White);
 
         // Act
@@ -116,6 +117,6 @@ public class KingTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(6, result.Count);
+        Assert.Equal(4, result.Count);
     }
 }
