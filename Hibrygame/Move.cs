@@ -54,7 +54,7 @@ public static class Move
                 
                 if (board.positions[newPosition.row, newPosition.column].piece != null && newPosition.piece?.Color != initialPosition.piece?.Color)
                 {
-                    previousEnemyPosition.Add(newPosition);
+                    if (newPosition.piece?.IsInCheckState == false && newPosition.piece?.Type != PieceEnum.King) previousEnemyPosition.Add(newPosition);
                 }
 
                 possibleMoves.Add(newPosition);
@@ -62,15 +62,14 @@ public static class Move
                 if (newPosition.piece?.Type != null && newPosition.piece?.Type == PieceEnum.King && newPosition.piece?.IsInCheckState == false)
                 {
                     var kingMove = VerifyKingMovementationCheck(board, newPosition);
-                    //var helperMove = PossibleHelpersToKingCheck(board,initialPosition, newPosition);
-                    //possibleMoves.AddRange(helperMove);
-                    return possibleMoves;
+                    var helperMove = PossiblePiecesHelpersToKingCheck(board, newPosition, possibleMoves);
+                    possibleMoves.AddRange(helperMove);
+                    return kingMove;
                 }
                 if(initialPosition.piece?.Type != PieceEnum.Knight && previousEnemyPosition.Any()) break;
             }
         }
-        if (initialPosition.piece?.Type == PieceEnum.Knight) return knightPossibleMoves;
-        return possibleMoves;
+        return initialPosition.piece?.Type == PieceEnum.Knight ? knightPossibleMoves : possibleMoves;
     }
     
     private static Position CalculateNewPosition(Board board, Position initialPosition, Direction direction, int steps)
@@ -159,7 +158,6 @@ public static class Move
         king.piece!.IsInCheckState = true;
         
         var possibleMoveKing = king.piece?.GetPossibleMove(board, king);
-        var possibleMoveWithoutTreat = possibleMoveKing;
         var possibleMoveOfOpponent = new List<Position>();
 
         var piecesOfOpponent = Common.GetOpponentPositions(board, king.piece!.Color);
@@ -178,20 +176,25 @@ public static class Move
         return possibleMoveKing.Count == 0 ? null! : possibleMoveKing;
     }
 
-    private static List<Position> PossiblePiecesHelpersToKingCheck(Board board, Position enemyTrigger, Position king)
+    private static List<Position> PossiblePiecesHelpersToKingCheck(Board board, Position king, List<Position> possibleMovesInDirection)
     {
         var possibleFriendsMove = new List<Position>();
-        var possibleMoveEnemyTrigger = enemyTrigger.piece!.GetPossibleMove(board, enemyTrigger);
+        var possibleValidFriendMoveToHelpKIng = new List<Position>();
+        
 
-        var possibleMoveFriends = Common.GetByColorPositions(board, king.piece!.Color);
-
-        possibleMoveEnemyTrigger.ForEach(x =>
+        var piecesFriendFriends = Common.GetByColorPositions(board, king.piece!.Color);
+        
+        foreach (var possibleFriendMove in piecesFriendFriends)
         {
-            if (possibleMoveFriends.Contains(x))
-                possibleFriendsMove.Add(x);
-            
+            possibleFriendsMove.AddRange(possibleFriendMove.piece!.GetPossibleMove(board, possibleFriendMove));
+        }
+
+        possibleMovesInDirection.ForEach(x =>
+        {
+            if (possibleFriendsMove.Contains(x))
+                possibleValidFriendMoveToHelpKIng.Add(x);
         });
-        return possibleFriendsMove;
+        return possibleValidFriendMoveToHelpKIng;
     }
 
     private static async Task<bool> MakeMove(Board board, List<Position> possibleMoves, Position pos)
