@@ -138,4 +138,48 @@ public class KingTests
         Assert.NotNull(result);
         Assert.Equal(7, result.Count);
     }
+    
+    [Fact]
+    public async void GetMovesKing_WhenIsInTreatByOwnMove_Correctly()
+    {
+        // Arrange
+        var board = new Board();
+        board.StartBoard();
+        board.positions[3,1].piece = new Rook(ColorEnum.Black);
+        board.positions[7,4].piece = new Queen(ColorEnum.White);
+        board.positions[3,4].piece = new Rook(ColorEnum.White);
+        board.positions[3,6].piece = new King(ColorEnum.White);
+        
+        // Act
+        var piece = new Rook(ColorEnum.White);
+        var positions = piece.GetPossibleMove(board, new Position(3,4));
+        var move = await Move.MakeMove(board, positions, new Position(0, 4), piece);
+        
+        // Assert
+        Assert.True(move.isInCheck);
+        Assert.IsType<Rook>(board.positions[3, 4].piece);
+        Assert.Equal(ColorEnum.White, board.positions[3, 4].piece.Color);
+    }
+    
+    [Fact]
+    public async void GetMovesKing_WhenIsInSaveByOwnMove_Correctly()
+    {
+        // Arrange
+        var board = new Board();
+        board.StartBoard();
+        board.positions[3,1].piece = new Rook(ColorEnum.Black);
+        board.positions[7,4].piece = new Queen(ColorEnum.White);
+        board.positions[3,4].piece = new Rook(ColorEnum.White);
+        board.positions[0,6].piece = new King(ColorEnum.White);
+        
+        // Act
+        var piece = new Rook(ColorEnum.White);
+        var positions = piece.GetPossibleMove(board, new Position(3,4));
+        var move = await Move.MakeMove(board, positions, new Position(6, 4), piece);
+        
+        // Assert
+        Assert.False(move.isInCheck);
+        Assert.IsType<Rook>(board.positions[6, 4].piece);
+        Assert.Equal(ColorEnum.White, board.positions[6, 4].piece.Color);
+    }
 }

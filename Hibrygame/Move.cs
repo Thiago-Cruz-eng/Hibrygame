@@ -61,7 +61,7 @@ public static class Move
                 movesInSpecficDirection.Add(newPosition);
                 possibleMoves.Add(newPosition);
                 
-                if (newPosition.piece?.Type != null && newPosition.piece?.Type == PieceEnum.King && newPosition.piece?.IsInCheckState == false)
+                if (newPosition.piece?.Type != null && newPosition.piece?.Type == PieceEnum.King && newPosition.piece?.IsInCheckState == false && newPosition.piece?.Color != initialPosition.piece?.Color)
                 {
                     var moves = new List<Position>();
                     var kingMove = VerifyKingMovementationCheck(board, newPosition);
@@ -202,12 +202,12 @@ public static class Move
         return possibleValidFriendMoveToHelpKIng;
     }
 
-    public static async Task<bool> MakeMove(Board board, List<Position> possibleMoves, Position pos)
+    public static async Task<(bool isInCheck, List<Position>? PossibleMovesKingInCheck)> MakeMove(Board board, List<Position> possibleMoves, Position pos, Piece piece)
     {
-        if (possibleMoves.All(position => position != pos)) return false;
-        board.positions[pos.row, pos.column] = pos;
-        var check = await IsKingInCheck(board, pos.piece.Color);
-        return !check.isInCheck || check.PossibleMovesKingInCheck is not null;
+        //privius position para tirar do tabuleiro
+        if (!possibleMoves.All(position => position != pos)) return (false, null);
+        board.positions[pos.row, pos.column].piece = piece;
+        return await IsKingInCheck(board, piece.Color);
     }
 
     public static async Task<(bool isInCheck, List<Position>? PossibleMovesKingInCheck)> IsKingInCheck(Board board, ColorEnum color)
@@ -218,13 +218,14 @@ public static class Move
             var pos = position.piece?.GetPossibleMove(board, position);
             foreach (var eachPosition in pos)
             {
-                if (pos.Any(possibleMoves => possibleMoves.piece!.IsInCheckState) && eachPosition.piece.Type == PieceEnum.King)
+                if(eachPosition.piece == null) continue;
+                if (eachPosition.piece!.IsInCheckState && eachPosition.piece.Type == PieceEnum.King)
                 {
                     return (true, pos);
                 }
             }
         }
-        return (false, null);
+        return (false, new List<Position>());
     }
 }
 
