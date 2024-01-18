@@ -202,11 +202,12 @@ public static class Move
         return possibleValidFriendMoveToHelpKIng;
     }
 
-    private static async Task<bool> MakeMove(Board board, List<Position> possibleMoves, Position pos)
+    public static async Task<bool> MakeMove(Board board, List<Position> possibleMoves, Position pos)
     {
         if (possibleMoves.All(position => position != pos)) return false;
         board.positions[pos.row, pos.column] = pos;
-        return true;
+        var check = await IsKingInCheck(board, pos.piece.Color);
+        return !check.isInCheck || check.PossibleMovesKingInCheck is not null;
     }
 
     public static async Task<(bool isInCheck, List<Position>? PossibleMovesKingInCheck)> IsKingInCheck(Board board, ColorEnum color)
