@@ -208,6 +208,23 @@ public static class Move
         board.positions[pos.row, pos.column] = pos;
         return true;
     }
+
+    public static async Task<(bool isInCheck, List<Position>? PossibleMovesKingInCheck)> IsKingInCheck(Board board, ColorEnum color)
+    {
+        var piecesEnemy = Common.GetOpponentPositions(board, color);
+        foreach (var position in piecesEnemy)
+        {
+            var pos = position.piece?.GetPossibleMove(board, position);
+            foreach (var eachPosition in pos)
+            {
+                if (pos.Any(possibleMoves => possibleMoves.piece!.IsInCheckState) && eachPosition.piece.Type == PieceEnum.King)
+                {
+                    return (true, pos);
+                }
+            }
+        }
+        return (false, null);
+    }
 }
 
 public enum Direction
