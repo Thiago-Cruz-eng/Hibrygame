@@ -31,17 +31,25 @@ public static class Common
 
         return pos;
     }
-    public static List<Position> GetByColorPositions(Board board, ColorEnum color)
+    public static List<Position>? GetByColorPositions(Board board, ColorEnum color, PieceEnum excludePiece)
     {
         var pos = new List<Position>();
-        
+        var positionWithOutExcludePiece = new List<Position>();
+
         foreach (var position in board.positions)
         {
-            if (position.piece?.Color == color)
-                pos.Add(position);
+            if (position.piece?.Color != color) continue;
+            pos.Add(position);
+            positionWithOutExcludePiece.Add(position);
         }
-
-        return pos;
+        
+        foreach (var position in pos)
+        {
+            if(position.piece!.Type == excludePiece)
+                positionWithOutExcludePiece.Remove(position);
+        }
+        
+        return positionWithOutExcludePiece;
     }
     
 }

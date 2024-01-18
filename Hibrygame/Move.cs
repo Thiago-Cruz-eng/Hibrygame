@@ -13,6 +13,7 @@ public static class Move
         if (initialPosition == null) return possibleMoves;
         foreach (var actualDir in dir)
         {
+            var movesInSpecficDirection = new List<Position>();
             var previousEnemyPosition = new List<Position>();
             for (var i = 1; i <= squares; i++)
             {
@@ -57,14 +58,17 @@ public static class Move
                     if (newPosition.piece?.IsInCheckState == false && newPosition.piece?.Type != PieceEnum.King) previousEnemyPosition.Add(newPosition);
                 }
 
+                movesInSpecficDirection.Add(newPosition);
                 possibleMoves.Add(newPosition);
                 
                 if (newPosition.piece?.Type != null && newPosition.piece?.Type == PieceEnum.King && newPosition.piece?.IsInCheckState == false)
                 {
+                    var moves = new List<Position>();
                     var kingMove = VerifyKingMovementationCheck(board, newPosition);
-                    var helperMove = PossiblePiecesHelpersToKingCheck(board, newPosition, possibleMoves);
-                    possibleMoves.AddRange(helperMove);
-                    return kingMove;
+                    var helperMove = PossiblePiecesHelpersToKingCheck(board, newPosition, movesInSpecficDirection);
+                    moves.AddRange(kingMove);
+                    if (helperMove.Count > 0) moves.AddRange(helperMove);
+                    return moves;
                 }
                 if(initialPosition.piece?.Type != PieceEnum.Knight && previousEnemyPosition.Any()) break;
             }
@@ -182,8 +186,9 @@ public static class Move
         var possibleValidFriendMoveToHelpKIng = new List<Position>();
         
 
-        var piecesFriendFriends = Common.GetByColorPositions(board, king.piece!.Color);
-        
+        var piecesFriendFriends = Common.GetByColorPositions(board, king.piece!.Color, PieceEnum.King);
+
+        if (piecesFriendFriends is null) return possibleValidFriendMoveToHelpKIng;
         foreach (var possibleFriendMove in piecesFriendFriends)
         {
             possibleFriendsMove.AddRange(possibleFriendMove.piece!.GetPossibleMove(board, possibleFriendMove));
