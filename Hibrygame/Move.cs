@@ -202,11 +202,11 @@ public static class Move
         return possibleValidFriendMoveToHelpKIng;
     }
 
-    public static async Task<(bool isInCheck, List<Position>? PossibleMovesKingInCheck)> MakeMove(Board board, List<Position> possibleMoves, Position pos, Piece piece)
+    public static async Task<(bool isInCheck, List<Position>? PossibleMovesKingInCheck)> MakeMove(Board board, List<Position> possibleMoves, Position newPosition, Piece piece)
     {
         //privius position para tirar do tabuleiro
-        if (!possibleMoves.All(position => position != pos)) return (false, null);
-        board.positions[pos.row, pos.column].piece = piece;
+        if (!possibleMoves.All(position => position != newPosition)) return (false, null);
+        board.positions[newPosition.row, newPosition.column].piece = piece;
         return await IsKingInCheck(board, piece.Color);
     }
 
