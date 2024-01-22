@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Identity;
+using Orchestrator.Domain;
 using Orchestrator.Infra.Interfaces;
 using Orchestrator.Infra.Mongo;
 using Orchestrator.Infra.Repositories;

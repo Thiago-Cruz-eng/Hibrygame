@@ -5,6 +5,8 @@ namespace Orchestrator.UseCases.Dto;
 public class CreateUserRequest
 {
     [Required]
+    public string UserName { get; set; }
+    [Required]
     public string Email { get; set; }
     [Required]
     [DataType(DataType.Password)]
