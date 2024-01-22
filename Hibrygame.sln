@@ -1,8 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hibrygame", "Hibrygame\Hibrygame.csproj", "{ECFA88E7-3619-42AE-A730-03A01AA8F8C0}"
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34004.107
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hibrygame", "Hibrygame\Hibrygame.csproj", "{ECFA88E7-3619-42AE-A730-03A01AA8F8C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hibrygame.Test", "Hibrygame.Test\Hibrygame.Test.csproj", "{87ED30D7-2739-462C-BB9B-5D45EA21A9EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hibrygame.Test", "Hibrygame.Test\Hibrygame.Test.csproj", "{87ED30D7-2739-462C-BB9B-5D45EA21A9EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orchestrator", "Orchestrator\Orchestrator.csproj", "{918E564C-551B-4E3D-B134-78196DEC92CB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +23,12 @@ Global
 		{87ED30D7-2739-462C-BB9B-5D45EA21A9EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87ED30D7-2739-462C-BB9B-5D45EA21A9EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87ED30D7-2739-462C-BB9B-5D45EA21A9EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{918E564C-551B-4E3D-B134-78196DEC92CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{918E564C-551B-4E3D-B134-78196DEC92CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{918E564C-551B-4E3D-B134-78196DEC92CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{918E564C-551B-4E3D-B134-78196DEC92CB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
