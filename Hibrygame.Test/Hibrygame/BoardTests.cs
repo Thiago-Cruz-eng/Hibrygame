@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using Hibrygame.Enums;
+using Xunit;
 
 namespace Hibrygame.Test.Hibrygame;
 

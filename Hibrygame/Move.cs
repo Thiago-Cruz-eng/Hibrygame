@@ -1,3 +1,5 @@
+using Hibrygame.Enums;
+
 namespace Hibrygame;
 
 public static class Move
@@ -204,7 +206,7 @@ public static class Move
 
     public static async Task<bool> MakeMove(Board board, List<Position> possibleMoves, Position newPosition, Position oldPosition)
     {
-        if (!possibleMoves.Contains(newPosition, new Board.PositionComparer())) return false;
+        if (!possibleMoves.Contains(newPosition, new Common.PositionComparer())) return false;
         board.positions[newPosition.row, newPosition.column].piece = oldPosition.piece;
         board.positions[oldPosition.row, oldPosition.column].piece = null;
         var isInCheck = await IsKingInCheck(board, oldPosition.piece!.Color);
@@ -230,16 +232,4 @@ public static class Move
         }
         return false;
     }
-}
-
-public enum Direction
-{
-    North,
-    South,
-    East,
-    West,
-    NorthEast, 
-    SouthEast, 
-    NorthWest, 
-    SouthWest,
 }

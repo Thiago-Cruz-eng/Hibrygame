@@ -1,4 +1,6 @@
-﻿namespace Hibrygame;
+﻿using Hibrygame.Enums;
+
+namespace Hibrygame;
 
 public class King : Piece
 {

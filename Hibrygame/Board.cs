@@ -1,4 +1,6 @@
-﻿namespace Hibrygame;
+﻿using Hibrygame.Enums;
+
+namespace Hibrygame;
 
 public class Board
 {
@@ -28,81 +30,5 @@ public class Board
         }
         return pos;
     }
-
-    public class PositionComparer : EqualityComparer<Position>
-    {
-        public override bool Equals(Position? x, Position? y)
-        {
-            return x.column == y.column && x.row == y.row;
-        }
-
-        public override int GetHashCode(Position obj)
-        {
-            return obj.GetHashCode();
-        }
-    }
 }
 
-public class Position(int row, int column)
-{
-    public ColorEnum squareColor { get; set; } = ColorEnum.None;
-    public Piece? piece { get; set; }
-    public int row { get; set; } = row;
-    public int column { get; set; } = column;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-public enum PieceEnum
-{
-    Pawn,
-    Bishop,
-    Knight,
-    Rook,
-    Queen,
-    King,
-    None
-}
-
-public enum ColorEnum
-{
-    Black,
-    White,
-    None
-}

@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Hibrygame.Enums;
 
 namespace Hibrygame;
 
@@ -31,6 +32,7 @@ public static class Common
 
         return pos;
     }
+    
     public static (List<Position> possibleMoves, Piece? actualPieceTrigger) GetPieceByColorPositions(Board board, ColorEnum color, PieceEnum excludePiece)
     {
         var pos = new List<Position>();
@@ -53,4 +55,16 @@ public static class Common
         return (null, null);
     }
     
+    public class PositionComparer : EqualityComparer<Position>
+    {
+        public override bool Equals(Position? x, Position? y)
+        {
+            return x.column == y.column && x.row == y.row;
+        }
+
+        public override int GetHashCode(Position obj)
+        {
+            return obj.GetHashCode();
+        }
+    }
 }

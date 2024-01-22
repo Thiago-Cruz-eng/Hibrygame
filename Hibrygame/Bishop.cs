@@ -1,3 +1,5 @@
+using Hibrygame.Enums;
+
 namespace Hibrygame;
 
 public class Bishop : Piece
