@@ -17,8 +17,8 @@ public class RookTests
         var result = piece.GetPossibleMove(board, new Position(3,3));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(14, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(14, result.possibleMoves.Count);
     }
 
     [Fact]
@@ -37,8 +37,8 @@ public class RookTests
         var result = piece.GetPossibleMove(board, new Position(7, 0));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(11, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(11, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -56,8 +56,8 @@ public class RookTests
         var result = piece.GetPossibleMove(board, new Position(7, 0));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(10, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(10, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -79,7 +79,7 @@ public class RookTests
         var result = piece.GetPossibleMove(board, new Position(3, 3));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(0, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(0, result.possibleMoves.Count);
     }
 }

@@ -6,5 +6,5 @@ public abstract class Piece
     public ColorEnum Color { get; set; } = ColorEnum.None;
     public bool IsInCheckState { get; set; }
 
-    public abstract List<Position> GetPossibleMove(Board board, Position pos);
+    public abstract (List<Position> possibleMoves, Piece? actualPieceTrigger) GetPossibleMove(Board board, Position pos);
 }

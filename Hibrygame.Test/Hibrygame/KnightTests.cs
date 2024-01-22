@@ -17,8 +17,8 @@ public class KnightTests
         var result = piece.GetPossibleMove(board, new Position(7,0));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(2, result.possibleMoves.Count);
     }
 
     [Fact]
@@ -37,8 +37,8 @@ public class KnightTests
         var result = piece.GetPossibleMove(board, new Position(5, 5));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(8, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(8, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -59,8 +59,8 @@ public class KnightTests
         var result = piece.GetPossibleMove(board, new Position(5, 5));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(4, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(4, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -85,8 +85,8 @@ public class KnightTests
         var result = piece.GetPossibleMove(board, new Position(5, 5));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(0, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(0, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -111,7 +111,7 @@ public class KnightTests
         var result = piece.GetPossibleMove(board, new Position(5, 5));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(8, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(8, result.possibleMoves.Count);
     }
 }

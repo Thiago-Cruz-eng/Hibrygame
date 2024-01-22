@@ -31,7 +31,7 @@ public static class Common
 
         return pos;
     }
-    public static List<Position>? GetByColorPositions(Board board, ColorEnum color, PieceEnum excludePiece)
+    public static (List<Position> possibleMoves, Piece? actualPieceTrigger) GetPieceByColorPositions(Board board, ColorEnum color, PieceEnum excludePiece)
     {
         var pos = new List<Position>();
         var positionWithOutExcludePiece = new List<Position>();
@@ -47,9 +47,10 @@ public static class Common
         {
             if(position.piece!.Type == excludePiece)
                 positionWithOutExcludePiece.Remove(position);
+            return (positionWithOutExcludePiece, position.piece);
         }
-        
-        return positionWithOutExcludePiece;
+
+        return (null, null);
     }
     
 }

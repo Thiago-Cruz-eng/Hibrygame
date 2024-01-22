@@ -17,8 +17,8 @@ public class PawnTests
         var result = piece.GetPossibleMove(board, new Position(3,3));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(2, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -36,8 +36,8 @@ public class PawnTests
         var result = piece.GetPossibleMove(board, new Position(3,3));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(1, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(1, result.possibleMoves.Count);
     }
 
     [Fact]
@@ -57,8 +57,8 @@ public class PawnTests
         var result = piece.GetPossibleMove(board, new Position(5, 5));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(3, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(3, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -79,7 +79,7 @@ public class PawnTests
         var result = piece.GetPossibleMove(board, new Position(5, 1));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(2, result.possibleMoves.Count);
     }
 }

@@ -17,8 +17,8 @@ public class QueenTests
         var result = piece.GetPossibleMove(board, new Position(5,5));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(25, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(25, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -36,8 +36,8 @@ public class QueenTests
         var result = piece.GetPossibleMove(board, new Position(5,5));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(20, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(20, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -57,8 +57,8 @@ public class QueenTests
         var result = piece.GetPossibleMove(board, new Position(7,7));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Empty(result);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Empty(result.possibleMoves);
     }
     
     [Fact]
@@ -77,8 +77,8 @@ public class QueenTests
         var result = piece.GetPossibleMove(board, new Position(7,7));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(3, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(3, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -97,7 +97,7 @@ public class QueenTests
         var result = piece.GetPossibleMove(board, new Position(7,7));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(2, result.possibleMoves.Count);
     }
 }

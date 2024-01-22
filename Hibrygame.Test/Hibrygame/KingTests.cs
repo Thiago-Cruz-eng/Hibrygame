@@ -17,8 +17,8 @@ public class KingTests
         var result = piece.GetPossibleMove(board, new Position(5,5));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(8, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(8, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -36,8 +36,8 @@ public class KingTests
         var result = piece.GetPossibleMove(board, new Position(5,5));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(7, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(7, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -57,8 +57,8 @@ public class KingTests
         var result = piece.GetPossibleMove(board, new Position(7,7));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Empty(result);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Empty(result.possibleMoves);
     }
     
     [Fact]
@@ -77,8 +77,8 @@ public class KingTests
         var result = piece.GetPossibleMove(board, new Position(7,7));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(3, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(3, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -97,8 +97,8 @@ public class KingTests
         var result = piece.GetPossibleMove(board, new Position(7,7));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(2, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -116,8 +116,8 @@ public class KingTests
         var result = piece.GetPossibleMove(board, new Position(3,1));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(4, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(4, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -135,8 +135,8 @@ public class KingTests
         var result = piece.GetPossibleMove(board, new Position(3,1));
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(7, result.Count);
+        Assert.NotNull(result.possibleMoves);
+        Assert.Equal(7, result.possibleMoves.Count);
     }
     
     [Fact]
@@ -153,10 +153,13 @@ public class KingTests
         // Act
         var piece = new Rook(ColorEnum.White);
         var positions = piece.GetPossibleMove(board, new Position(3,4));
-        var move = await Move.MakeMove(board, positions, new Position(0, 4), piece);
+        var move = await Move.MakeMove(board, positions.possibleMoves, new Position(0, 4), new Position(3, 4) {
+            squareColor = ColorEnum.White,
+            piece = piece
+        });
         
         // Assert
-        Assert.True(move.isInCheck);
+        Assert.False(move);
         Assert.IsType<Rook>(board.positions[3, 4].piece);
         Assert.Equal(ColorEnum.White, board.positions[3, 4].piece.Color);
     }
@@ -173,12 +176,17 @@ public class KingTests
         board.positions[0,6].piece = new King(ColorEnum.White);
         
         // Act
+        //outra forma de "colocar a peça no tabuleiro"
         var piece = new Rook(ColorEnum.White);
         var positions = piece.GetPossibleMove(board, new Position(3,4));
-        var move = await Move.MakeMove(board, positions, new Position(6, 4), piece);
+        var move = await Move.MakeMove(board, positions.possibleMoves, new Position(6, 4), new Position(3, 4)
+        {
+            squareColor = ColorEnum.White,
+            piece = piece
+        });
         
         // Assert
-        Assert.False(move.isInCheck);
+        Assert.True(move);
         Assert.IsType<Rook>(board.positions[6, 4].piece);
         Assert.Equal(ColorEnum.White, board.positions[6, 4].piece.Color);
     }

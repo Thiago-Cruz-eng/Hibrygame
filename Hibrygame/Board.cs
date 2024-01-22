@@ -28,6 +28,19 @@ public class Board
         }
         return pos;
     }
+
+    public class PositionComparer : EqualityComparer<Position>
+    {
+        public override bool Equals(Position? x, Position? y)
+        {
+            return x.column == y.column && x.row == y.row;
+        }
+
+        public override int GetHashCode(Position obj)
+        {
+            return obj.GetHashCode();
+        }
+    }
 }
 
 public class Position(int row, int column)

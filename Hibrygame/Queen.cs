@@ -8,7 +8,7 @@ public class Queen : Piece
         Type = PieceEnum.Queen;
     }
 
-    public override List<Position> GetPossibleMove(Board board, Position pos)
+    public override (List<Position> possibleMoves, Piece? actualPieceTrigger) GetPossibleMove(Board board, Position pos)
     {
         var direction = new List<Direction>
         {

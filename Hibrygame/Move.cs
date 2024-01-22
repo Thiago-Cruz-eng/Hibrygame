@@ -2,7 +2,7 @@ namespace Hibrygame;
 
 public static class Move
 {
-    public static List<Position> CalculatePossibleMove(Board board, Position pos, List<Direction> dir, int squares)
+    public static (List<Position> possibleMoves, Piece? actualPieceTrigger) CalculatePossibleMove(Board board, Position pos, List<Direction> dir, int squares)
     {
         var possibleMoves = new List<Position>();
         var knightPossibleMoves = new List<Position>();
@@ -10,7 +10,7 @@ public static class Move
         var initialPosition = initialState.FirstOrDefault(x => x.row == pos.row && x.column == pos.column);
         var isInCheckState = false;
 
-        if (initialPosition == null) return possibleMoves;
+        if (initialPosition == null) return (possibleMoves, null);
         foreach (var actualDir in dir)
         {
             var movesInSpecficDirection = new List<Position>();
@@ -27,7 +27,7 @@ public static class Move
                    newPosition.piece?.Color == null)
                     break;
                 
-                if (initialPosition.piece?.Type == PieceEnum.Knight && i == squares )
+                if (initialPosition.piece?.Type == PieceEnum.Knight && i == squares)
                 {
                     newPosition.piece = new Knight(initialPosition.piece.Color);
                     var knightDir = new List<Direction>();
@@ -68,12 +68,12 @@ public static class Move
                     var helperMove = PossiblePiecesHelpersToKingCheck(board, newPosition, movesInSpecficDirection);
                     moves.AddRange(kingMove);
                     if (helperMove.Count > 0) moves.AddRange(helperMove);
-                    return moves;
+                    return (moves, newPosition.piece);
                 }
                 if(initialPosition.piece?.Type != PieceEnum.Knight && previousEnemyPosition.Any()) break;
             }
         }
-        return initialPosition.piece?.Type == PieceEnum.Knight ? knightPossibleMoves : possibleMoves;
+        return initialPosition.piece?.Type == PieceEnum.Knight ? (knightPossibleMoves, initialPosition.piece) : (possibleMoves, initialPosition.piece);
     }
     
     private static Position CalculateNewPosition(Board board, Position initialPosition, Direction direction, int steps)
@@ -169,15 +169,15 @@ public static class Move
         piecesOfOpponent.ForEach(x =>
         {
             var pos = x.piece!.GetPossibleMove(board, x);
-            possibleMoveOfOpponent.AddRange(pos);
+            possibleMoveOfOpponent.AddRange(pos.possibleMoves);
         });
 
-        foreach (var x in possibleMoveKing.ToArray())
+        foreach (var x in possibleMoveKing.Value.possibleMoves.ToArray())
         {
-            if(possibleMoveOfOpponent.Contains(x)) possibleMoveKing.Remove(x);
+            if(possibleMoveOfOpponent.Contains(x)) possibleMoveKing.Value.possibleMoves.Remove(x);
         }
 
-        return possibleMoveKing.Count == 0 ? null! : possibleMoveKing;
+        return possibleMoveKing.Value.possibleMoves.Count == 0 ? null! : possibleMoveKing.Value.possibleMoves;
     }
 
     private static List<Position> PossiblePiecesHelpersToKingCheck(Board board, Position king, List<Position> possibleMovesInDirection)
@@ -186,12 +186,12 @@ public static class Move
         var possibleValidFriendMoveToHelpKIng = new List<Position>();
         
 
-        var piecesFriendFriends = Common.GetByColorPositions(board, king.piece!.Color, PieceEnum.King);
+        var piecesFriendFriends = Common.GetPieceByColorPositions(board, king.piece!.Color, PieceEnum.King);
 
-        if (piecesFriendFriends is null) return possibleValidFriendMoveToHelpKIng;
-        foreach (var possibleFriendMove in piecesFriendFriends)
+        if (piecesFriendFriends.possibleMoves is null) return possibleValidFriendMoveToHelpKIng;
+        foreach (var possibleFriendMove in piecesFriendFriends.possibleMoves)
         {
-            possibleFriendsMove.AddRange(possibleFriendMove.piece!.GetPossibleMove(board, possibleFriendMove));
+            possibleFriendsMove.AddRange(possibleFriendMove.piece!.GetPossibleMove(board, possibleFriendMove).possibleMoves);
         }
 
         possibleMovesInDirection.ForEach(x =>
@@ -202,30 +202,33 @@ public static class Move
         return possibleValidFriendMoveToHelpKIng;
     }
 
-    public static async Task<(bool isInCheck, List<Position>? PossibleMovesKingInCheck)> MakeMove(Board board, List<Position> possibleMoves, Position newPosition, Piece piece)
+    public static async Task<bool> MakeMove(Board board, List<Position> possibleMoves, Position newPosition, Position oldPosition)
     {
-        //privius position para tirar do tabuleiro
-        if (!possibleMoves.All(position => position != newPosition)) return (false, null);
-        board.positions[newPosition.row, newPosition.column].piece = piece;
-        return await IsKingInCheck(board, piece.Color);
+        if (!possibleMoves.Contains(newPosition, new Board.PositionComparer())) return false;
+        board.positions[newPosition.row, newPosition.column].piece = oldPosition.piece;
+        board.positions[oldPosition.row, oldPosition.column].piece = null;
+        var isInCheck = await IsKingInCheck(board, oldPosition.piece!.Color);
+        if(isInCheck)
+        {
+            board.positions[newPosition.row, newPosition.column].piece = null;
+            board.positions[oldPosition.row, oldPosition.column].piece = oldPosition.piece;
+            return false;
+        };
+        return true;
     }
 
-    public static async Task<(bool isInCheck, List<Position>? PossibleMovesKingInCheck)> IsKingInCheck(Board board, ColorEnum color)
+    public static async Task<bool> IsKingInCheck(Board board, ColorEnum color)
     {
         var piecesEnemy = Common.GetOpponentPositions(board, color);
         foreach (var position in piecesEnemy)
         {
             var pos = position.piece?.GetPossibleMove(board, position);
-            foreach (var eachPosition in pos)
+            if (pos.Value.actualPieceTrigger.Type == PieceEnum.King)
             {
-                if(eachPosition.piece == null) continue;
-                if (eachPosition.piece!.IsInCheckState && eachPosition.piece.Type == PieceEnum.King)
-                {
-                    return (true, pos);
-                }
+                return true;
             }
         }
-        return (false, new List<Position>());
+        return false;
     }
 }
 
