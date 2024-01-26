@@ -28,6 +28,8 @@
     &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.PawnTests&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.QueenTests&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.BishopTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.BoardTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.CommonTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=dcd73127_002De15d_002D4666_002Dafa0_002D0a1bede451dd/@EntryIndexedValue">&lt;SessionState ContinuousTestingIsOn="True" ContinuousTestingMode="1" Name="StartBoard_Initializes_Correctly #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;

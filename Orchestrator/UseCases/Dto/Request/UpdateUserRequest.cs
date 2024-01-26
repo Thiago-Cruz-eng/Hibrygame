@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Orchestrator.UseCases.Dto.Response;
+namespace Orchestrator.UseCases.Dto.Request;
 
 public class UpdateUserRequest
 {

@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using AspNetCore.Identity.MongoDbCore.Models;
+using Microsoft.AspNet.Identity;
+using MongoDbGenericRepository.Attributes;
 
 namespace Orchestrator.Domain;
 
-public class User : IdentityUser
+[CollectionName("users")]
+public class User : MongoIdentityUser<Guid>
 {
     public string Password { get; set; }
     public string PasswordConfirmation { get; set; }

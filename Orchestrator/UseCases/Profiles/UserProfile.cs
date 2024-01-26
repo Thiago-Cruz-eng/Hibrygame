@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Orchestrator.Domain;
 using Orchestrator.UseCases.Dto;
-using Orchestrator.UseCases.Dto.Response;
+using Orchestrator.UseCases.Dto.Request;
 
 namespace Orchestrator.UseCases.Profiles;
 
