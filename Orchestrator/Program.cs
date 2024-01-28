@@ -24,7 +24,7 @@ var mongoDbIdentityConfig = new MongoDbIdentityConfiguration
 {
     MongoDbSettings = new MongoDbSettings
     {
-        ConnectionString = "",
+        ConnectionString = "mongodb://localhost:27017",
         DatabaseName = "Hybrigame"
     },
     IdentityOptionsAction = options =>
@@ -75,8 +75,8 @@ builder.Services.AddControllers().AddJsonOptions(x =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.Configure<HibrygameDatabaseSettings>(
-    builder.Configuration.GetSection("HibrygameDatabase"));
+// builder.Services.Configure<HibrygameDatabaseSettings>(
+//     builder.Configuration.GetSection("HibrygameDatabase"));
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<CreateUserService>();

@@ -11,5 +11,7 @@ public class UserProfile : Profile
     {
         CreateMap<CreateUserRequest, User>();
         CreateMap<UpdateUserRequest, User>();
+        CreateMap<User, CreateUserRequest>();
+        CreateMap<User, UpdateUserRequest>();
     }
 }

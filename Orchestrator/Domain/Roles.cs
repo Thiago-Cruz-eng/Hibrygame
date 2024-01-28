@@ -6,6 +6,5 @@ namespace Orchestrator.Domain;
 [CollectionName("roles")]
 public class Roles : MongoIdentityRole<Guid>
 {
-
-    
+    public string Role { get; set; }
 }

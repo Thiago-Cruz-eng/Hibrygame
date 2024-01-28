@@ -40,8 +40,13 @@ public class CreateUserService
             if(!userSaved.Succeeded) return new CreateUserResponse { Message = $"User not Found {userSaved.Errors.First().Description}", Success = false };
 
             var addRoleToUser = await _userManager.AddToRoleAsync(userMap, "USER");
-
-
+            if(!addRoleToUser.Succeeded) return new CreateUserResponse { Message = $"Role not Found {addRoleToUser.Errors.First().Description}", Success = false };
+            
+            return new CreateUserResponse
+            {
+                Success = true,
+                Message = "User create"
+            };
         }
         catch (Exception e)
         {
