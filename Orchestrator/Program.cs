@@ -11,6 +11,7 @@ using Orchestrator.Domain;
 using Orchestrator.Infra.Interfaces;
 using Orchestrator.Infra.Mongo;
 using Orchestrator.Infra.Repositories;
+using Orchestrator.Infra.SignalR;
 using Orchestrator.UseCases;
 
 
@@ -74,6 +75,7 @@ builder.Services.AddControllers().AddJsonOptions(x =>
     x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);;
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSignalR();
 
 // builder.Services.Configure<HibrygameDatabaseSettings>(
 //     builder.Configuration.GetSection("HibrygameDatabase"));
@@ -89,6 +91,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller}/{action}/{id?}");
+app.MapHub<ChessHub>("/chesshub");
 
 app.UseHttpsRedirection();
 
