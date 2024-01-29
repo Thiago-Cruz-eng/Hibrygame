@@ -20,6 +20,12 @@ public class ChessHub : Hub
             await Clients.Group(room).SendAsync("StartGame");
         }
     }
+    
+    public async Task LeaveRoom(string roomName)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomName);
+        await Clients.Group(roomName).SendAsync("PlayerLeft", Context.ConnectionId);
+    }
 
     public async Task SendMove(string move)
     {
