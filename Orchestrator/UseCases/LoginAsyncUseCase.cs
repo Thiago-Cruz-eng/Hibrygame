@@ -35,7 +35,7 @@ public class LoginAsyncUseCase
             var roleClaims = roles.Select(x => new Claim(ClaimTypes.Role, x));
             claims.AddRange(roleClaims);
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("agbika789/aihs||oiihda"));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("agbika7OUASHN*/**//+aicsdc89/aihs||oiihda"));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var expires = DateTime.Now.AddMinutes(10);
 

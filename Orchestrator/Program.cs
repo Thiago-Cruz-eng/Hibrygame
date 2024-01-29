@@ -26,7 +26,7 @@ var mongoDbIdentityConfig = new MongoDbIdentityConfiguration
     MongoDbSettings = new MongoDbSettings
     {
         ConnectionString = "mongodb://localhost:27017",
-        DatabaseName = "Hybrigame"
+        DatabaseName = "Hibrygame"
     },
     IdentityOptionsAction = options =>
     {
@@ -82,6 +82,8 @@ builder.Services.AddSignalR();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<CreateUserService>();
+builder.Services.AddScoped<LoginAsyncUseCase>();
+builder.Services.AddScoped<CreateRoleUseCase>();
 builder.Services.AddScoped<IUserRepositoryNoSql, UserRepositoryNoNoSql>();
 
 var app = builder.Build();

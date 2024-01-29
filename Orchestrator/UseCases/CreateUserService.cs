@@ -33,7 +33,7 @@ public class CreateUserService
         try
         {
             var user = await _userManager.FindByEmailAsync(req.Email);
-            if (user is null) return new CreateUserResponse { Message = "User not Found", Success = false };
+            if (user is not null) return new CreateUserResponse { Message = "User already has a account", Success = false };
             var userMap = _mapper.Map<User>(req);
             
             var userSaved = await _userManager.CreateAsync(userMap, userMap.Password);
