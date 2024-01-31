@@ -10,12 +10,12 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("Orchestrator")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("Orchestrator.Test")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e9fef8ec5f90f37920e5fd66ff9a234992f9703d")]
-[assembly: System.Reflection.AssemblyProductAttribute("Orchestrator")]
-[assembly: System.Reflection.AssemblyTitleAttribute("Orchestrator")]
+[assembly: System.Reflection.AssemblyProductAttribute("Orchestrator.Test")]
+[assembly: System.Reflection.AssemblyTitleAttribute("Orchestrator.Test")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
 
 // Gerado pela classe WriteCodeFragment do MSBuild.
