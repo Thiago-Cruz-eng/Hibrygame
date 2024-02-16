@@ -9,7 +9,7 @@ namespace Orchestrator.Infra.SignalR
     {
         private static Dictionary<string, Board> games = new Dictionary<string, Board>();
         private static Dictionary<string, string> playerRooms = new Dictionary<string, string>();
-        private static Dictionary<string, string> playersInRooms = new();
+        private static Dictionary<string, string> playersOnRoom = new();
 
         public string CreateRoom(string room)
         {
@@ -35,9 +35,9 @@ namespace Orchestrator.Infra.SignalR
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, room);
                 
-                playersInRooms.Add(playerName, room); 
+                playersOnRoom.Add(playerName, room); 
 
-                await Clients.All.SendAsync("PlayerJoined", playersInRooms);
+                await Clients.All.SendAsync("PlayerJoined", playersOnRoom);
                 
                 return new JoinRoomResponse
                 {
