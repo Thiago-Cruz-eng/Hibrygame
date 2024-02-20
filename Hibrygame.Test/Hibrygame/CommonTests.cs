@@ -12,9 +12,9 @@ public class CommonTests
         var board = new Board();
         board.StartBoard();
         var piece = new King(ColorEnum.Black);
-        board.positions[2, 3].piece = piece;
-        board.positions[2, 4].piece = piece;
-        board.positions[2, 5].piece = piece;
+        board.Positions[2, 3].Piece = piece;
+        board.Positions[2, 4].Piece = piece;
+        board.Positions[2, 5].Piece = piece;
         
         // Act
         var result = Common.GetOpponentPositions(board, ColorEnum.White);
@@ -30,9 +30,9 @@ public class CommonTests
         var board = new Board();
         board.StartBoard();
         var piece = new King(ColorEnum.White);
-        board.positions[2, 3].piece = piece;
-        board.positions[2, 4].piece = piece;
-        board.positions[2, 5].piece = piece;
+        board.Positions[2, 3].Piece = piece;
+        board.Positions[2, 4].Piece = piece;
+        board.Positions[2, 5].Piece = piece;
         
         // Act
         var result = Common.GetOpponentPositions(board, ColorEnum.Black);

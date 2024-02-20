@@ -11,7 +11,7 @@ public class BishopTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[3, 3].piece = new Bishop(ColorEnum.White);
+        board.Positions[3, 3].Piece = new Bishop(ColorEnum.White);
 
         // Act
         var piece = new Bishop(ColorEnum.Black);
@@ -28,8 +28,8 @@ public class BishopTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[3, 3].piece = new Rook(ColorEnum.Black);
-        board.positions[5, 5].piece = new Bishop(ColorEnum.White);
+        board.Positions[3, 3].Piece = new Rook(ColorEnum.Black);
+        board.Positions[5, 5].Piece = new Bishop(ColorEnum.White);
 
 
         // Act
@@ -47,10 +47,10 @@ public class BishopTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[6, 6].piece = new Rook(ColorEnum.White);
-        board.positions[7, 6].piece = new Rook(ColorEnum.White);
-        board.positions[6, 7].piece = new Rook(ColorEnum.White);
-        board.positions[7, 7].piece = new Bishop(ColorEnum.White);
+        board.Positions[6, 6].Piece = new Rook(ColorEnum.White);
+        board.Positions[7, 6].Piece = new Rook(ColorEnum.White);
+        board.Positions[6, 7].Piece = new Rook(ColorEnum.White);
+        board.Positions[7, 7].Piece = new Bishop(ColorEnum.White);
 
 
         // Act
@@ -68,9 +68,9 @@ public class BishopTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[7, 6].piece = new Rook(ColorEnum.Black);
-        board.positions[6, 7].piece = new Rook(ColorEnum.Black);
-        board.positions[7, 7].piece = new Bishop(ColorEnum.White);
+        board.Positions[7, 6].Piece = new Rook(ColorEnum.Black);
+        board.Positions[6, 7].Piece = new Rook(ColorEnum.Black);
+        board.Positions[7, 7].Piece = new Bishop(ColorEnum.White);
 
         // Act
         var piece = new Bishop(ColorEnum.White);
@@ -87,12 +87,12 @@ public class BishopTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[2, 2].piece = new Rook(ColorEnum.Black);
-        board.positions[4, 3].piece = new Rook(ColorEnum.Black);
-        board.positions[7, 1].piece = new Rook(ColorEnum.White);
-        board.positions[1, 7].piece = new Rook(ColorEnum.Black);
-        board.positions[7, 7].piece = new Queen(ColorEnum.White);
-        board.positions[4, 4].piece = new Bishop(ColorEnum.White);
+        board.Positions[2, 2].Piece = new Rook(ColorEnum.Black);
+        board.Positions[4, 3].Piece = new Rook(ColorEnum.Black);
+        board.Positions[7, 1].Piece = new Rook(ColorEnum.White);
+        board.Positions[1, 7].Piece = new Rook(ColorEnum.Black);
+        board.Positions[7, 7].Piece = new Queen(ColorEnum.White);
+        board.Positions[4, 4].Piece = new Bishop(ColorEnum.White);
 
         // Act
         var piece = new Bishop(ColorEnum.White);

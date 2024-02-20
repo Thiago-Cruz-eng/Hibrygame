@@ -2,13 +2,15 @@ using Amazon.Runtime.Internal.Transform;
 using Hibrygame;
 using Hibrygame.Enums;
 using Microsoft.AspNetCore.SignalR;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Orchestrator.Infra.SignalR
 {
     public class ChessHub : Hub
     {
-        private static Dictionary<string, Board> games = new Dictionary<string, Board>();
-        private static Dictionary<string, string> playerRooms = new Dictionary<string, string>();
+        private static Dictionary<string, Board> games = new();
+        private static Dictionary<string, string> playerRooms = new();
         private static Dictionary<string, string> playersOnRoom = new();
 
         public string CreateRoom(string room)
@@ -43,42 +45,37 @@ namespace Orchestrator.Infra.SignalR
                 {
                     ConnectionId = Context.ConnectionId,
                     Player = playerName,
-                    Room = room,
-                    //Board = games[room]
+                    Room = room
                 };
             }
             await Clients.Caller.SendAsync("RoomFull", "The room is full. Please try another room.");
-            await StartGame(room, games[room]);
             return new JoinRoomResponse
             {
                 ConnectionId = null,
                 Player = null,
                 Room = null,
-                //Board = null
             };
         }
         
-        public async Task EnterRoom(string connectionId, string playerName, bool ready)
+        public async Task ReadyToGame(string connectionId, string playerName, bool ready)
         {
             var room = playerRooms[connectionId];
             if (games.ContainsKey(room) && IsRoomFull(room))
             {
-                games[room].StartBoard(); 
-                await Clients.Group(room).SendAsync("Ready");
+                await Clients.Group(room).SendAsync("Ready", connectionId);
             }
         }
 
-        public async Task StartGame(string room, Board board)
+        public string StartGame(string room, Board board)
         {
-            if (games.ContainsKey(room) && IsRoomFull(room))
+            if (!games.ContainsKey(room) || !IsRoomFull(room)) return "Game cannot start";
+            if (!games.ContainsKey(room))
             {
-                if (!games.ContainsKey(room))
-                {
-                    games.TryAdd(room, new Board());
-                }
-                games[room].StartBoard(); 
-                await Clients.Group(room).SendAsync("StartGame", "Jogo iniciado");
+                games.TryAdd(room, new Board());
             }
+            var game = games[room].StartBoard();
+            var gameJson = JsonConvert.SerializeObject(game);
+            return gameJson;
         }
 
         public async Task LeaveRoom(string roomName)
@@ -87,25 +84,31 @@ namespace Orchestrator.Infra.SignalR
             await Clients.Group(roomName).SendAsync("PlayerLeft", Context.ConnectionId);
         }
 
-        public async Task SendMove(string user, Position actualPosition, Position newPosition)
+        public async Task<List<Position>> SendPossiblesMoves(string user, Position actualPosition)
         {
             var room = playerRooms[Context.ConnectionId];
             var game = games[room];
 
-            foreach (var gamePosition in game.positions)
+            foreach (var gamePosition in game.Positions)
             {
-                if (gamePosition.piece == null || gamePosition.piece != actualPosition.piece) continue;
-                var possibleMoves = gamePosition.piece.GetPossibleMove(game, actualPosition);
-                if (!possibleMoves.possibleMoves.Contains(newPosition)) continue;
-                await Clients.Group(room).SendAsync("ReceiveMove", newPosition);
-                return;
+                if (gamePosition.Piece == null || gamePosition.Piece != actualPosition.Piece) continue;
+                var possibleMoves = gamePosition.Piece.GetPossibleMove(game, actualPosition);
+                return possibleMoves.possibleMoves;
             }
             await Clients.Caller.SendAsync("InvalidMove", "Invalid move, please try again.");
+            return new List<Position>();
+        }
+        
+        public async Task<bool> MakeMove(string user, Position newPosition, Position actualPosition)
+        {
+            var possibleMoves = await SendPossiblesMoves(user, actualPosition);
+            return possibleMoves.Contains(newPosition);
         }
         
         private bool IsRoomFull(string room)
         {
-            return playerRooms.Count(p => p.Value == room) == 2;
+            var x = playersOnRoom.Count();
+            return playersOnRoom.Count(p => p.Value == room) == 1;
         }
 
         public class JoinRoomResponse
@@ -113,7 +116,6 @@ namespace Orchestrator.Infra.SignalR
             public string ConnectionId { get; set; }
             public string Player { get; set; }
             public string Room { get; set; }
-            //public Board Board { get; set; }
         }
     }
 

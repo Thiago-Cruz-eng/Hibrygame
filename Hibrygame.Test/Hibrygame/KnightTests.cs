@@ -11,7 +11,7 @@ public class KnightTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[7,0].piece = new Knight(ColorEnum.White);
+        board.Positions[7,0].Piece = new Knight(ColorEnum.White);
 
         // Act
         var piece = new Knight(ColorEnum.White);
@@ -28,9 +28,9 @@ public class KnightTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[4,7].piece = new Rook(ColorEnum.Black);
-        board.positions[6,7].piece = new Rook(ColorEnum.Black);
-        board.positions[5, 5].piece = new Knight(ColorEnum.White);
+        board.Positions[4,7].Piece = new Rook(ColorEnum.Black);
+        board.Positions[6,7].Piece = new Rook(ColorEnum.Black);
+        board.Positions[5, 5].Piece = new Knight(ColorEnum.White);
 
 
         // Act
@@ -48,11 +48,11 @@ public class KnightTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[4,7].piece = new Rook(ColorEnum.White);
-        board.positions[6,7].piece = new Rook(ColorEnum.White);
-        board.positions[7,4].piece = new Rook(ColorEnum.White);
-        board.positions[7,6].piece = new Rook(ColorEnum.White);
-        board.positions[5, 5].piece = new Knight(ColorEnum.White);
+        board.Positions[4,7].Piece = new Rook(ColorEnum.White);
+        board.Positions[6,7].Piece = new Rook(ColorEnum.White);
+        board.Positions[7,4].Piece = new Rook(ColorEnum.White);
+        board.Positions[7,6].Piece = new Rook(ColorEnum.White);
+        board.Positions[5, 5].Piece = new Knight(ColorEnum.White);
 
 
         // Act
@@ -70,15 +70,15 @@ public class KnightTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[4,7].piece = new Rook(ColorEnum.White);
-        board.positions[6,7].piece = new Rook(ColorEnum.White);
-        board.positions[7,4].piece = new Rook(ColorEnum.White);
-        board.positions[7,6].piece = new Rook(ColorEnum.White);
-        board.positions[4,3].piece = new Rook(ColorEnum.White);
-        board.positions[6,3].piece = new Rook(ColorEnum.White);
-        board.positions[3,4].piece = new Rook(ColorEnum.White);
-        board.positions[3,6].piece = new Rook(ColorEnum.White);
-        board.positions[5, 5].piece = new Knight(ColorEnum.White);
+        board.Positions[4,7].Piece = new Rook(ColorEnum.White);
+        board.Positions[6,7].Piece = new Rook(ColorEnum.White);
+        board.Positions[7,4].Piece = new Rook(ColorEnum.White);
+        board.Positions[7,6].Piece = new Rook(ColorEnum.White);
+        board.Positions[4,3].Piece = new Rook(ColorEnum.White);
+        board.Positions[6,3].Piece = new Rook(ColorEnum.White);
+        board.Positions[3,4].Piece = new Rook(ColorEnum.White);
+        board.Positions[3,6].Piece = new Rook(ColorEnum.White);
+        board.Positions[5, 5].Piece = new Knight(ColorEnum.White);
 
 
         // Act
@@ -96,15 +96,15 @@ public class KnightTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[4,7].piece = new Rook(ColorEnum.Black);
-        board.positions[6,7].piece = new Rook(ColorEnum.Black);
-        board.positions[7,4].piece = new Rook(ColorEnum.Black);
-        board.positions[7,6].piece = new Rook(ColorEnum.Black);
-        board.positions[4,3].piece = new Rook(ColorEnum.Black);
-        board.positions[6,3].piece = new Rook(ColorEnum.Black);
-        board.positions[3,4].piece = new Rook(ColorEnum.Black);
-        board.positions[3,6].piece = new Rook(ColorEnum.Black);
-        board.positions[5, 5].piece = new Knight(ColorEnum.White);
+        board.Positions[4,7].Piece = new Rook(ColorEnum.Black);
+        board.Positions[6,7].Piece = new Rook(ColorEnum.Black);
+        board.Positions[7,4].Piece = new Rook(ColorEnum.Black);
+        board.Positions[7,6].Piece = new Rook(ColorEnum.Black);
+        board.Positions[4,3].Piece = new Rook(ColorEnum.Black);
+        board.Positions[6,3].Piece = new Rook(ColorEnum.Black);
+        board.Positions[3,4].Piece = new Rook(ColorEnum.Black);
+        board.Positions[3,6].Piece = new Rook(ColorEnum.Black);
+        board.Positions[5, 5].Piece = new Knight(ColorEnum.White);
 
 
         // Act

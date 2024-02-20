@@ -11,7 +11,7 @@ public class KingTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[5,5].piece = new King(ColorEnum.White);
+        board.Positions[5,5].Piece = new King(ColorEnum.White);
 
         // Act
         var piece = new King(ColorEnum.Black);
@@ -28,8 +28,8 @@ public class KingTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[4, 5].piece = new Rook(ColorEnum.White);
-        board.positions[5,5].piece = new King(ColorEnum.White);
+        board.Positions[4, 5].Piece = new Rook(ColorEnum.White);
+        board.Positions[5,5].Piece = new King(ColorEnum.White);
 
 
         // Act
@@ -47,10 +47,10 @@ public class KingTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[6,6].piece = new Rook(ColorEnum.White);
-        board.positions[7,6].piece = new Rook(ColorEnum.White);
-        board.positions[6,7].piece = new Rook(ColorEnum.White);
-        board.positions[7,7].piece = new King(ColorEnum.White);
+        board.Positions[6,6].Piece = new Rook(ColorEnum.White);
+        board.Positions[7,6].Piece = new Rook(ColorEnum.White);
+        board.Positions[6,7].Piece = new Rook(ColorEnum.White);
+        board.Positions[7,7].Piece = new King(ColorEnum.White);
 
 
         // Act
@@ -68,10 +68,10 @@ public class KingTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[6,6].piece = new Rook(ColorEnum.Black);
-        board.positions[7,6].piece = new Rook(ColorEnum.Black);
-        board.positions[6,7].piece = new Rook(ColorEnum.Black);
-        board.positions[7,7].piece = new King(ColorEnum.White);
+        board.Positions[6,6].Piece = new Rook(ColorEnum.Black);
+        board.Positions[7,6].Piece = new Rook(ColorEnum.Black);
+        board.Positions[6,7].Piece = new Rook(ColorEnum.Black);
+        board.Positions[7,7].Piece = new King(ColorEnum.White);
 
         // Act
         var piece = new King(ColorEnum.White);
@@ -88,10 +88,10 @@ public class KingTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[6,6].piece = new Rook(ColorEnum.Black);
-        board.positions[7,6].piece = new Rook(ColorEnum.Black);
-        board.positions[6,7].piece = new Rook(ColorEnum.White);
-        board.positions[7,7].piece = new King(ColorEnum.White);
+        board.Positions[6,6].Piece = new Rook(ColorEnum.Black);
+        board.Positions[7,6].Piece = new Rook(ColorEnum.Black);
+        board.Positions[6,7].Piece = new Rook(ColorEnum.White);
+        board.Positions[7,7].Piece = new King(ColorEnum.White);
 
         // Act
         var piece = new King(ColorEnum.White);
@@ -108,9 +108,9 @@ public class KingTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[3,1].piece = new Rook(ColorEnum.Black);
-        board.positions[0,6].piece = new Rook(ColorEnum.Black);
-        board.positions[3,6].piece = new King(ColorEnum.White);
+        board.Positions[3,1].Piece = new Rook(ColorEnum.Black);
+        board.Positions[0,6].Piece = new Rook(ColorEnum.Black);
+        board.Positions[3,6].Piece = new King(ColorEnum.White);
 
         // Act
         var piece = new Rook(ColorEnum.Black);
@@ -127,9 +127,9 @@ public class KingTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[3,1].piece = new Rook(ColorEnum.Black);
-        board.positions[7,4].piece = new Queen(ColorEnum.White);
-        board.positions[3,6].piece = new King(ColorEnum.White);
+        board.Positions[3,1].Piece = new Rook(ColorEnum.Black);
+        board.Positions[7,4].Piece = new Queen(ColorEnum.White);
+        board.Positions[3,6].Piece = new King(ColorEnum.White);
 
         // Act
         var piece = new Rook(ColorEnum.Black);
@@ -146,23 +146,23 @@ public class KingTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[3,1].piece = new Rook(ColorEnum.Black);
-        board.positions[7,4].piece = new Queen(ColorEnum.White);
-        board.positions[3,4].piece = new Rook(ColorEnum.White);
-        board.positions[3,6].piece = new King(ColorEnum.White);
+        board.Positions[3,1].Piece = new Rook(ColorEnum.Black);
+        board.Positions[7,4].Piece = new Queen(ColorEnum.White);
+        board.Positions[3,4].Piece = new Rook(ColorEnum.White);
+        board.Positions[3,6].Piece = new King(ColorEnum.White);
         
         // Act
         var piece = new Rook(ColorEnum.White);
         var positions = piece.GetPossibleMove(board, new Position(3,4));
         var move = await Move.MakeMove(board, positions.possibleMoves, new Position(0, 4), new Position(3, 4) {
-            squareColor = ColorEnum.White,
-            piece = piece
+            SquareColor = ColorEnum.White,
+            Piece = piece
         });
         
         // Assert
         Assert.False(move);
-        Assert.IsType<Rook>(board.positions[3, 4].piece);
-        Assert.Equal(ColorEnum.White, board.positions[3, 4].piece.Color);
+        Assert.IsType<Rook>(board.Positions[3, 4].Piece);
+        Assert.Equal(ColorEnum.White, board.Positions[3, 4].Piece.Color);
     }
     
     [Fact]
@@ -171,10 +171,10 @@ public class KingTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[3,1].piece = new Rook(ColorEnum.Black);
-        board.positions[7,4].piece = new Queen(ColorEnum.White);
-        board.positions[3,4].piece = new Rook(ColorEnum.White);
-        board.positions[0,6].piece = new King(ColorEnum.White);
+        board.Positions[3,1].Piece = new Rook(ColorEnum.Black);
+        board.Positions[7,4].Piece = new Queen(ColorEnum.White);
+        board.Positions[3,4].Piece = new Rook(ColorEnum.White);
+        board.Positions[0,6].Piece = new King(ColorEnum.White);
         
         // Act
         //outra forma de "colocar a peça no tabuleiro"
@@ -182,13 +182,13 @@ public class KingTests
         var positions = piece.GetPossibleMove(board, new Position(3,4));
         var move = await Move.MakeMove(board, positions.possibleMoves, new Position(6, 4), new Position(3, 4)
         {
-            squareColor = ColorEnum.White,
-            piece = piece
+            SquareColor = ColorEnum.White,
+            Piece = piece
         });
         
         // Assert
         Assert.True(move);
-        Assert.IsType<Rook>(board.positions[6, 4].piece);
-        Assert.Equal(ColorEnum.White, board.positions[6, 4].piece.Color);
+        Assert.IsType<Rook>(board.Positions[6, 4].Piece);
+        Assert.Equal(ColorEnum.White, board.Positions[6, 4].Piece.Color);
     }
 }

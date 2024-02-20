@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Hibrygame")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+630131b9fb3d81256bfc6593f9b7d76009b8a905")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+03e2c4b62c006cdbd1c2319d248272c2644379a6")]
 [assembly: System.Reflection.AssemblyProductAttribute("Hibrygame")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Hibrygame")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

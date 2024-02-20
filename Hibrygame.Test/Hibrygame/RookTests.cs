@@ -11,7 +11,7 @@ public class RookTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[3, 3].piece = new Rook(ColorEnum.White);
+        board.Positions[3, 3].Piece = new Rook(ColorEnum.White);
 
         // Act
         var piece = new Rook(ColorEnum.White);
@@ -28,9 +28,9 @@ public class RookTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[6, 4].piece = new Rook(ColorEnum.Black);
-        board.positions[7, 4].piece = new Rook(ColorEnum.Black);
-        board.positions[7, 0].piece = new Rook(ColorEnum.White);
+        board.Positions[6, 4].Piece = new Rook(ColorEnum.Black);
+        board.Positions[7, 4].Piece = new Rook(ColorEnum.Black);
+        board.Positions[7, 0].Piece = new Rook(ColorEnum.White);
 
 
         // Act
@@ -48,8 +48,8 @@ public class RookTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[7, 4].piece = new Rook(ColorEnum.White);
-        board.positions[7, 0].piece = new Rook(ColorEnum.White);
+        board.Positions[7, 4].Piece = new Rook(ColorEnum.White);
+        board.Positions[7, 0].Piece = new Rook(ColorEnum.White);
 
 
         // Act
@@ -67,12 +67,12 @@ public class RookTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[3, 2].piece = new Rook(ColorEnum.White);
-        board.positions[4, 3].piece = new Rook(ColorEnum.White);
-        board.positions[3, 4].piece = new Rook(ColorEnum.White);
-        board.positions[2, 3].piece = new Rook(ColorEnum.White);
+        board.Positions[3, 2].Piece = new Rook(ColorEnum.White);
+        board.Positions[4, 3].Piece = new Rook(ColorEnum.White);
+        board.Positions[3, 4].Piece = new Rook(ColorEnum.White);
+        board.Positions[2, 3].Piece = new Rook(ColorEnum.White);
         
-        board.positions[3, 3].piece = new Rook(ColorEnum.White);
+        board.Positions[3, 3].Piece = new Rook(ColorEnum.White);
 
 
         // Act

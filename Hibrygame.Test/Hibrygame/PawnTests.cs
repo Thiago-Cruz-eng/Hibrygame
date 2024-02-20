@@ -11,7 +11,7 @@ public class PawnTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[3, 3].piece = new Pawn(ColorEnum.White);
+        board.Positions[3, 3].Piece = new Pawn(ColorEnum.White);
 
         // Act
         var piece = new Pawn(ColorEnum.White);
@@ -28,7 +28,7 @@ public class PawnTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[3, 3].piece = new Pawn(ColorEnum.White);
+        board.Positions[3, 3].Piece = new Pawn(ColorEnum.White);
         
         
         // Act
@@ -47,9 +47,9 @@ public class PawnTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[6, 4].piece = new Rook(ColorEnum.Black);
-        board.positions[4, 4].piece = new Rook(ColorEnum.Black);
-        board.positions[5, 5].piece = new Pawn(ColorEnum.White);
+        board.Positions[6, 4].Piece = new Rook(ColorEnum.Black);
+        board.Positions[4, 4].Piece = new Rook(ColorEnum.Black);
+        board.Positions[5, 5].Piece = new Pawn(ColorEnum.White);
 
 
         // Act
@@ -68,10 +68,10 @@ public class PawnTests
         // Arrange
         var board = new Board();
         board.StartBoard();
-        board.positions[4, 2].piece = new Rook(ColorEnum.White);
-        board.positions[5, 2].piece = new Rook(ColorEnum.Black);
-        board.positions[6, 2].piece = new Rook(ColorEnum.White);
-        board.positions[5, 1].piece = new Pawn(ColorEnum.Black);
+        board.Positions[4, 2].Piece = new Rook(ColorEnum.White);
+        board.Positions[5, 2].Piece = new Rook(ColorEnum.Black);
+        board.Positions[6, 2].Piece = new Rook(ColorEnum.White);
+        board.Positions[5, 1].Piece = new Pawn(ColorEnum.Black);
 
 
         // Act
