@@ -66,14 +66,17 @@ namespace Orchestrator.Infra.SignalR
             }
         }
 
-        public string StartGame(string room, Board board)
+        public string StartGame(string room)
         {
             if (!games.ContainsKey(room) || !IsRoomFull(room)) return "Game cannot start";
             if (!games.ContainsKey(room))
             {
                 games.TryAdd(room, new Board());
             }
-            var game = games[room].StartBoard();
+            
+            games[room].StartBoard();
+            var game = games[room].GetPositionsPlaced();
+            
             var gameJson = JsonConvert.SerializeObject(game);
             return gameJson;
         }
@@ -82,6 +85,20 @@ namespace Orchestrator.Infra.SignalR
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomName);
             await Clients.Group(roomName).SendAsync("PlayerLeft", Context.ConnectionId);
+        }
+        public async Task<List<Position>> SendPossiblesMove(string user, Position actualPosition)
+        {
+            var room = playerRooms[Context.ConnectionId];
+            var game = games[room];
+
+            foreach (var gamePosition in game.Positions)
+            {
+                if (gamePosition.Piece == null || gamePosition.Piece != actualPosition.Piece) continue;
+                var possibleMoves = gamePosition.Piece.GetPossibleMove(game, actualPosition);
+                return possibleMoves.possibleMoves;
+            }
+            await Clients.Caller.SendAsync("InvalidMove", "Invalid move, please try again.");
+            return new List<Position>();
         }
 
         public async Task<List<Position>> SendPossiblesMoves(string user, Position actualPosition)
@@ -108,7 +125,7 @@ namespace Orchestrator.Infra.SignalR
         private bool IsRoomFull(string room)
         {
             var x = playersOnRoom.Count();
-            return playersOnRoom.Count(p => p.Value == room) == 1;
+            return playersOnRoom.Count(p => p.Value == room) == 2;
         }
 
         public class JoinRoomResponse

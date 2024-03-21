@@ -13,10 +13,6 @@ public class CreateUserRequest
     [Compare("Password")]
     public string PasswordConfirmation { get; set; }
     public DateTime? CreateAt { get; set; } = DateTime.Now;
-    [Required]
-    public DateTime DateBirth { get; set; }
-    [Required]
-    public string Address { get; set; }
-    [Required]
+    public DateTime? DateBirth { get; set; }
     public string PhoneNumber { get; set; }
 }

@@ -60,7 +60,6 @@ C:/Users/thiago.cruz/Documents/Proj/Pessoal/Chess/Hibrygame/Orchestrator/bin/Deb
 C:/Users/thiago.cruz/Documents/Proj/Pessoal/Chess/Hibrygame/Orchestrator/bin/Debug/net8.0/runtimes/win/native/mongocrypt.dll
 C:/Users/thiago.cruz/Documents/Proj/Pessoal/Chess/Hibrygame/Orchestrator/obj/Debug/net8.0/Orchestrator.csproj.AssemblyReference.cache
 C:/Users/thiago.cruz/Documents/Proj/Pessoal/Chess/Hibrygame/Orchestrator/obj/Debug/net8.0/Orchestrator.MvcApplicationPartsAssemblyInfo.cs
-C:/Users/thiago.cruz/Documents/Proj/Pessoal/Chess/Hibrygame/Orchestrator/obj/Debug/net8.0/Orchestrator.csproj.CopyComplete
 C:/Users/thiago.cruz/Documents/Proj/Pessoal/Chess/Hibrygame/Orchestrator/bin/Debug/net8.0/AutoMapper.dll
 C:/Users/thiago.cruz/Documents/Proj/Pessoal/Chess/Hibrygame/Orchestrator/bin/Debug/net8.0/AutoMapper.Extensions.Microsoft.DependencyInjection.dll
 /home/marlongiona/Documents/Proj/Hibrygame/Orchestrator/bin/Debug/net8.0/appsettings.Development.json
@@ -198,9 +197,9 @@ C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Orchestrator\obj\Deb
 C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Orchestrator\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.Orchestrator.props
 C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Orchestrator\obj\Debug\net8.0\staticwebassets.pack.json
 C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Orchestrator\obj\Debug\net8.0\scopedcss\bundle\Orchestrator.styles.css
-C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Orchestrator\obj\Debug\net8.0\Orchestrator.csproj.CopyComplete
 C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Orchestrator\obj\Debug\net8.0\Orchestrator.dll
 C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Orchestrator\obj\Debug\net8.0\refint\Orchestrator.dll
 C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Orchestrator\obj\Debug\net8.0\Orchestrator.pdb
 C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Orchestrator\obj\Debug\net8.0\Orchestrator.genruntimeconfig.cache
 C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Orchestrator\obj\Debug\net8.0\ref\Orchestrator.dll
+C:\Users\thiago.cruz\Documents\Proj\Pessoal\Chess\Hibrygame\Orchestrator\obj\Debug\net8.0\Orchestr.E23A4B34.Up2Date
