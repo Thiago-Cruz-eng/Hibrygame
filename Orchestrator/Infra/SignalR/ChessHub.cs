@@ -10,23 +10,34 @@ namespace Orchestrator.Infra.SignalR
     public class ChessHub : Hub
     {
         private static Dictionary<string, Board> games = new();
-        private static Dictionary<string, string> playerRooms = new();
-        private static Dictionary<string, string> playersOnRoom = new();
+        private static Dictionary<string, string> Rooms = new();
+        private static Dictionary<string, string> playersInRoom = new();
 
         public string CreateRoom(string room)
         {
-            return playerRooms[Context.ConnectionId] = room;
+            return Rooms[Context.ConnectionId] = room;
         }
 
-        public List<string> GetAvailableRoom()
+        public Dictionary<List<string>, string> GetAvailableRoom()
         {
-            var availableRooms = new List<string>();
-            foreach (var room in playerRooms.Values.Distinct())
+                                               // players  room
+            var availableRooms = new Dictionary<List<string>, string>();
+            foreach (var room in Rooms)
             {
-                if (playerRooms.Count(p => p.Value == room) < 2)
+                var user = new List<string>();
+                foreach (var player in playersInRoom)
                 {
-                    availableRooms.Add(room);
+                    if (player.Value == room.Value)
+                    {
+                        user.Add(player.Value);
+                        availableRooms.Add(user, room.Value);
+                    }
+                    else
+                    {
+                        availableRooms.Add(new List<string>(), room.Value);
+                    }
                 }
+                if(playersInRoom.Count == 0) availableRooms.Add(new List<string>(), room.Value);
             }
             return availableRooms;
         }
@@ -37,9 +48,9 @@ namespace Orchestrator.Infra.SignalR
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, room);
                 
-                playersOnRoom.Add(playerName, room); 
+                playersInRoom.Add(playerName, room); 
 
-                await Clients.All.SendAsync("PlayerJoined", playersOnRoom);
+                await Clients.All.SendAsync("PlayerJoined", playersInRoom);
                 
                 return new JoinRoomResponse
                 {
@@ -57,12 +68,13 @@ namespace Orchestrator.Infra.SignalR
             };
         }
         
-        public async Task ReadyToGame(string connectionId, string playerName, bool ready)
+        public async Task ReadyToGame(string connectionId, bool ready)
         {
-            var room = playerRooms[connectionId];
+            var room = Rooms[connectionId];
             if (games.ContainsKey(room) && IsRoomFull(room))
             {
                 await Clients.Group(room).SendAsync("Ready", connectionId);
+                StartGame(room);
             }
         }
 
@@ -88,7 +100,7 @@ namespace Orchestrator.Infra.SignalR
         }
         public async Task<List<Position>> SendPossiblesMove(string user, Position actualPosition)
         {
-            var room = playerRooms[Context.ConnectionId];
+            var room = Rooms[Context.ConnectionId];
             var game = games[room];
 
             foreach (var gamePosition in game.Positions)
@@ -103,7 +115,7 @@ namespace Orchestrator.Infra.SignalR
 
         public async Task<List<Position>> SendPossiblesMoves(string user, Position actualPosition)
         {
-            var room = playerRooms[Context.ConnectionId];
+            var room = Rooms[Context.ConnectionId];
             var game = games[room];
 
             foreach (var gamePosition in game.Positions)
@@ -124,8 +136,8 @@ namespace Orchestrator.Infra.SignalR
         
         private bool IsRoomFull(string room)
         {
-            var x = playersOnRoom.Count();
-            return playersOnRoom.Count(p => p.Value == room) == 2;
+            var x = playersInRoom.Count();
+            return playersInRoom.Count(p => p.Value == room) == 2;
         }
 
         public class JoinRoomResponse

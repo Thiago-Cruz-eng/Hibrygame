@@ -25,8 +25,32 @@ public class CreateUserService
     public async Task<List<User>> GetAsync() =>
         await _userRepository.FindAll();
 
-    public async Task<User?> GetAsync(string id) =>
-        await _userRepository.FindById(id);
+    public async Task<GetUserResponse?> GetAsync(string id)
+    {
+        try
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user.UserName != null)
+                return new GetUserResponse
+                {
+                    UserName = user.UserName,
+                    Email = user.Email
+                };
+        }
+        catch (Exception e)
+        {
+            return new GetUserResponse
+            {
+                UserName = null,
+                Email = null
+            };
+        }
+        return new GetUserResponse
+        {
+            UserName = null,
+            Email = null
+        };
+    }
 
     public async Task<CreateUserResponse> CreateAsync(CreateUserRequest req)
     {

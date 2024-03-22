@@ -38,6 +38,13 @@ public class UserController : ControllerBase
         return Ok(result);
     }
     
+    [HttpGet("/get/{id}")]
+    public async Task<IActionResult> GetUser(string id)
+    {
+        var result = await _createUserService.GetAsync(id);
+        return Ok(result);
+    }
+    
     [HttpPost("/create-role")]
     [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(LoginResponse))]
     public async Task<IActionResult> CreateRole([FromBody] CreateRoleRequest req)
