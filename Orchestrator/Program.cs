@@ -5,6 +5,7 @@ using AspNetCore.Identity.MongoDbCore.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Owin.Builder;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using Orchestrator.Domain;
@@ -13,6 +14,7 @@ using Orchestrator.Infra.Mongo;
 using Orchestrator.Infra.Repositories;
 using Orchestrator.Infra.SignalR;
 using Orchestrator.UseCases;
+using Owin;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -87,6 +89,7 @@ builder.Services.AddCors(options =>
                 .AllowCredentials();
         });
 });
+
 builder.Services.AddSignalR();
 
 // builder.Services.Configure<HibrygameDatabaseSettings>(
@@ -96,7 +99,9 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<CreateUserService>();
 builder.Services.AddScoped<LoginAsyncUseCase>();
 builder.Services.AddScoped<CreateRoleUseCase>();
+builder.Services.AddScoped<ValidationService>();
 builder.Services.AddScoped<IUserRepositoryNoSql, UserRepositoryNoNoSql>();
+builder.Services.AddScoped<IValidationRepositoryNoSql, ValidationRepositoryNoSql>();
 
 var app = builder.Build();
 

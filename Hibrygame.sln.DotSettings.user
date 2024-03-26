@@ -1,43 +1,44 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 	
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=0b6ca513_002D4c01_002D4da1_002Dbb38_002D63d67543265f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetMovesKing_WhenIsInTreat_Correctly" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests.GetMovesKing_WhenIsInTreat_Correctly&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests.GetMovesKing_WhenIsInTreatWithFriendAside_Correctly&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests.GetMovesKing_WhenIsInTreatByOwnMove_Correctly&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=0b6ca513_002D4c01_002D4da1_002Dbb38_002D63d67543265f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetMovesKing_WhenIsInTreat_Correctly" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests.GetMovesKing_WhenIsInTreat_Correctly&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests.GetMovesKing_WhenIsInTreatWithFriendAside_Correctly&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests.GetMovesKing_WhenIsInTreatByOwnMove_Correctly&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=adb4ba8a_002D6a4a_002D4381_002D8d4b_002D37ee3e72798d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="BishopTests #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.BishopTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.CommonTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KnightTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.PawnTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.QueenTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.RookTests&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=adb4ba8a_002D6a4a_002D4381_002D8d4b_002D37ee3e72798d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="BishopTests #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.BishopTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.CommonTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KnightTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.PawnTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.QueenTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.RookTests&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=b4842d25_002Db9ca_002D44c0_002Dbaa5_002Dd48e064c1044/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="GetMovesKing_WhenIsInTreatByOwnMove_Correctly" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests.GetMovesKing_WhenIsInTreatByOwnMove_Correctly&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests.GetMovesKing_WhenIsInSaveByOwnMove_Correctly&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.RookTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.BishopTests+QueenTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KnightTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.PawnTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.QueenTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.BishopTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.BoardTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.CommonTests&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=b4842d25_002Db9ca_002D44c0_002Dbaa5_002Dd48e064c1044/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="GetMovesKing_WhenIsInTreatByOwnMove_Correctly" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests.GetMovesKing_WhenIsInTreatByOwnMove_Correctly&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests.GetMovesKing_WhenIsInSaveByOwnMove_Correctly&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.RookTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.BishopTests+QueenTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KingTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KnightTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.PawnTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.QueenTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.BishopTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.BoardTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.CommonTests&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=dcd73127_002De15d_002D4666_002Dafa0_002D0a1bede451dd/@EntryIndexedValue">&lt;SessionState ContinuousTestingIsOn="True" ContinuousTestingMode="1" Name="StartBoard_Initializes_Correctly #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.BoardTests.StartBoard_Initializes_Correctly&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=dcd73127_002De15d_002D4666_002Dafa0_002D0a1bede451dd/@EntryIndexedValue">&lt;SessionState ContinuousTestingIsOn="True" ContinuousTestingMode="1" Name="StartBoard_Initializes_Correctly #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.BoardTests.StartBoard_Initializes_Correctly&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
+	<s:Boolean x:Key="/Default/Monitoring/IsToolWindowHidden/@EntryValue">True</s:Boolean>
 	
 	
 	

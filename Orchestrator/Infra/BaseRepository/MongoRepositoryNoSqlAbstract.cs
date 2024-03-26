@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using System.Linq.Expressions;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Orchestrator.Infra.Mongo;
 
@@ -24,10 +25,9 @@ public abstract class MongoRepositoryNoSqlAbstract<TId, TEntity> : IBaseReposito
         return await _gameCollection.Find(_ => true).ToListAsync();
     }
 
-    public Task<TEntity> FindById(TId id)
+    public Task<List<TEntity>> FindByFilter(Expression<Func<TEntity, bool>> filter)
     {
-        var filter = Builders<TEntity>.Filter.Eq("_id", id);
-        return _gameCollection.Find(filter).FirstOrDefaultAsync();
+        return _gameCollection.Find(filter).ToListAsync();
     }
 
     public void Delete(TId id, TEntity entity)

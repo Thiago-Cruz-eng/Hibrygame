@@ -31,10 +31,16 @@ public class UserController : ControllerBase
     }
     
     [HttpPost("/create")]
-    [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(LoginResponse))]
     public async Task<IActionResult> CreateUser(CreateUserRequest req)
     {
         var result = await _createUserService.CreateAsync(req);
+        return Ok(result);
+    }
+    
+    [HttpGet("/get/{id}")]
+    public async Task<IActionResult> GetUser(string id)
+    {
+        var result = await _createUserService.GetAsync(id);
         return Ok(result);
     }
     
