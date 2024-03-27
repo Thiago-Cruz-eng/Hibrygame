@@ -62,6 +62,7 @@ public static class Move
 
                 movesInSpecficDirection.Add(newPosition);
                 possibleMoves.Add(newPosition);
+                possibleMoves.ForEach(x => x.HighlightedPosition = true);
                 
                 if (newPosition.Piece?.Type != null && newPosition.Piece?.Type == PieceEnum.King && newPosition.Piece?.IsInCheckState == false && newPosition.Piece?.Color != initialPosition.Piece?.Color)
                 {
