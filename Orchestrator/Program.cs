@@ -14,6 +14,7 @@ using Orchestrator.Infra.Mongo;
 using Orchestrator.Infra.Repositories;
 using Orchestrator.Infra.SignalR;
 using Orchestrator.UseCases;
+using Orchestrator.UseCases.Interfaces;
 using Owin;
 
 
@@ -54,8 +55,6 @@ builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-
-
 }).AddJwtBearer(x =>
 {
     x.RequireHttpsMetadata = true;
@@ -92,14 +91,14 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSignalR();
 
-// builder.Services.Configure<HibrygameDatabaseSettings>(
-//     builder.Configuration.GetSection("HibrygameDatabase"));
+builder.Services.Configure<HibrygameDatabaseSettings>(
+    builder.Configuration.GetSection("HibrygameDatabase"));
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<CreateUserService>();
 builder.Services.AddScoped<LoginAsyncUseCase>();
 builder.Services.AddScoped<CreateRoleUseCase>();
-builder.Services.AddScoped<ValidationService>();
+builder.Services.AddScoped<IValidationService, ValidationService>();
 builder.Services.AddScoped<IUserRepositoryNoSql, UserRepositoryNoNoSql>();
 builder.Services.AddScoped<IValidationRepositoryNoSql, ValidationRepositoryNoSql>();
 

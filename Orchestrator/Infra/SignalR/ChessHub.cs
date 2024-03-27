@@ -121,7 +121,12 @@ namespace Orchestrator.Infra.SignalR
 
         public async Task<List<Position>> SendPossiblesMoves(string user, string room, int row, int column)
         {
-            var roomName = Rooms[room];
+            var connect = "";
+            foreach (var rooms in Rooms.Where(rooms => rooms.Value == room))
+            {
+                connect = rooms.Key;
+            }
+            var roomName = Rooms[connect];
             var game = games[roomName];
             var actualPositionInBoard = game.GetPositionInBoard(row, column);
             var actualPosition = new Position(actualPositionInBoard.Row, actualPositionInBoard.Column);

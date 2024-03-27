@@ -8,7 +8,19 @@ namespace Orchestrator.Infra.BaseRepository;
 public abstract class MongoRepositoryNoSqlAbstract<TId, TEntity> : IBaseRepositoryNoSql<TId, TEntity> where TEntity : class
 {
     private IMongoCollection<TEntity> _gameCollection;
-    
+
+    public MongoRepositoryNoSqlAbstract(IOptions<HibrygameDatabaseSettings> hibryDatabaseSettings)
+    {
+        var mongoClient = new MongoClient(
+            hibryDatabaseSettings.Value.ConnectionString);
+
+        var mongoDatabase = mongoClient.GetDatabase(
+            hibryDatabaseSettings.Value.DatabaseName);
+
+        _gameCollection = mongoDatabase.GetCollection<TEntity>(
+            hibryDatabaseSettings.Value.HibrygameCollectionName);
+    }
+
     public Task Save(TEntity entity)
     {
         return _gameCollection.InsertOneAsync(entity);

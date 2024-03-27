@@ -57,7 +57,7 @@ public class LoginAsyncUseCase
                 signingCredentials: credentials
             );
 
-            _validationService.CreateValidation(new ValidationDto
+            await _validationService.CreateValidation(new ValidationDto
             {
                 AcessToken = new JwtSecurityTokenHandler().WriteToken(token),
                 Room = null,

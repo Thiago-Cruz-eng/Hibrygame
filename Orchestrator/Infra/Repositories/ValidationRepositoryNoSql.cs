@@ -8,7 +8,7 @@ namespace Orchestrator.Infra.Repositories;
 
 public class ValidationRepositoryNoSql : MongoRepositoryNoSqlAbstract<string, Validation>, IValidationRepositoryNoSql
 {
-    public ValidationRepositoryNoSql(IOptions<HibrygameDatabaseSettings> hibrygameDatabaseSettings)
+    public ValidationRepositoryNoSql(IOptions<HibrygameDatabaseSettings> hibrygameDatabaseSettings) : base(hibrygameDatabaseSettings)
     {
     }
 }

@@ -8,7 +8,7 @@ namespace Orchestrator.Infra.Repositories;
 
 public class UserRepositoryNoNoSql : MongoRepositoryNoSqlAbstract<string, User>, IUserRepositoryNoSql
 {
-    public UserRepositoryNoNoSql(IOptions<HibrygameDatabaseSettings> hibrygameDatabaseSettings)
+    public UserRepositoryNoNoSql(IOptions<HibrygameDatabaseSettings> hibrygameDatabaseSettings) : base(hibrygameDatabaseSettings)
     {
     }
 }
