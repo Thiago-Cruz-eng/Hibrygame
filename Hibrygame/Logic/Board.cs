@@ -1,4 +1,5 @@
-﻿using Hibrygame.Enums;
+﻿using System.Data;
+using Hibrygame.Enums;
 
 namespace Hibrygame;
 
@@ -83,6 +84,11 @@ public class Board
     public Position GetPositionInBoard(int row, int column)
     {
         return Positions[row, column];
+    }
+    
+    public async Task MakeMove(Board board, List<Position> possibleMoves, Position newPosition, Position oldPosition)
+    {
+        await Move.MakeMove(board, possibleMoves, newPosition, oldPosition);
     }
 }
 

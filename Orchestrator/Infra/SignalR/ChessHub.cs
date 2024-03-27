@@ -2,6 +2,7 @@ using Amazon.Runtime.Internal.Transform;
 using Hibrygame;
 using Hibrygame.Enums;
 using Microsoft.AspNetCore.SignalR;
+using MongoDB.Driver.Search;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Orchestrator.UseCases;
@@ -143,11 +144,16 @@ namespace Orchestrator.Infra.SignalR
             return new List<Position>();
         }
         
-        public async Task<bool> MakeMove(string accessToken, string user, string room, int startRow, int endRow, int startColumn, int endColumn)
+        public async Task<bool> MakeMove(string user, string room, int startRow, int endRow, int startColumn, int endColumn, bool isHighlight)
         {
-            var endPosition = GetPositionInBoard(room, endRow, endColumn);
+            if (isHighlight) return false;
+            var newPosition = GetPositionInBoard(room, endRow, endColumn);
+            var oldPosition = GetPositionInBoard(room, startRow, startColumn);
             var possibleMoves = await SendPossiblesMoves(user, room, startRow, startColumn);
-            return possibleMoves.Contains(endPosition);
+            if (!possibleMoves.Contains(newPosition)) return false;
+            var game = games[room];
+            var makeMove = game.MakeMove(game, possibleMoves, newPosition, oldPosition);
+            return true;
         }
         
         public Position GetPositionInBoard(string room, int row, int column)
@@ -155,6 +161,13 @@ namespace Orchestrator.Infra.SignalR
             var game = games[room];
             return game.GetPositionInBoard(row, column);
         }
+        public string GetPositionPlaced(string room)
+        {
+            var game = games[room];
+            var gameJson = JsonConvert.SerializeObject(game);
+            return gameJson;
+        }
+        
         
         private bool IsRoomFull(string room)
         {

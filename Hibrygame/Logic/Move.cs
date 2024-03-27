@@ -210,7 +210,7 @@ public static class Move
         if (!possibleMoves.Contains(newPosition, new Common.PositionComparer())) return false;
         board.Positions[newPosition.Row, newPosition.Column].Piece = oldPosition.Piece;
         board.Positions[oldPosition.Row, oldPosition.Column].Piece = null;
-        var isInCheck = await IsKingInCheck(board, oldPosition.Piece!.Color);
+        var isInCheck = await IsKingInCheck(board, oldPosition.Piece?.Color);
         if(isInCheck)
         {
             board.Positions[newPosition.Row, newPosition.Column].Piece = null;
@@ -220,16 +220,18 @@ public static class Move
         return true;
     }
 
-    public static async Task<bool> IsKingInCheck(Board board, ColorEnum color)
+    public static async Task<bool> IsKingInCheck(Board board, ColorEnum? color)
     {
-        var piecesEnemy = Common.GetOpponentPositions(board, color);
+        var piecesEnemy = Common.GetOpponentPositions(board, color ?? ColorEnum.None);
         foreach (var position in piecesEnemy)
         {
+            var inCheckState = false;
             var pos = position.Piece?.GetPossibleMove(board, position);
-            if (pos.Value.actualPieceTrigger.Type == PieceEnum.King)
+            pos?.possibleMoves.ForEach(x =>
             {
-                return true;
-            }
+                if(x.Piece?.Type == PieceEnum.King) inCheckState = true;
+            });
+            return inCheckState;
         }
         return false;
     }
