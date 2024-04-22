@@ -180,6 +180,9 @@ namespace Orchestrator.Infra.SignalR
             public string ConnectionId { get; set; }
             public string Player { get; set; }
             public string Room { get; set; }
+            //AO RENDERIZAR A TELA UM NOVO GAME/INSTACIA É CHAMADA
+            //AO PEDIR O SMOVIMENTOS DO CAVALO QUANDO PEAO NA FRENTE, ELE BUGA 
+            //AO MOVER O BISPO, CAVALO BUGA E RAINHA BUGA 
         }
     }
 

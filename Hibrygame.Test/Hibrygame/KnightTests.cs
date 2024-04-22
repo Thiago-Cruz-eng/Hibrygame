@@ -5,7 +5,7 @@ namespace Hibrygame.Test.Hibrygame;
 
 public class KnightTests
 {
-        [Fact]
+    [Fact]
     public void GetMovesKnight_AloneFirstMove_Correctly()
     {
         // Arrange

@@ -1,32 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Orchestrator\\Orchestrator.csproj": {}
+    "/home/marlongiona/Documents/Proj/Hibrygame/Orchestrator/Orchestrator.csproj": {}
   },
   "projects": {
-    "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Hibrygame\\Hibrygame.csproj": {
+    "/home/marlongiona/Documents/Proj/Hibrygame/Hibrygame/Hibrygame.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Hibrygame\\Hibrygame.csproj",
+        "projectUniqueName": "/home/marlongiona/Documents/Proj/Hibrygame/Hibrygame/Hibrygame.csproj",
         "projectName": "Hibrygame",
-        "projectPath": "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Hibrygame\\Hibrygame.csproj",
-        "packagesPath": "C:\\Users\\thiago.cruz\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Hibrygame\\obj\\",
+        "projectPath": "/home/marlongiona/Documents/Proj/Hibrygame/Hibrygame/Hibrygame.csproj",
+        "packagesPath": "/home/marlongiona/.nuget/packages/",
+        "outputPath": "/home/marlongiona/Documents/Proj/Hibrygame/Hibrygame/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\thiago.cruz\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/marlongiona/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -39,11 +32,6 @@
           "warnAsError": [
             "NU1605"
           ]
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
         }
       },
       "frameworks": {
@@ -75,41 +63,34 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.202/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/marlongiona/.dotnet/sdk/8.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Orchestrator\\Orchestrator.csproj": {
+    "/home/marlongiona/Documents/Proj/Hibrygame/Orchestrator/Orchestrator.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Orchestrator\\Orchestrator.csproj",
+        "projectUniqueName": "/home/marlongiona/Documents/Proj/Hibrygame/Orchestrator/Orchestrator.csproj",
         "projectName": "Orchestrator",
-        "projectPath": "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Orchestrator\\Orchestrator.csproj",
-        "packagesPath": "C:\\Users\\thiago.cruz\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Orchestrator\\obj\\",
+        "projectPath": "/home/marlongiona/Documents/Proj/Hibrygame/Orchestrator/Orchestrator.csproj",
+        "packagesPath": "/home/marlongiona/.nuget/packages/",
+        "outputPath": "/home/marlongiona/Documents/Proj/Hibrygame/Orchestrator/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\thiago.cruz\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/marlongiona/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Hibrygame\\Hibrygame.csproj": {
-                "projectPath": "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Hibrygame\\Hibrygame.csproj"
+              "/home/marlongiona/Documents/Proj/Hibrygame/Hibrygame/Hibrygame.csproj": {
+                "projectPath": "/home/marlongiona/Documents/Proj/Hibrygame/Hibrygame/Hibrygame.csproj"
               }
             }
           }
@@ -118,11 +99,6 @@
           "warnAsError": [
             "NU1605"
           ]
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
         }
       },
       "frameworks": {
@@ -221,7 +197,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.202/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/marlongiona/.dotnet/sdk/8.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
