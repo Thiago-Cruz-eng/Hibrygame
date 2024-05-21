@@ -49,6 +49,7 @@ public static class Move
                     if(southPos != newPosition) knightPossibleMoves.Add(southPos);
                     var northPos = CalculateNewPosition(board, newPosition, knightDir[1], 1);
                     if(northPos != newPosition) knightPossibleMoves.Add(northPos);
+                    newPosition.Piece = null;
                     break;
                 }
                 
@@ -81,6 +82,10 @@ public static class Move
     
     private static Position CalculateNewPosition(Board board, Position initialPosition, Direction direction, int steps)
     {
+        if (initialPosition.Row + steps == 6 && initialPosition.Column == 6)
+        {
+            var f = 50;
+        }
         switch (direction)
         {
             case Direction.North:
@@ -204,6 +209,11 @@ public static class Move
         });
         return possibleValidFriendMoveToHelpKIng;
     }
+    
+    /*
+     * SEND A EVNT TO AUTHORIZE BLACK OR WHITE
+     * I ALRERY KNOW WHO IS HOW, NOW I NEED MADE A MOVE ONLY IF THE ORDER FINISH BEFORE
+     */
 
     public static async Task<bool> MakeMove(Board board, List<Position> possibleMoves, Position newPosition, Position oldPosition)
     {
@@ -217,6 +227,11 @@ public static class Move
             board.Positions[oldPosition.Row, oldPosition.Column].Piece = oldPosition.Piece;
             return false;
         };
+        var pos = board.GetPositionsPlaced();
+        pos.ForEach(x =>
+        {
+            x.HighlightedPosition = false;
+        });
         return true;
     }
 

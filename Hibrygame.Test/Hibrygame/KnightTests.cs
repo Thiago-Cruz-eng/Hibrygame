@@ -115,4 +115,24 @@ public class KnightTests
         Assert.NotNull(result.possibleMoves);
         Assert.Equal(8, result.possibleMoves.Count);
     }
+    
+    [Fact]
+    public void GetMovesKnight_AfterOneMove_Correctly()
+    {
+        // Arrange
+        var board = new Board();
+        board.StartBoard();
+        board.Positions[5,5].Piece = new Knight(ColorEnum.White);
+
+
+        // Act
+        var piece = new Knight(ColorEnum.White);
+        var result = piece.GetPossibleMove(board, new Position(5, 5));
+        var move = board.MakeMove(board, result.possibleMoves, board.Positions[4,7], board.Positions[5,5] );
+        var result2 = piece.GetPossibleMove(board, board.Positions[4,7]);
+        
+        // Assert
+        Assert.NotNull(result2.possibleMoves);
+        Assert.Equal(8, result2.possibleMoves.Count);
+    }
 }

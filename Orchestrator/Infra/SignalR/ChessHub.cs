@@ -90,10 +90,10 @@ namespace Orchestrator.Infra.SignalR
             if (!games.ContainsKey(room))
             {
                 games.TryAdd(room, new Board());
+                games[room].StartBoard();
+                games[room].MakePieceInInitialState();
             }
             
-            games[room].StartBoard();
-            games[room].MakePieceInInitialState();
             var game = games[room].GetPositionsPlaced();
             await Clients.Group(room).SendAsync("GameWillStart", room);
             
@@ -153,6 +153,7 @@ namespace Orchestrator.Infra.SignalR
             if (!possibleMoves.Contains(newPosition)) return false;
             var game = games[room];
             var makeMove = game.MakeMove(game, possibleMoves, newPosition, oldPosition);
+            await Clients.Group(room).SendAsync("BoardChange", true);
             return true;
         }
         
@@ -167,7 +168,6 @@ namespace Orchestrator.Infra.SignalR
             var gameJson = JsonConvert.SerializeObject(game);
             return gameJson;
         }
-        
         
         private bool IsRoomFull(string room)
         {
@@ -185,6 +185,4 @@ namespace Orchestrator.Infra.SignalR
             //AO MOVER O BISPO, CAVALO BUGA E RAINHA BUGA 
         }
     }
-
-   
 }
