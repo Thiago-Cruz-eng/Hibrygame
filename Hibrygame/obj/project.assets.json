@@ -4025,19 +4025,19 @@
     ]
   },
   "packageFolders": {
-    "/home/marlongiona/.nuget/packages/": {}
+    "C:\\Users\\thiago.cruz\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/marlongiona/Documents/Proj/Hibrygame/Hibrygame/Hibrygame.csproj",
+      "projectUniqueName": "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Hibrygame\\Hibrygame.csproj",
       "projectName": "Hibrygame",
-      "projectPath": "/home/marlongiona/Documents/Proj/Hibrygame/Hibrygame/Hibrygame.csproj",
-      "packagesPath": "/home/marlongiona/.nuget/packages/",
-      "outputPath": "/home/marlongiona/Documents/Proj/Hibrygame/Hibrygame/obj/",
+      "projectPath": "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Hibrygame\\Hibrygame.csproj",
+      "packagesPath": "C:\\Users\\thiago.cruz\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Hibrygame\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/marlongiona/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\thiago.cruz\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -4055,6 +4055,11 @@
         "warnAsError": [
           "NU1605"
         ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -4086,7 +4091,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/home/marlongiona/.dotnet/sdk/8.0.203/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.302/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

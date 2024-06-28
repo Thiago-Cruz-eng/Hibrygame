@@ -128,9 +128,19 @@ public class KnightTests
         // Act
         var piece = new Knight(ColorEnum.White);
         var result = piece.GetPossibleMove(board, new Position(5, 5));
+        var pieces = board.GetPositionsPlacedInBoard();
         var move = board.MakeMove(board, result.possibleMoves, board.Positions[4,7], board.Positions[5,5] );
-        var result2 = piece.GetPossibleMove(board, board.Positions[4,7]);
-        
+        var piecess = board.GetPositionsPlacedInBoard();
+        var result2 = piece.GetPossibleMove(board, new Position(4, 7));
+        var piecesss = board.GetPositionsPlacedInBoard();
+        var move2 = board.MakeMove(board, result2.possibleMoves, board.Positions[3,5], board.Positions[4,7] );
+        var piecessss = board.GetPositionsPlacedInBoard();
+        var result3 = piece.GetPossibleMove(board, new Position(3, 5));
+        var piecesssss = board.GetPositionsPlacedInBoard();
+        var move3 = board.MakeMove(board, result3.possibleMoves, board.Positions[1,4], board.Positions[3,5] );
+        var piecessssss = board.GetPositionsPlacedInBoard();
+
+
         // Assert
         Assert.NotNull(result2.possibleMoves);
         Assert.Equal(8, result2.possibleMoves.Count);

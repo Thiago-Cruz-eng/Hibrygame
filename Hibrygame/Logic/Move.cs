@@ -41,6 +41,7 @@ public static class Move
                         if(eastPos != newPosition) knightPossibleMoves.Add(eastPos);
                         var westPos = CalculateNewPosition(board, newPosition, knightDir[1], 1);
                         if(westPos != newPosition) knightPossibleMoves.Add(westPos);
+                        newPosition.Piece = null;
                         break;
                     }
                     knightDir.Add(Direction.South);

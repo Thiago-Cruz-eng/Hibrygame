@@ -1,0 +1,11 @@
+
+tcsharpsquid:S3776"RRefactor this method to reduce its Cognitive Complexity from 62 to the 15 allowed.(„ÂÁ›üÿÿÿÿ
+ocsharpsquid:S3776S"RRefactor this method to reduce its Cognitive Complexity from 35 to the 15 allowed.(ÀÕ¤
+?csharpsquid:S1116å"Remove this empty statement.(ôŸìúÿÿÿÿ
+pcsharpsquid:S6602"N"Find" method should be used instead of the "FirstOrDefault" extension method.(İĞ”ûÿÿÿÿ
+Qcsharpsquid:S1066="/Merge this if statement with the enclosing one.(ÚíÖÜÿÿÿÿÿ
+Vcsharpsquid:S3267·"8Loops should be simplified using the "Where" LINQ method(ïšÉ²
+Xcsharpsquid:S3655·":'possibleMoveKing' is null on at least one execution path.(ïšÉ²
+Ycsharpsquid:S1751ù";Refactor the containing loop to do more than one iteration.(ù¡ˆ¹
+Ocsharpsquid:S1481"2Remove the unused local variable 'isInCheckState'.(â–ş¦
+Bcsharpsquid:S1481W"%Remove the unused local variable 'f'.(“¯„¾

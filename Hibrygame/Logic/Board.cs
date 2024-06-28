@@ -81,6 +81,17 @@ public class Board
         return pos;
     }
     
+    public List<Position> GetPositionsPlacedInBoard()
+    {
+        var pos = new List<Position>();
+        foreach (var position in Positions)
+        {
+            if(position.Piece is null) continue;
+            pos.Add(position);
+        }
+        return pos;
+    }
+    
     public Position GetPositionInBoard(int row, int column)
     {
         return Positions[row, column];

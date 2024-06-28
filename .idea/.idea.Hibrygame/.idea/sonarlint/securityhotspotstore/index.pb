@@ -1,0 +1,19 @@
+
+H
+Hibrygame/Logic/Board.cs,9\d\9dd8c4edcbe97693a1a6ff5c3e5165b8ff53006f
+G
+Orchestrator/Program.cs,9\2\92549835d2b2ed64ec52d5aca308cb09100ea034
+Z
+*Orchestrator/UseCases/CreateUserService.cs,4\3\43ce4cfaa22d8cb5e582896eb2b5ec5e14e796c7
+Z
+*Orchestrator/UseCases/LoginAsyncUseCase.cs,7\f\7fd9807f42b7183a3ac8cb549990d09f885bee5e
+O
+Orchestrator/docker-compose.yml,6\1\617a11cc0123c5b017b4f817b01202b5c932a1b1
+G
+Hibrygame/Logic/Move.cs,0\e\0e103ed98b9e6436318a1de487b8e20a78c929f1
+W
+'Hibrygame.Test/Hibrygame/KnightTests.cs,7\9\791bb7dddee3187d675d7ff4d72c3814bd2d307d
+K
+Hibrygame/Logic/Position.cs,f\0\f0e7078134364e4ceea398643592426b10f461ad
+I
+Hibrygame/Logic/Knight.cs,e\a\ea5deff0c1db8f10b89efe0646c869a31148c420
