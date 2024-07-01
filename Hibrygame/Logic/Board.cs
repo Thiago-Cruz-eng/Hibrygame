@@ -42,15 +42,15 @@ public class Board
         if (pos.Row == 5 && pos.Column == 7) singlePiece = new Bishop(ColorEnum.White);
         if (pos.Row == 6 && pos.Column == 7) singlePiece = new Knight(ColorEnum.White);
         if (pos.Row == 7 && pos.Column == 7) singlePiece = new Rook(ColorEnum.White);
-        // if (pos.Row == 0 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-        // if (pos.Row == 1 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-        // if (pos.Row == 2 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-        // if (pos.Row == 3 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-        // if (pos.Row == 4 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-        // if (pos.Row == 5 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-        // if (pos.Row == 6 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-        // if (pos.Row == 7 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-
+        if (pos.Row == 0 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
+        if (pos.Row == 1 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
+        if (pos.Row == 2 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
+        if (pos.Row == 3 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
+        if (pos.Row == 4 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
+        if (pos.Row == 5 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
+        if (pos.Row == 6 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
+        if (pos.Row == 7 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
+        
         if (pos.Row == 0 && pos.Column == 0) singlePiece = new Rook(ColorEnum.Black);
         if (pos.Row == 1 && pos.Column == 0) singlePiece = new Knight(ColorEnum.Black);
         if (pos.Row == 2 && pos.Column == 0) singlePiece = new Bishop(ColorEnum.Black);
@@ -59,14 +59,14 @@ public class Board
         if (pos.Row == 5 && pos.Column == 0) singlePiece = new Bishop(ColorEnum.Black);
         if (pos.Row == 6 && pos.Column == 0) singlePiece = new Knight(ColorEnum.Black);
         if (pos.Row == 7 && pos.Column == 0) singlePiece = new Rook(ColorEnum.Black);
-        // if (pos.Row == 0 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
-        // if (pos.Row == 1 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
-        // if (pos.Row == 2 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
-        // if (pos.Row == 3 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
-        // if (pos.Row == 4 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
-        // if (pos.Row == 5 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
-        // if (pos.Row == 6 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
-        // if (pos.Row == 7 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
+        if (pos.Row == 0 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
+        if (pos.Row == 1 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
+        if (pos.Row == 2 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
+        if (pos.Row == 3 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
+        if (pos.Row == 4 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
+        if (pos.Row == 5 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
+        if (pos.Row == 6 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
+        if (pos.Row == 7 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
 
         return singlePiece;
     }

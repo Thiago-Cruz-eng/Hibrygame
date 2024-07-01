@@ -1,11 +1,10 @@
 
-tcsharpsquid:S3776"RRefactor this method to reduce its Cognitive Complexity from 62 to the 15 allowed.(„ÂÁ›üÿÿÿÿ
-ocsharpsquid:S3776S"RRefactor this method to reduce its Cognitive Complexity from 35 to the 15 allowed.(ÀÕ¤
-?csharpsquid:S1116å"Remove this empty statement.(ôŸìúÿÿÿÿ
-pcsharpsquid:S6602"N"Find" method should be used instead of the "FirstOrDefault" extension method.(İĞ”ûÿÿÿÿ
-Qcsharpsquid:S1066="/Merge this if statement with the enclosing one.(ÚíÖÜÿÿÿÿÿ
-Vcsharpsquid:S3267·"8Loops should be simplified using the "Where" LINQ method(ïšÉ²
-Xcsharpsquid:S3655·":'possibleMoveKing' is null on at least one execution path.(ïšÉ²
-Ycsharpsquid:S1751ù";Refactor the containing loop to do more than one iteration.(ù¡ˆ¹
-Ocsharpsquid:S1481"2Remove the unused local variable 'isInCheckState'.(â–ş¦
-Bcsharpsquid:S1481W"%Remove the unused local variable 'f'.(“¯„¾
+šcsharpsquid:S3776"RRefactor this method to reduce its Cognitive Complexity from 78 to the 15 allowed.(„ÂÁ›üÿÿÿÿJ$9db737bc-762b-4f49-be42-4f5f4e5e4b82
+•csharpsquid:S3776T"RRefactor this method to reduce its Cognitive Complexity from 33 to the 15 allowed.(ÀÕ¤J$3cbb56ba-bcfc-4905-8e6e-f805741c5297
+ecsharpsquid:S1116İ"Remove this empty statement.(ôŸìúÿÿÿÿJ$f38777a3-13b6-4371-8591-001c1ae52b27
+–csharpsquid:S6602"N"Find" method should be used instead of the "FirstOrDefault" extension method.(İĞ”ûÿÿÿÿJ$104f7776-f9c1-4616-bfd1-7eac77182037
+wcsharpsquid:S1066>"/Merge this if statement with the enclosing one.(ÚíÖÜÿÿÿÿÿJ$543f5312-530a-4736-b5fa-f5b1e9adb27a
+|csharpsquid:S3267´"8Loops should be simplified using the "Where" LINQ method(ïšÉ²J$c58bec1a-ff8a-4ea5-b3a4-50b3e23e1d52
+~csharpsquid:S3655´":'possibleMoveKing' is null on at least one execution path.(ïšÉ²J$ee00a094-3d19-4cde-974d-11e4a9de8300
+†csharpsquid:S1751õ";Refactor the containing loop to do more than one iteration.(ù¡ˆ¹8µò†2J$ea12d871-b026-4e6a-8af4-b65306f400f7
+ucsharpsquid:S1481"2Remove the unused local variable 'isInCheckState'.(â–ş¦J$7b63573e-f1cc-4a2b-a54a-9397c0af8817

@@ -14,13 +14,25 @@
     &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KnightTests.GetMovesKnight_AfterOneMove_Correctly&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=6f2f2942_002D9124_002D42cb_002Db432_002D54b476044685/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="GetMovesKnight_AfterOneMove_Correctly #6" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=633bfe46_002Df0d3_002D4bd4_002D8d5a_002D08f47eb75dd3/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetMovesKnight_WhenAnotherFourFriendIsInWay_Correctly" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KnightTests.GetMovesKnight_WhenAnotherFourFriendIsInWay_Correctly&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KnightTests.GetMovesKnight_AfterOneMove_Correctly&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=6f2f2942_002D9124_002D42cb_002Db432_002D54b476044685/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetMovesKnight_AfterOneMove_Correctly #6" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KnightTests.GetMovesKnight_AfterOneMove_Correctly&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=96e4f9b5_002Df704_002D485b_002D9032_002De93a44f8274a/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetMovesKnight_AfterOneMove_Correctly" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KnightTests.GetMovesKnight_AfterOneMove_Correctly&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=987edb1a_002D70d4_002D4a6f_002D9ae9_002D064b17062927/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="GetMovesKnight_WhenAnotherFourFriendIsInWay_Correctly #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KnightTests.GetMovesKnight_WhenAnotherFourFriendIsInWay_Correctly&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::87ED30D7-2739-462C-BB9B-5D45EA21A9EB::net8.0::Hibrygame.Test.Hibrygame.KnightTests.GetMovesKnight_AfterOneMove_Correctly&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>

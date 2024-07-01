@@ -38,23 +38,23 @@ public static class Move
                         knightDir.Add(Direction.East);
                         knightDir.Add(Direction.West);
                         var eastPos = CalculateNewPosition(board, newPosition, knightDir[0], 1);
-                        if(eastPos != newPosition) knightPossibleMoves.Add(eastPos);
+                        if(eastPos != newPosition && newPosition != initialPosition) knightPossibleMoves.Add(eastPos);
                         var westPos = CalculateNewPosition(board, newPosition, knightDir[1], 1);
-                        if(westPos != newPosition) knightPossibleMoves.Add(westPos);
-                        newPosition.Piece = null;
+                        if(westPos != newPosition && newPosition != initialPosition) knightPossibleMoves.Add(westPos);
+                        if(newPosition != initialPosition && newPosition.Piece.Color == initialPosition.Piece.Color) newPosition.Piece = null;
                         break;
                     }
                     knightDir.Add(Direction.South);
                     knightDir.Add(Direction.North);
                     var southPos = CalculateNewPosition(board, newPosition, knightDir[0], 1);
-                    if(southPos != newPosition) knightPossibleMoves.Add(southPos);
+                    if(southPos != newPosition && newPosition != initialPosition) knightPossibleMoves.Add(southPos);
                     var northPos = CalculateNewPosition(board, newPosition, knightDir[1], 1);
-                    if(northPos != newPosition) knightPossibleMoves.Add(northPos);
-                    newPosition.Piece = null;
+                    if(northPos != newPosition && newPosition != initialPosition) knightPossibleMoves.Add(northPos);
+                    if(newPosition != initialPosition && newPosition.Piece.Color == initialPosition.Piece.Color) newPosition.Piece = null;
                     break;
                 }
                 
-                if (board.Positions[newPosition.Row, newPosition.Column].Piece?.Color == initialPosition.Piece?.Color)
+                if (board.Positions[newPosition.Row, newPosition.Column].Piece?.Color == initialPosition.Piece?.Color && newPosition.Piece?.Type != PieceEnum.Knight)
                     break;
                 
                 if (board.Positions[newPosition.Row, newPosition.Column].Piece != null && newPosition.Piece?.Color != initialPosition.Piece?.Color)
@@ -83,10 +83,6 @@ public static class Move
     
     private static Position CalculateNewPosition(Board board, Position initialPosition, Direction direction, int steps)
     {
-        if (initialPosition.Row + steps == 6 && initialPosition.Column == 6)
-        {
-            var f = 50;
-        }
         switch (direction)
         {
             case Direction.North:
@@ -210,11 +206,6 @@ public static class Move
         });
         return possibleValidFriendMoveToHelpKIng;
     }
-    
-    /*
-     * SEND A EVNT TO AUTHORIZE BLACK OR WHITE
-     * I ALRERY KNOW WHO IS HOW, NOW I NEED MADE A MOVE ONLY IF THE ORDER FINISH BEFORE
-     */
 
     public static async Task<bool> MakeMove(Board board, List<Position> possibleMoves, Position newPosition, Position oldPosition)
     {
@@ -233,6 +224,10 @@ public static class Move
         {
             x.HighlightedPosition = false;
         });
+        if (board.Positions[newPosition.Row, newPosition.Column].Piece?.Type == PieceEnum.Pawn)
+        {
+            board.Positions[newPosition.Row, newPosition.Column].Piece.HasAlreadyOneMove = true;
+        }
         return true;
     }
 

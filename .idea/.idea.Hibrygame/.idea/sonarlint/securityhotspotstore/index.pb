@@ -17,3 +17,9 @@ K
 Hibrygame/Logic/Position.cs,f\0\f0e7078134364e4ceea398643592426b10f461ad
 I
 Hibrygame/Logic/Knight.cs,e\a\ea5deff0c1db8f10b89efe0646c869a31148c420
+I
+Hibrygame/Logic/Common.cs,8\b\8b3d4e41e53ae43d935da5399f0a39adb79d1a6f
+G
+Hibrygame/Logic/Pawn.cs,1\b\1b1ae265021ec16e181e90c0ee009fea744cfc88
+H
+Hibrygame/Logic/Piece.cs,4\1\413089d47539ef1560bef008ce923aecbb51240c
