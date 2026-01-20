@@ -1,11 +1,12 @@
 {
   "Version": 1,
-  "Hash": "IvPF+1CMg3MKJ7GLnGPGbb8piTTzjDayV++k+Eag8Qg=",
+  "Hash": "3dUCvOuSLsbjgyontUPUbNPvYKhWy4X52Z/75RlJIPc=",
   "Source": "Orchestrator",
   "BasePath": "_content/Orchestrator",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
   "DiscoveryPatterns": [],
-  "Assets": []
+  "Assets": [],
+  "Endpoints": []
 }

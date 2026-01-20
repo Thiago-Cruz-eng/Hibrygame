@@ -28,6 +28,10 @@ public class CreateRoleUseCase
             var result = await _roleManager.CreateAsync(role);
             if (!result.Succeeded)
                 return new CreateRoleResponse { Message = $"Role not create {result.Errors.First().Description}", Success = false };
+            
+            var roleMap = _mapper.Map<Roles>(req);
+            var result = await _roleManager.CreateAsync(roleMap);
+            if(!result.Succeeded) return new CreateRoleResponse { Message = $"Role not create {result.Errors.First().Description}", Success = false };
 
             return new CreateRoleResponse
             {
