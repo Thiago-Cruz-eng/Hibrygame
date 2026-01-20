@@ -12,12 +12,18 @@ namespace Orchestrator.Presentation;
 public class UserController : ControllerBase
 {
     private readonly LoginAsyncUseCase _loginAsync;
-    private readonly CreateUserService _createUserService;
+    private readonly CreateUserUseCase _createUserUseCase;
+    private readonly GetUserUseCase _getUserUseCase;
     private readonly CreateRoleUseCase _createRole;
 
-    public UserController(CreateUserService createUserService, LoginAsyncUseCase loginAsync, CreateRoleUseCase createRole)
+    public UserController(
+        CreateUserUseCase createUserUseCase,
+        GetUserUseCase getUserUseCase,
+        LoginAsyncUseCase loginAsync,
+        CreateRoleUseCase createRole)
     {
-        _createUserService = createUserService;
+        _createUserUseCase = createUserUseCase;
+        _getUserUseCase = getUserUseCase;
         _loginAsync = loginAsync;
         _createRole = createRole;
     }
@@ -27,20 +33,28 @@ public class UserController : ControllerBase
     public async Task<IActionResult> LoginUser(LoginRequest req)
     {
         var result = await _loginAsync.LoginAsync(req);
+        if (!result.Success)
+        {
+            return Unauthorized(result);
+        }
         return Ok(result);
     }
     
     [HttpPost("/create")]
     public async Task<IActionResult> CreateUser(CreateUserRequest req)
     {
-        var result = await _createUserService.CreateAsync(req);
+        var result = await _createUserUseCase.CreateAsync(req);
         return Ok(result);
     }
     
     [HttpGet("/get/{id}")]
     public async Task<IActionResult> GetUser(string id)
     {
-        var result = await _createUserService.GetAsync(id);
+        var result = await _getUserUseCase.GetAsync(id);
+        if (result is null)
+        {
+            return NotFound();
+        }
         return Ok(result);
     }
     
