@@ -6717,32 +6717,40 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\thiago.cruz\\.nuget\\packages\\": {}
+    "C:\\Users\\hscth\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Hibrygame.Test\\Hibrygame.Test.csproj",
+      "projectUniqueName": "C:\\Users\\hscth\\OneDrive\\Documentos\\XADREZ\\Hibrygame\\Hibrygame.Test\\Hibrygame.Test.csproj",
       "projectName": "Hibrygame.Test",
-      "projectPath": "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Hibrygame.Test\\Hibrygame.Test.csproj",
-      "packagesPath": "C:\\Users\\thiago.cruz\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Hibrygame.Test\\obj\\",
+      "projectPath": "C:\\Users\\hscth\\OneDrive\\Documentos\\XADREZ\\Hibrygame\\Hibrygame.Test\\Hibrygame.Test.csproj",
+      "packagesPath": "C:\\Users\\hscth\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\hscth\\OneDrive\\Documentos\\XADREZ\\Hibrygame\\Hibrygame.Test\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\thiago.cruz\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\hscth\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Hibrygame\\Hibrygame.csproj": {
-              "projectPath": "C:\\Users\\thiago.cruz\\Documents\\Proj\\Pessoal\\Chess\\Hibrygame\\Hibrygame\\Hibrygame.csproj"
+            "C:\\Users\\hscth\\OneDrive\\Documentos\\XADREZ\\Hibrygame\\Hibrygame\\Hibrygame.csproj": {
+              "projectPath": "C:\\Users\\hscth\\OneDrive\\Documentos\\XADREZ\\Hibrygame\\Hibrygame\\Hibrygame.csproj"
             }
           }
         }
@@ -6756,7 +6764,8 @@
         "enableAudit": "true",
         "auditLevel": "low",
         "auditMode": "direct"
-      }
+      },
+      "SdkAnalysisLevel": "10.0.100"
     },
     "frameworks": {
       "net8.0": {
@@ -6799,7 +6808,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.302/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.100-rc.1.25451.107/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
