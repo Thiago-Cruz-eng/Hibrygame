@@ -12,6 +12,7 @@ using Orchestrator.Domain;
 using Orchestrator.Infra.Interfaces;
 using Orchestrator.Infra.Mongo;
 using Orchestrator.Infra.Repositories;
+using Orchestrator.Infra.Settings;
 using Orchestrator.Infra.SignalR;
 using Orchestrator.UseCases;
 using Orchestrator.UseCases.Interfaces;
@@ -51,6 +52,12 @@ builder.Services.ConfigureMongoDbIdentity<User, Roles, Guid>(mongoDbIdentityConf
     .AddRoleManager<RoleManager<Roles>>()
     .AddDefaultTokenProviders();
 
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection("Jwt"));
+
+var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
+    ?? throw new InvalidOperationException("Jwt settings are missing.");
+
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -65,9 +72,9 @@ builder.Services.AddAuthentication(x =>
         ValidateAudience = true,
         ValidateIssuer = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = "https://localhost:5001",
-        ValidAudience = "https://localhost:5001",
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("agbika789/aihs||oiihda")),
+        ValidIssuer = jwtSettings.Issuer,
+        ValidAudience = jwtSettings.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key)),
         ClockSkew = TimeSpan.Zero
     };
 });
@@ -94,10 +101,11 @@ builder.Services.AddSignalR();
 builder.Services.Configure<HibrygameDatabaseSettings>(
     builder.Configuration.GetSection("HibrygameDatabase"));
 
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-builder.Services.AddScoped<CreateUserService>();
+builder.Services.AddScoped<CreateUserUseCase>();
+builder.Services.AddScoped<GetUserUseCase>();
 builder.Services.AddScoped<LoginAsyncUseCase>();
 builder.Services.AddScoped<CreateRoleUseCase>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IValidationService, ValidationService>();
 builder.Services.AddScoped<IUserRepositoryNoSql, UserRepositoryNoNoSql>();
 builder.Services.AddScoped<IValidationRepositoryNoSql, ValidationRepositoryNoSql>();
@@ -125,5 +133,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-
