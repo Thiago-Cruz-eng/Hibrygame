@@ -1,5 +1,8 @@
+using Orchestrator.Infra.Mongo;
+
 namespace Orchestrator.Domain;
 
+[MongoCollection("validations")]
 public class Validation
 {
     public Guid Id { get; set; } = new ();

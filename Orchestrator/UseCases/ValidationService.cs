@@ -1,8 +1,6 @@
-using System.Globalization;
 using Orchestrator.Domain;
 using Orchestrator.Infra.Interfaces;
 using Orchestrator.UseCases.Interfaces;
-using ZstdSharp.Unsafe;
 
 namespace Orchestrator.UseCases;
 
@@ -45,7 +43,6 @@ public class ValidationService : IValidationService
     {
         try
         {
-            var dayGame = DateTime.Parse(day);
             var validation = await _validationRepositoryNoSql.FindByFilter(x => 
                 x.AcessToken == token &&
                 x.UserId == userId &&
@@ -112,9 +109,9 @@ public class ValidationService : IValidationService
 
 public class ValidationDto
 {
-    public string AcessToken { get; set; }
+    public string AcessToken { get; set; } = null!;
     public string? Room { get; set; }
-    public string UserId { get; set; }
+    public string UserId { get; set; } = null!;
     public string? PieceColor { get; set; }
-    public string UserEmail { get; set; }
+    public string UserEmail { get; set; } = null!;
 }

@@ -1,25 +1,26 @@
-﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Orchestrator.Domain;
 using Orchestrator.Infra.Interfaces;
+using Orchestrator.UseCases.Dto;
 using Orchestrator.UseCases.Dto.Request;
 using Orchestrator.UseCases.Dto.Response;
+using Orchestrator.UseCases.Interfaces;
 
 namespace Orchestrator.UseCases;
 
 public class CreateUserUseCase
 {
     private readonly IUserRepositoryNoSql _userRepository;
-    private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly ISecureHashingService _hashingService;
     private readonly ILogger<CreateUserUseCase> _logger;
 
     public CreateUserUseCase(
         IUserRepositoryNoSql userRepository,
-        IPasswordHasher<User> passwordHasher,
+        ISecureHashingService hashingService,
         ILogger<CreateUserUseCase> logger)
     {
         _userRepository = userRepository;
-        _passwordHasher = passwordHasher;
+        _hashingService = hashingService;
         _logger = logger;
     }
 
@@ -27,34 +28,30 @@ public class CreateUserUseCase
     {
         try
         {
-            var normalizedEmail = NormalizeValue(req.Email);
-            var normalizedUserName = NormalizeValue(req.UserName);
-            var existing = await _userRepository.FindByFilter(user =>
-                user.NormalizedEmail == normalizedEmail || user.Email == req.Email);
+            var normalizedEmail = NormalizeEmail(req.Email);
+            var existing = await _userRepository.FindByFilter(user => user.Email == normalizedEmail);
             if (existing.Any())
                 return new CreateUserResponse { Message = "User already has a account", Success = false };
 
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                UserName = req.UserName?.Trim(),
-                NormalizedUserName = normalizedUserName,
-                Email = req.Email?.Trim(),
-                NormalizedEmail = normalizedEmail,
-                PhoneNumber = req.PhoneNumber?.Trim(),
-                DateBirth = req.DateBirth ?? default,
-                CreateAt = DateTime.UtcNow,
-                SecurityStamp = Guid.NewGuid().ToString(),
-                Address = string.Empty
-            };
+            var (hash, salt) = _hashingService.HashValue(req.Password);
+            var assignments = req.Assignments
+                .Select(assignment => MapAssignment(assignment, req.CreatedBy))
+                .ToList();
+            var user = User.Create(
+                name: req.Name.Trim(),
+                email: normalizedEmail,
+                passwordHash: hash,
+                salt: salt,
+                assignments: assignments,
+                createdBy: req.CreatedBy.Trim());
 
-            user.PasswordHash = _passwordHasher.HashPassword(user, req.Password);
             await _userRepository.Save(user);
 
             return new CreateUserResponse
             {
                 Success = true,
-                Message = "User create"
+                Message = "User created",
+                UserId = user.Id.ToString()
             };
         }
         catch (Exception e)
@@ -64,8 +61,23 @@ public class CreateUserUseCase
         }
     }
 
-    private static string NormalizeValue(string value)
+    private static UserAssignment MapAssignment(UserAssignmentDto assignment, string createdBy)
     {
-        return value?.Trim().ToUpperInvariant() ?? string.Empty;
+        var nodes = assignment.HierarchyNodes
+            .Select(node => UserAssignment.HierarchyNode.Create(node.NodeId, node.NodeName))
+            .ToList();
+
+        return UserAssignment.Create(
+            assignment.TeamName,
+            assignment.TeamId,
+            assignment.RoleName,
+            assignment.RoleId,
+            nodes,
+            createdBy: createdBy);
+    }
+
+    private static string NormalizeEmail(string value)
+    {
+        return value?.Trim().ToLowerInvariant() ?? string.Empty;
     }
 }
