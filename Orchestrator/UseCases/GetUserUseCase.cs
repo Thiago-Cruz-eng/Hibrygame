@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
+using Orchestrator.Domain;
 using Orchestrator.Infra.Interfaces;
+using Orchestrator.UseCases.Dto;
 using Orchestrator.UseCases.Dto.Response;
 
 namespace Orchestrator.UseCases;
@@ -26,8 +28,12 @@ public class GetUserUseCase
 
             return new GetUserResponse
             {
-                UserName = user.UserName,
-                Email = user.Email
+                Id = user.Id.ToString(),
+                Name = user.Name,
+                Email = user.Email,
+                Role = user.Role,
+                MustChangePassword = user.MustChangePassword,
+                Assignments = user.Assignments.Select(MapAssignment).ToList()
             };
         }
         catch (Exception e)
@@ -35,5 +41,21 @@ public class GetUserUseCase
             _logger.LogError(e, "Error while retrieving user.");
             return null;
         }
+    }
+
+    private static UserAssignmentDto MapAssignment(UserAssignment assignment)
+    {
+        return new UserAssignmentDto
+        {
+            TeamName = assignment.TeamName,
+            TeamId = assignment.TeamId,
+            RoleName = assignment.RoleName,
+            RoleId = assignment.RoleId,
+            HierarchyNodes = assignment.HierarchyNodes.Select(node => new HierarchyNodeDto
+            {
+                NodeId = node.NodeId,
+                NodeName = node.NodeName
+            }).ToList()
+        };
     }
 }

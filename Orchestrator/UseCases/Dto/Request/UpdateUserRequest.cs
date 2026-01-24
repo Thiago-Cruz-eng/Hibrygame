@@ -1,23 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
+using Orchestrator.UseCases.Dto;
 
 namespace Orchestrator.UseCases.Dto.Request;
 
 public class UpdateUserRequest
 {
     [Required]
-    public string? Email { get; set; }
+    public string Name { get; set; } = null!;
+
+    [Required, EmailAddress]
+    public string Email { get; set; } = null!;
+
     [Required]
-    public string? UserName { get; set; }
+    public string Role { get; set; } = null!;
+
+    public List<UserAssignmentDto> Assignments { get; set; } = new();
+
     [Required]
-    [DataType(DataType.Password)]
-    public string? Password { get; set; }
-    [Compare("Password")]
-    public string? PasswordConfirmation { get; set; }
-    public DateTime? CreateAt { get; set; } = DateTime.Now;
-    [Required]
-    public DateTime? DateBirth { get; set; }
-    [Required]
-    public string? Address { get; set; }
-    [Required]
-    public string? PhoneNumber { get; set; }
+    public string ModifiedBy { get; set; } = null!;
 }

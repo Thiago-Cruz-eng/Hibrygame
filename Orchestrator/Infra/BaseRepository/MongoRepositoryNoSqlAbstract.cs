@@ -17,8 +17,17 @@ public abstract class MongoRepositoryNoSqlAbstract<TId, TEntity> : IBaseReposito
         var mongoDatabase = mongoClient.GetDatabase(
             hibryDatabaseSettings.Value.DatabaseName);
 
-        _gameCollection = mongoDatabase.GetCollection<TEntity>(
-            hibryDatabaseSettings.Value.HibrygameCollectionName);
+        var collectionName = ResolveCollectionName();
+        _gameCollection = mongoDatabase.GetCollection<TEntity>(collectionName);
+    }
+
+    private static string ResolveCollectionName()
+    {
+        var attribute = typeof(TEntity).GetCustomAttributes(typeof(MongoCollectionAttribute), false)
+            .Cast<MongoCollectionAttribute>()
+            .FirstOrDefault();
+
+        return attribute?.Name ?? typeof(TEntity).Name.ToLowerInvariant();
     }
 
     public Task Save(TEntity entity)
