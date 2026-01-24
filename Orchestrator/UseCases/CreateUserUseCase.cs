@@ -5,6 +5,7 @@ using Orchestrator.UseCases.Dto;
 using Orchestrator.UseCases.Dto.Request;
 using Orchestrator.UseCases.Dto.Response;
 using Orchestrator.UseCases.Interfaces;
+using Orchestrator.UseCases.Security.Authorization;
 
 namespace Orchestrator.UseCases;
 
@@ -33,6 +34,10 @@ public class CreateUserUseCase
             if (existing.Any())
                 return new CreateUserResponse { Message = "User already has a account", Success = false };
 
+            if (!RoleHierarchy.TryGetLevel(req.Role, out var roleLevel))
+                return new CreateUserResponse { Message = "Invalid role", Success = false };
+
+            var normalizedRole = RoleHierarchy.NormalizeRole(roleLevel);
             var (hash, salt) = _hashingService.HashValue(req.Password);
             var assignments = req.Assignments
                 .Select(assignment => MapAssignment(assignment, req.CreatedBy))
@@ -40,6 +45,7 @@ public class CreateUserUseCase
             var user = User.Create(
                 name: req.Name.Trim(),
                 email: normalizedEmail,
+                role: normalizedRole,
                 passwordHash: hash,
                 salt: salt,
                 assignments: assignments,

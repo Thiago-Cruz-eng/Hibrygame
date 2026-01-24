@@ -11,6 +11,9 @@ public class UpdateUserRequest
     [Required, EmailAddress]
     public string Email { get; set; } = null!;
 
+    [Required]
+    public string Role { get; set; } = null!;
+
     public List<UserAssignmentDto> Assignments { get; set; } = new();
 
     [Required]

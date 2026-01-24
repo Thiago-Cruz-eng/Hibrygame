@@ -31,6 +31,7 @@ public class GetUserUseCase
                 Id = user.Id.ToString(),
                 Name = user.Name,
                 Email = user.Email,
+                Role = user.Role,
                 MustChangePassword = user.MustChangePassword,
                 Assignments = user.Assignments.Select(MapAssignment).ToList()
             };

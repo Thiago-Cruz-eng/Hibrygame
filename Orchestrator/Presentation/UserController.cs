@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Orchestrator.UseCases;
 using Orchestrator.UseCases.Dto.Request;
@@ -36,6 +37,7 @@ public class UserController : ControllerBase
         _refreshTokenUseCase = refreshTokenUseCase;
     }
 
+    [AllowAnonymous]
     [HttpPost("/login")]
     [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(LoginResponse))]
     public async Task<IActionResult> LoginUser(LoginRequest req)
@@ -48,6 +50,7 @@ public class UserController : ControllerBase
         return Ok(result);
     }
 
+    [AllowAnonymous]
     [HttpPost("/refresh-token")]
     [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(RefreshTokenResponse))]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest req)
@@ -61,6 +64,7 @@ public class UserController : ControllerBase
         return Ok(result);
     }
 
+    [AllowAnonymous]
     [HttpPost("/users")]
     public async Task<IActionResult> CreateUser(CreateUserRequest req)
     {
@@ -68,6 +72,7 @@ public class UserController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Policy = "Role:Player")]
     [HttpGet("/users/{id}")]
     public async Task<IActionResult> GetUser(string id)
     {
@@ -79,6 +84,7 @@ public class UserController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Policy = "Role:TeamLeader")]
     [HttpPut("/users/{id}")]
     [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(UpdateUserResponse))]
     public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserRequest req)
@@ -91,6 +97,7 @@ public class UserController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Policy = "Role:Admin")]
     [HttpDelete("/users/{id}")]
     [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(DeleteUserResponse))]
     public async Task<IActionResult> DeleteUser(string id)
@@ -103,6 +110,7 @@ public class UserController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Policy = "Role:Player")]
     [HttpPost("/users/change-password")]
     [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(ChangePasswordResponse))]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)

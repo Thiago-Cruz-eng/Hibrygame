@@ -20,6 +20,11 @@ public class User
     public string Email { get; protected set; } = null!;
 
     /// <summary>
+    /// User's primary role in the system hierarchy.
+    /// </summary>
+    public string Role { get; protected set; } = null!;
+
+    /// <summary>
     /// Secure hash of the user's password.
     /// </summary>
     public string PasswordHash { get; protected set; } = null!;
@@ -53,6 +58,7 @@ public class User
     private User(
         string name,
         string email,
+        string role,
         string passwordHash,
         string salt,
         List<UserAssignment> assignments,
@@ -60,6 +66,7 @@ public class User
     {
         Name = name;
         Email = email;
+        Role = role;
         PasswordHash = passwordHash;
         Salt = salt;
         MustChangePassword = false;
@@ -73,11 +80,12 @@ public class User
     public static User Create(
         string name,
         string email,
+        string role,
         string passwordHash,
         string salt,
         List<UserAssignment> assignments,
         string createdBy)
-        => new(name, email, passwordHash, salt, assignments, createdBy);
+        => new(name, email, role, passwordHash, salt, assignments, createdBy);
 
     /// <summary>
     /// Marks the user as required to change password and updates audit data.
@@ -115,6 +123,16 @@ public class User
     public User ChangeEmail(string email, string modifiedBy)
     {
         Email = email;
+        ModificationInformations = new ModificationInformation(modifiedBy);
+        return this;
+    }
+
+    /// <summary>
+    /// Updates the user's primary role.
+    /// </summary>
+    public User ChangeRole(string role, string modifiedBy)
+    {
+        Role = role;
         ModificationInformations = new ModificationInformation(modifiedBy);
         return this;
     }

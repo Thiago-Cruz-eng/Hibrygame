@@ -4,6 +4,7 @@ using Orchestrator.Infra.Interfaces;
 using Orchestrator.UseCases.Dto;
 using Orchestrator.UseCases.Dto.Request;
 using Orchestrator.UseCases.Dto.Response;
+using Orchestrator.UseCases.Security.Authorization;
 
 namespace Orchestrator.UseCases;
 
@@ -33,9 +34,14 @@ public class UpdateUserUseCase
             if (existing.Any())
                 return new UpdateUserResponse { Message = "Email already in use", Success = false };
 
+            if (!RoleHierarchy.TryGetLevel(req.Role, out var roleLevel))
+                return new UpdateUserResponse { Message = "Invalid role", Success = false };
+
+            var normalizedRole = RoleHierarchy.NormalizeRole(roleLevel);
             var assignments = req.Assignments.Select(assignment => MapAssignment(assignment, req.ModifiedBy)).ToList();
             user.ChangeName(req.Name.Trim(), req.ModifiedBy.Trim())
                 .ChangeEmail(normalizedEmail, req.ModifiedBy.Trim())
+                .ChangeRole(normalizedRole, req.ModifiedBy.Trim())
                 .ChangeAssignments(assignments, req.ModifiedBy.Trim());
 
             await _userRepository.Update(user.Id.ToString(), user);

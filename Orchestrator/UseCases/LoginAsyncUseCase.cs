@@ -66,6 +66,7 @@ public class LoginAsyncUseCase
                 ExpiresAt = accessTokenResult.ExpiresAt,
                 Email = user.Email,
                 UserId = user.Id.ToString(),
+                Role = user.Role,
                 MustChangePassword = user.MustChangePassword,
                 Message = "User logged"
             };

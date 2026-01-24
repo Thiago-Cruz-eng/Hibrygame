@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
@@ -11,6 +12,7 @@ using Orchestrator.Infra.Settings;
 using Orchestrator.Infra.SignalR;
 using Orchestrator.UseCases;
 using Orchestrator.UseCases.Interfaces;
+using Orchestrator.UseCases.Security.Authorization;
 using Orchestrator.UseCases.Security;
 
 
@@ -47,6 +49,20 @@ builder.Services.AddAuthentication(x =>
     };
 });
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Role:Player", policy =>
+        policy.Requirements.Add(new MinimumRoleRequirement(RoleLevel.Player)));
+    options.AddPolicy("Role:MainPlayer", policy =>
+        policy.Requirements.Add(new MinimumRoleRequirement(RoleLevel.MainPlayer)));
+    options.AddPolicy("Role:TeamLeader", policy =>
+        policy.Requirements.Add(new MinimumRoleRequirement(RoleLevel.TeamLeader)));
+    options.AddPolicy("Role:Admin", policy =>
+        policy.Requirements.Add(new MinimumRoleRequirement(RoleLevel.Admin)));
+    options.AddPolicy("Role:SuperAdmin", policy =>
+        policy.Requirements.Add(new MinimumRoleRequirement(RoleLevel.SuperAdmin)));
+});
+
 builder.Services.AddControllers().AddJsonOptions(x =>
     x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
 builder.Services.AddEndpointsApiExplorer();
@@ -78,6 +94,7 @@ builder.Services.AddScoped<ChangePasswordUseCase>();
 builder.Services.AddScoped<RefreshTokenUseCase>();
 builder.Services.AddScoped<ISecureHashingService, SecureHashingService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddSingleton<IAuthorizationHandler, MinimumRoleHandler>();
 builder.Services.AddScoped<IValidationService, ValidationService>();
 builder.Services.AddScoped<IUserRepositoryNoSql, UserRepositoryNoNoSql>();
 builder.Services.AddScoped<IValidationRepositoryNoSql, ValidationRepositoryNoSql>();

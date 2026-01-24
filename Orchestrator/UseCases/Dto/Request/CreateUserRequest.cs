@@ -14,6 +14,9 @@ public class CreateUserRequest
     [Required, DataType(DataType.Password)]
     public string Password { get; set; } = null!;
 
+    [Required]
+    public string Role { get; set; } = null!;
+
     [Compare("Password")]
     public string PasswordConfirmation { get; set; } = null!;
 
