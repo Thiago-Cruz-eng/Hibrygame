@@ -1,0 +1,11 @@
+# IDE folders
+.idea/
+.vs/
+
+# IDE user settings
+*.DotSettings.user
+*.suo
+*.user
+
+# Build artifacts
+**/obj/
