@@ -1,13 +1,6 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.IdentityModel.Tokens;
 using Orchestrator.Domain;
 using Orchestrator.Infra.Interfaces;
-using Orchestrator.Infra.Settings;
 using Orchestrator.UseCases.Dto.Request;
 using Orchestrator.UseCases.Dto.Response;
 using Orchestrator.UseCases.Interfaces;
@@ -17,73 +10,48 @@ namespace Orchestrator.UseCases;
 public class LoginAsyncUseCase
 {
     private readonly IValidationService _validationService;
-    private readonly JwtSettings _jwtSettings;
     private readonly ILogger<LoginAsyncUseCase> _logger;
     private readonly IUserRepositoryNoSql _userRepository;
-    private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly IRefreshTokenRepositoryNoSql _refreshTokenRepository;
+    private readonly ISecureHashingService _hashingService;
+    private readonly ITokenService _tokenService;
 
     public LoginAsyncUseCase(
         IValidationService validationService,
-        IOptions<JwtSettings> jwtOptions,
         ILogger<LoginAsyncUseCase> logger,
         IUserRepositoryNoSql userRepository,
-        IPasswordHasher<User> passwordHasher)
+        IRefreshTokenRepositoryNoSql refreshTokenRepository,
+        ISecureHashingService hashingService,
+        ITokenService tokenService)
     {
         _validationService = validationService;
-        _jwtSettings = jwtOptions.Value;
         _logger = logger;
         _userRepository = userRepository;
-        _passwordHasher = passwordHasher;
+        _refreshTokenRepository = refreshTokenRepository;
+        _hashingService = hashingService;
+        _tokenService = tokenService;
     }
 
     public async Task<LoginResponse> LoginAsync(LoginRequest req)
     {
         try
         {
-            var normalizedEmail = NormalizeValue(req.Email);
-            var users = await _userRepository.FindByFilter(user =>
-                user.NormalizedEmail == normalizedEmail || user.Email == req.Email);
+            var normalizedEmail = NormalizeEmail(req.Email);
+            var users = await _userRepository.FindByFilter(user => user.Email == normalizedEmail);
             var user = users.FirstOrDefault();
             if (user is null)
                 return new LoginResponse { Message = "Invalid credentials", Success = false };
 
-            if (string.IsNullOrWhiteSpace(user.PasswordHash))
+            if (!_hashingService.Verify(req.Password, user.PasswordHash, user.Salt))
                 return new LoginResponse { Message = "Invalid credentials", Success = false };
 
-            var verification = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, req.Password);
-            if (verification == PasswordVerificationResult.Failed)
-                return new LoginResponse { Message = "Invalid credentials", Success = false };
-            if (verification == PasswordVerificationResult.SuccessRehashNeeded)
-            {
-                user.PasswordHash = _passwordHasher.HashPassword(user, req.Password);
-                await _userRepository.Update(user.Id.ToString(), user);
-            }
-
-            var claims = new List<Claim>()
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email)
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiresMinutes);
-            
-
-            var token = new JwtSecurityToken(
-                issuer: _jwtSettings.Issuer,
-                audience: _jwtSettings.Audience,
-                claims: claims,
-                expires: expires,
-                signingCredentials: credentials
-            );
+            var accessTokenResult = _tokenService.CreateAccessToken(user);
+            var refreshTokenResult = _tokenService.CreateRefreshToken(user);
+            await _refreshTokenRepository.Save(refreshTokenResult.Token);
 
             await _validationService.CreateValidation(new ValidationDto
             {
-                AcessToken = new JwtSecurityTokenHandler().WriteToken(token),
+                AcessToken = accessTokenResult.Token,
                 Room = null,
                 UserId = user.Id.ToString(),
                 PieceColor = null,
@@ -93,10 +61,14 @@ public class LoginAsyncUseCase
             return new LoginResponse
             {
                 Success = true,
-                AccessToken = new JwtSecurityTokenHandler().WriteToken(token),
+                AccessToken = accessTokenResult.Token,
+                RefreshToken = refreshTokenResult.RawToken,
+                ExpiresAt = accessTokenResult.ExpiresAt,
                 Email = user.Email,
                 UserId = user.Id.ToString(),
-                Message = "User loged"
+                Role = user.Role,
+                MustChangePassword = user.MustChangePassword,
+                Message = "User logged"
             };
         }
         catch (Exception e)
@@ -106,8 +78,8 @@ public class LoginAsyncUseCase
         }
     }
 
-    private static string NormalizeValue(string value)
+    private static string NormalizeEmail(string value)
     {
-        return value?.Trim().ToUpperInvariant() ?? string.Empty;
+        return value?.Trim().ToLowerInvariant() ?? string.Empty;
     }
 }

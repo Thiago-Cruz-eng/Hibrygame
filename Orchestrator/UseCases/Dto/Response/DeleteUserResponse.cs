@@ -1,7 +1,7 @@
 namespace Orchestrator.UseCases.Dto.Response;
 
-public class CreateRoleResponse
+public class DeleteUserResponse
 {
-    public string Message { get; set; }
     public bool Success { get; set; }
+    public string Message { get; set; } = null!;
 }
