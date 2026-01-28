@@ -1,14 +1,12 @@
 using MongoDB.Bson.Serialization.Attributes;
 using Orchestrator.Infra.Mongo;
+using Orchestrator.Infra.Utils;
 
 namespace Orchestrator.Domain;
 
-[MongoCollection("refresh_tokens")]
-public class RefreshToken
+[CollectionName(nameof(RefreshToken))]
+public class RefreshToken : BaseEntity
 {
-    [BsonId]
-    public Guid Id { get; init; } = Guid.NewGuid();
-
     public Guid UserId { get; init; }
 
     public string TokenHash { get; private set; } = null!;

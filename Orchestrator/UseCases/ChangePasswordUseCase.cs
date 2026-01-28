@@ -1,5 +1,5 @@
-using Microsoft.Extensions.Logging;
-using Orchestrator.Infra.Interfaces;
+using Orchestrator.Domain;
+using Orchestrator.Infra.Mongo;
 using Orchestrator.UseCases.Dto.Request;
 using Orchestrator.UseCases.Dto.Response;
 using Orchestrator.UseCases.Interfaces;
@@ -8,16 +8,16 @@ namespace Orchestrator.UseCases;
 
 public class ChangePasswordUseCase
 {
-    private readonly IUserRepositoryNoSql _userRepository;
+    private readonly IGenericRepository _genericRepository;
     private readonly ISecureHashingService _hashingService;
     private readonly ILogger<ChangePasswordUseCase> _logger;
 
     public ChangePasswordUseCase(
-        IUserRepositoryNoSql userRepository,
+        IGenericRepository genericRepository,
         ISecureHashingService hashingService,
         ILogger<ChangePasswordUseCase> logger)
     {
-        _userRepository = userRepository;
+        _genericRepository = genericRepository;
         _hashingService = hashingService;
         _logger = logger;
     }
@@ -26,17 +26,22 @@ public class ChangePasswordUseCase
     {
         try
         {
-            var users = await _userRepository.FindByFilter(user => user.Id.ToString() == req.UserId);
-            var user = users.FirstOrDefault();
+            var user = await _genericRepository.GetFirstOrDefault<User>(user => user.Id.ToString() == req.UserId);
             if (user is null)
                 return new ChangePasswordResponse { Message = "User not found", Success = false };
 
             if (!_hashingService.Verify(req.CurrentPassword, user.PasswordHash, user.Salt))
                 return new ChangePasswordResponse { Message = "Invalid credentials", Success = false };
-
+            
             var (hash, salt) = _hashingService.HashValue(req.NewPassword);
             user.ChangePassword(hash, salt, req.ModifiedBy.Trim());
-            await _userRepository.Update(user.Id.ToString(), user);
+            await _genericRepository.Update<User>(us => us.Id == user.Id, 
+                CancellationToken.None, 
+                (x => x.PasswordHash, user.PasswordHash),
+                (x => x.Salt, user.Salt),
+                (x => x.MustChangePassword, user.MustChangePassword),
+                (x => x.ModificationInformations, user.ModificationInformations)
+                );
 
             return new ChangePasswordResponse { Message = "Password updated", Success = true };
         }

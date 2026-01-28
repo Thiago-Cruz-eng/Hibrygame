@@ -5,9 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
-using Orchestrator.Infra.Interfaces;
 using Orchestrator.Infra.Mongo;
-using Orchestrator.Infra.Repositories;
 using Orchestrator.Infra.Settings;
 using Orchestrator.Infra.SignalR;
 using Orchestrator.UseCases;
@@ -82,8 +80,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSignalR();
 
-builder.Services.Configure<HibrygameDatabaseSettings>(
-    builder.Configuration.GetSection("HibrygameDatabase"));
+builder.Services.AddSingleton<IMongoDbContextFactory, MongoDbContextFactory>();
 
 builder.Services.AddScoped<CreateUserUseCase>();
 builder.Services.AddScoped<GetUserUseCase>();
@@ -96,9 +93,6 @@ builder.Services.AddScoped<ISecureHashingService, SecureHashingService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinimumRoleHandler>();
 builder.Services.AddScoped<IValidationService, ValidationService>();
-builder.Services.AddScoped<IUserRepositoryNoSql, UserRepositoryNoNoSql>();
-builder.Services.AddScoped<IValidationRepositoryNoSql, ValidationRepositoryNoSql>();
-builder.Services.AddScoped<IRefreshTokenRepositoryNoSql, RefreshTokenRepositoryNoSql>();
 
 var app = builder.Build();
 

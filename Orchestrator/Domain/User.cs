@@ -1,14 +1,12 @@
 using MongoDB.Bson.Serialization.Attributes;
 using Orchestrator.Infra.Mongo;
+using Orchestrator.Infra.Utils;
 
 namespace Orchestrator.Domain;
 
-[MongoCollection("users")]
-public class User
+[CollectionName(nameof(User))]
+public class User : BaseEntity
 {
-    [BsonId]
-    public Guid Id { get; init; } = Guid.NewGuid();
-
     /// <summary>
     /// User's name.
     /// </summary>

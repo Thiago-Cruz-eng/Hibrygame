@@ -51,7 +51,7 @@ public class TokenService : ITokenService
         var rawToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
         var (hash, salt) = _hashingService.HashValue(rawToken);
         var expiresAt = DateTime.UtcNow.AddDays(_settings.RefreshTokenDays);
-        var refreshToken = RefreshToken.Create(user.Id, hash, salt, expiresAt);
+        var refreshToken = RefreshToken.Create(Guid.Parse(user.Id), hash, salt, expiresAt);
 
         return new RefreshTokenIssueResult(rawToken, refreshToken);
     }

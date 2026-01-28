@@ -1,11 +1,11 @@
 using Orchestrator.Infra.Mongo;
+using Orchestrator.Infra.Utils;
 
 namespace Orchestrator.Domain;
 
-[MongoCollection("validations")]
-public class Validation
+[CollectionName(nameof(Validation))]
+public class Validation : BaseEntity
 {
-    public Guid Id { get; set; } = new ();
     public string AcessToken { get; set; }
     public string? Room { get; set; }
     public string UserId { get; set; }

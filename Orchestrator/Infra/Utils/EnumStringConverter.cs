@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace Orchestrator.Infra.EnumConverter;
+namespace Orchestrator.Infra.Utils;
 
 public class EnumStringConverter<TEnum> : StringEnumConverter where TEnum : Enum
 {
