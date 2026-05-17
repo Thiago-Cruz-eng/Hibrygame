@@ -1,0 +1,1109 @@
+﻿{
+    "name":  "antigravity-skills",
+    "description":  "Skills imported from Antigravity agent system - specialized skills for development, design, testing, and more",
+    "skills":  [
+                   {
+                       "name":  "agent-browser",
+                       "path":  "skills/agent-browser/SKILL.md",
+                       "description":  "Browser automation CLI for AI agents. Use when the user needs to interact with websites, including navigating pages, filling forms, clicking buttons, taking screenshots, extracting data, testing web apps, or automating any browser task. Triggers include requests to \"open a website\", \"fill out a form..."
+                   },
+                   {
+                       "name":  "agent-email-cli",
+                       "path":  "skills/agent-email-cli/SKILL.md",
+                       "description":  "Operate the agent-email CLI to create disposable inboxes, poll for new mail, retrieve full message details, and manage local mailbox profiles. Use when the user needs terminal-based email inbox access for LLM or agent automation workflows."
+                   },
+                   {
+                       "name":  "agent-evaluation",
+                       "path":  "skills/agent-evaluation/SKILL.md",
+                       "description":  "Design and implement comprehensive evaluation systems for AI agents. Use when building evals for coding agents, conversational agents, research agents, or computer-use agents. Covers grader types, benchmarks, 8-step roadmap, and production integration."
+                   },
+                   {
+                       "name":  "agent-ui",
+                       "path":  "skills/agent-ui/SKILL.md",
+                       "description":  "Batteries-included agent component for React/Next.js from ui.inference.sh. One component with runtime, tools, streaming, approvals, and widgets built in. Capabilities: drop-in agent, human-in-the-loop, client-side tools, form filling. Use for: building AI chat interfaces, agentic UIs, SaaS copilots,"
+                   },
+                   {
+                       "name":  "ai-automation-workflows",
+                       "path":  "skills/ai-automation-workflows/SKILL.md",
+                       "description":  "Build automated AI workflows combining multiple models and services. Patterns: batch processing, scheduled tasks, event-driven pipelines, agent loops. Tools: inference.sh CLI, bash scripting, Python SDK, webhook integration. Use for: content automation, data processing, monitoring, scheduled generat"
+                   },
+                   {
+                       "name":  "ai-image-generation",
+                       "path":  "skills/ai-image-generation/SKILL.md",
+                       "description":  "Generate AI images with FLUX, Gemini, Grok, Seedream, Reve and 50+ models via inference.sh CLI. Models: FLUX Dev LoRA, FLUX.2 Klein LoRA, Gemini 3 Pro Image, Grok Imagine, Seedream 4.5, Reve, ImagineArt. Capabilities: text-to-image, image-to-image, inpainting, LoRA, image editing, upscaling, text re"
+                   },
+                   {
+                       "name":  "ai-music-generation",
+                       "path":  "skills/ai-music-generation/SKILL.md",
+                       "description":  "Generate AI music and songs with Diffrythm, Tencent Song Generation via inference.sh CLI. Models: Diffrythm (fast song generation), Tencent Song Generation (full songs with vocals). Capabilities: text-to-music, song generation, instrumental, lyrics to song, soundtrack creation. Use for: background m"
+                   },
+                   {
+                       "name":  "ai-rag-pipeline",
+                       "path":  "skills/ai-rag-pipeline/SKILL.md",
+                       "description":  "Build RAG (Retrieval Augmented Generation) pipelines with web search and LLMs. Tools: Tavily Search, Exa Search, Exa Answer, Claude, GPT-4, Gemini via OpenRouter. Capabilities: research, fact-checking, grounded responses, knowledge retrieval. Use for: AI agents, research assistants, fact-checkers, k"
+                   },
+                   {
+                       "name":  "ai-video-generation",
+                       "path":  "skills/ai-video-generation/SKILL.md",
+                       "description":  "Generate AI videos with Google Veo, Seedance, Wan, Grok and 40+ models via inference.sh CLI. Models: Veo 3.1, Veo 3, Seedance 1.5 Pro, Wan 2.5, Grok Imagine Video, OmniHuman, Fabric, HunyuanVideo. Capabilities: text-to-video, image-to-video, lipsync, avatar animation, video upscaling, foley sound. U"
+                   },
+                   {
+                       "name":  "ai-voice-cloning",
+                       "path":  "skills/ai-voice-cloning/SKILL.md",
+                       "description":  "AI voice generation, text-to-speech, and voice synthesis via inference.sh CLI. Models: Kokoro TTS, DIA, Chatterbox, Higgs, VibeVoice for natural speech. Capabilities: multiple voices, emotions, accents, long-form narration, conversation. Use for: voiceovers, audiobooks, podcasts, video narration, ac"
+                   },
+                   {
+                       "name":  "api-design-principles",
+                       "path":  "skills/api-design-principles/SKILL.md",
+                       "description":  "Master REST and GraphQL API design principles to build intuitive, scalable, and maintainable APIs that delight developers. Use when designing new APIs, reviewing API specifications, or establishing API design standards."
+                   },
+                   {
+                       "name":  "api-documentation",
+                       "path":  "skills/api-documentation/SKILL.md",
+                       "description":  "Create comprehensive API documentation for developers. Use when documenting REST APIs, GraphQL schemas, or SDK methods. Handles OpenAPI/Swagger, interactive docs, examples, and API reference guides."
+                   },
+                   {
+                       "name":  "appinsights-instrumentation",
+                       "path":  "skills/appinsights-instrumentation/SKILL.md",
+                       "description":  "Guidance for instrumenting webapps with Azure Application Insights. Provides telemetry patterns, SDK setup, and configuration references. WHEN: how to instrument app, App Insights SDK, telemetry patterns, what is App Insights, Application Insights guidance, instrumentation examples, APM best practic"
+                   },
+                   {
+                       "name":  "architecture-patterns",
+                       "path":  "skills/architecture-patterns/SKILL.md",
+                       "description":  "Implement proven backend architecture patterns including Clean Architecture, Hexagonal Architecture, and Domain-Driven Design. Use when architecting complex backend systems or refactoring existing applications for better maintainability."
+                   },
+                   {
+                       "name":  "audit-website",
+                       "path":  "skills/audit-website/SKILL.md",
+                       "description":  "Audit websites for SEO, performance, security, technical, content, and 15 other issue cateories with 230+ rules using the squirrelscan CLI. Returns LLM-optimized reports with health scores, broken links, meta tag analysis, and actionable recommendations. Use to discover and asses website or webapp i..."
+                   },
+                   {
+                       "name":  "azure-ai",
+                       "path":  "skills/azure-ai/SKILL.md",
+                       "description":  "Use for Azure AI: Search, Speech, OpenAI, Document Intelligence. Helps with search, vector/hybrid search, speech-to-text, text-to-speech, transcription, OCR. WHEN: AI Search, query search, vector search, hybrid search, semantic search, speech-to-text, text-to-speech, transcribe, OCR, convert text to"
+                   },
+                   {
+                       "name":  "azure-aigateway",
+                       "path":  "skills/azure-aigateway/SKILL.md",
+                       "description":  "Configure Azure API Management as an AI Gateway for AI models, MCP tools, and agents. WHEN: semantic caching, token limit, content safety, load balancing, AI model governance, MCP rate limiting, jailbreak detection, add Azure OpenAI backend, add AI Foundry model, test AI gateway, LLM policies, confi"
+                   },
+                   {
+                       "name":  "azure-cloud-migrate",
+                       "path":  "skills/azure-cloud-migrate/SKILL.md",
+                       "description":  "Assess and migrate cross-cloud workloads to Azure. Generates assessment reports and converts code from AWS, GCP, or other providers to Azure services. WHEN: migrate Lambda to Azure Functions, migrate AWS to Azure, Lambda migration assessment, convert AWS serverless to Azure, migration readiness repo"
+                   },
+                   {
+                       "name":  "azure-compliance",
+                       "path":  "skills/azure-compliance/SKILL.md",
+                       "description":  "Comprehensive Azure compliance and security auditing capabilities including best practices assessment, Key Vault expiration monitoring, and resource configuration validation. WHEN: compliance scan, security audit, BEFORE running azqr (compliance cli tool), Azure best practices, Key Vault expiration "
+                   },
+                   {
+                       "name":  "azure-compute",
+                       "path":  "skills/azure-compute/SKILL.md",
+                       "description":  "Recommend Azure VM sizes, VM Scale Sets (VMSS), and configurations based on workload requirements, performance needs, and budget constraints. No Azure account required â€” uses public documentation and the Azure Retail Prices API. WHEN: recommend VM size, which VM should I use, choose Azure VM, VM for"
+                   },
+                   {
+                       "name":  "azure-cost-optimization",
+                       "path":  "skills/azure-cost-optimization/SKILL.md",
+                       "description":  "Identify and quantify cost savings across Azure subscriptions by analyzing actual costs, utilization metrics, and generating actionable optimization recommendations. USE FOR: optimize Azure costs, reduce Azure spending, reduce Azure expenses, analyze Azure costs, find cost savings, generate cost opt"
+                   },
+                   {
+                       "name":  "azure-deploy",
+                       "path":  "skills/azure-deploy/SKILL.md",
+                       "description":  "Execute Azure deployments for ALREADY-PREPARED applications that have existing .azure/plan.md and infrastructure files. DO NOT use this skill when the user asks to CREATE a new application â€” use azure-prepare instead. This skill runs azd up, azd deploy, terraform apply, and az deployment commands wi"
+                   },
+                   {
+                       "name":  "azure-diagnostics",
+                       "path":  "skills/azure-diagnostics/SKILL.md",
+                       "description":  "Debug and troubleshoot Azure Container Apps and Function Apps production issues using log analysis, health checks, and KQL. WHEN: debug production issues, troubleshoot containerized apps, troubleshoot Azure Functions, analyze logs with KQL, fix image pull failures, investigate health probe failures,"
+                   },
+                   {
+                       "name":  "azure-hosted-copilot-sdk",
+                       "path":  "skills/azure-hosted-copilot-sdk/SKILL.md",
+                       "description":  "Build and deploy GitHub Copilot SDK apps to Azure. WHEN: build copilot app, create copilot app, copilot SDK, @github/copilot-sdk, scaffold copilot project, copilot-powered app, deploy copilot app, host on azure, azure model, BYOM, bring your own model, use my own model, azure openai model, DefaultAz"
+                   },
+                   {
+                       "name":  "azure-kusto",
+                       "path":  "skills/azure-kusto/SKILL.md",
+                       "description":  "Query and analyze data in Azure Data Explorer (Kusto/ADX) using KQL for log analytics, telemetry, and time series analysis. WHEN: KQL queries, Kusto database queries, Azure Data Explorer, ADX clusters, log analytics, time series data, IoT telemetry, anomaly detection."
+                   },
+                   {
+                       "name":  "azure-messaging",
+                       "path":  "skills/azure-messaging/SKILL.md",
+                       "description":  "Troubleshoot and resolve issues with Azure Messaging SDKs for Event Hubs and Service Bus. Covers connection failures, authentication errors, message processing issues, and SDK configuration problems. WHEN: event hub SDK error, service bus SDK issue, messaging connection failure, AMQP error, event pr"
+                   },
+                   {
+                       "name":  "azure-prepare",
+                       "path":  "skills/azure-prepare/SKILL.md",
+                       "description":  "Prepare Azure apps for deployment (infra Bicep/Terraform, azure.yaml, Dockerfiles). Use for create/modernize or create+deploy; not cross-cloud migration (use azure-cloud-migrate). WHEN: \\\"create app\\\", \\\"build web app\\\", \\\"create API\\\", \\\"create serverless HTTP API\\\", \\\"create frontend\\\", \\\"create b"
+                   },
+                   {
+                       "name":  "azure-quotas",
+                       "path":  "skills/azure-quotas/SKILL.md",
+                       "description":  "Check/manage Azure quotas and usage across providers. For deployment planning, capacity validation, region selection. WHEN: \\\"check quotas\\\", \\\"service limits\\\", \\\"current usage\\\", \\\"request quota increase\\\", \\\"quota exceeded\\\", \\\"validate capacity\\\", \\\"regional availability\\\", \\\"provisioning limits"
+                   },
+                   {
+                       "name":  "azure-rbac",
+                       "path":  "skills/azure-rbac/SKILL.md",
+                       "description":  "Helps users find the right Azure RBAC role for an identity with least privilege access, then generate CLI commands and Bicep code to assign it. Also provides guidance on permissions required to grant roles. WHEN: what role should I assign, least privilege role, RBAC role for, role to read blobs, rol"
+                   },
+                   {
+                       "name":  "azure-resource-lookup",
+                       "path":  "skills/azure-resource-lookup/SKILL.md",
+                       "description":  "List, find, and show Azure resources. Answers \\\"list my VMs\\\", \\\"show my storage accounts\\\", \\\"list websites\\\", \\\"find container apps\\\", \\\"what resources do I have\\\", and similar queries for any Azure resource type. USE FOR: list resources, list virtual machines, list VMs, list storage accounts, lis"
+                   },
+                   {
+                       "name":  "azure-storage",
+                       "path":  "skills/azure-storage/SKILL.md",
+                       "description":  "Azure Storage Services including Blob Storage, File Shares, Queue Storage, Table Storage, and Data Lake. Provides object storage, SMB file shares, async messaging, NoSQL key-value, and big data analytics capabilities. Includes access tiers (hot, cool, archive) and lifecycle management. USE FOR: blob"
+                   },
+                   {
+                       "name":  "azure-upgrade",
+                       "path":  "skills/azure-upgrade/SKILL.md",
+                       "description":  "Assess and upgrade Azure workloads between plans, tiers, or SKUs within Azure. Generates assessment reports and automates upgrade steps. WHEN: upgrade Consumption to Flex Consumption, upgrade Azure Functions plan, migrate hosting plan, upgrade Functions SKU, move to Flex Consumption, upgrade Azure s"
+                   },
+                   {
+                       "name":  "azure-validate",
+                       "path":  "skills/azure-validate/SKILL.md",
+                       "description":  "Pre-deployment validation for Azure readiness. Run deep checks on configuration, infrastructure (Bicep or Terraform), permissions, and prerequisites before deploying. WHEN: validate my app, check deployment readiness, run preflight checks, verify configuration, check if ready to deploy, validate azu"
+                   },
+                   {
+                       "name":  "backend-testing",
+                       "path":  "skills/backend-testing/SKILL.md",
+                       "description":  "Write comprehensive backend tests including unit tests, integration tests, and API tests. Use when testing REST APIs, database operations, authentication flows, or business logic. Handles Jest, Pytest, Mocha, testing strategies, mocking, and test coverage."
+                   },
+                   {
+                       "name":  "better-auth-best-practices",
+                       "path":  "skills/better-auth-best-practices/SKILL.md",
+                       "description":  "Configure Better Auth server and client, set up database adapters, manage sessions, add plugins, and handle environment variables. Use when users mention Better Auth, betterauth, auth.ts, or need to set up TypeScript authentication with email/password, OAuth, or plugin configuration."
+                   },
+                   {
+                       "name":  "better-icons",
+                       "path":  "skills/better-icons/SKILL.md",
+                       "description":  "Use when working with icons in any project. Provides CLI for searching 200+ icon libraries (Iconify) and retrieving SVGs. Commands: `better-icons search \u003cquery\u003e` to find icons, `better-icons get \u003cid\u003e` to get SVG. Also available as MCP server for AI agents."
+                   },
+                   {
+                       "name":  "brainstorming",
+                       "path":  "skills/brainstorming/SKILL.md",
+                       "description":  "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+                   },
+                   {
+                       "name":  "browser-automation",
+                       "path":  "skills/browser-automation/SKILL.md",
+                       "description":  "Browser automation powers web testing, scraping, and AI agent interactions. The difference between a flaky script and a reliable system comes down to understanding selectors, waiting strategies, an..."
+                   },
+                   {
+                       "name":  "browser-use",
+                       "path":  "skills/browser-use/SKILL.md",
+                       "description":  "Automates browser interactions for web testing, form filling, screenshots, and data extraction. Use when the user needs to navigate websites, interact with web pages, fill forms, take screenshots, or extract information from web pages."
+                   },
+                   {
+                       "name":  "chat-ui",
+                       "path":  "skills/chat-ui/SKILL.md",
+                       "description":  "Chat UI building blocks for React/Next.js from ui.inference.sh. Components: container, messages, input, typing indicators, avatars. Capabilities: chat interfaces, message lists, input handling, streaming. Use for: building custom chat UIs, messaging interfaces, AI assistants. Triggers: chat ui, chat"
+                   },
+                   {
+                       "name":  "chrome-devtools",
+                       "path":  "skills/chrome-devtools/SKILL.md",
+                       "description":  "Expert-level browser automation, debugging, and performance analysis using Chrome DevTools MCP. Use for interacting with web pages, capturing screenshots, analyzing network traffic, and profiling performance."
+                   },
+                   {
+                       "name":  "ckm-banner-design",
+                       "path":  "skills/ckm-banner-design/SKILL.md",
+                       "description":  "Design banners for social media, ads, website heroes, creative assets, and print. Multiple art direction options with AI-generated visuals. Actions: design, create, generate banner. Platforms: Facebook, Twitter/X, LinkedIn, YouTube, Instagram, Google Display, website hero, print. Styles: minimalist,"
+                   },
+                   {
+                       "name":  "ckm-brand",
+                       "path":  "skills/ckm-brand/SKILL.md",
+                       "description":  "Brand voice, visual identity, messaging frameworks, asset management, brand consistency. Activate for branded content, tone of voice, marketing assets, brand compliance, style guides."
+                   },
+                   {
+                       "name":  "ckm-design",
+                       "path":  "skills/ckm-design/SKILL.md",
+                       "description":  "Comprehensive design skill: brand identity, design tokens, UI styling, logo generation (55 styles, Gemini AI), corporate identity program (50 deliverables, CIP mockups), HTML presentations (Chart.js), banner design (22 styles, social/ads/web/print), icon design (15 styles, SVG, Gemini 3.1 Pro), soci"
+                   },
+                   {
+                       "name":  "ckm-design-system",
+                       "path":  "skills/ckm-design-system/SKILL.md",
+                       "description":  "Token architecture, component specifications, and slide generation. Three-layer tokens (primitiveâ†’semanticâ†’component), CSS variables, spacing/typography scales, component specs, strategic slide creation. Use for design tokens, systematic design, brand-compliant presentations."
+                   },
+                   {
+                       "name":  "ckm-slides",
+                       "path":  "skills/ckm-slides/SKILL.md",
+                       "description":  "Create strategic HTML presentations with Chart.js, design tokens, responsive layouts, copywriting formulas, and contextual slide strategies."
+                   },
+                   {
+                       "name":  "clerk",
+                       "path":  "skills/clerk/SKILL.md",
+                       "description":  "Clerk authentication router. Use when user asks about adding authentication, setting up Clerk, custom sign-in flows, Swift or native iOS auth, native Android auth, Next.js patterns, organizations, syncing users, or testing. Automatically routes to the specific skill based on their task."
+                   },
+                   {
+                       "name":  "clerk-nextjs-patterns",
+                       "path":  "skills/clerk-nextjs-patterns/SKILL.md",
+                       "description":  "Advanced Next.js patterns - middleware, Server Actions, caching with Clerk."
+                   },
+                   {
+                       "name":  "cloudflare",
+                       "path":  "skills/cloudflare/SKILL.md",
+                       "description":  "Comprehensive Cloudflare platform skill covering Workers, Pages, storage (KV, D1, R2), AI (Workers AI, Vectorize, Agents SDK), networking (Tunnel, Spectrum), security (WAF, DDoS), and infrastructure-as-code (Terraform, Pulumi). Use for any Cloudflare development task. Biases towards retrieval from C"
+                   },
+                   {
+                       "name":  "code-refactoring",
+                       "path":  "skills/code-refactoring/SKILL.md",
+                       "description":  "Simplify and refactor code while preserving behavior, improving clarity, and reducing complexity. Use when simplifying complex code, removing duplication, or applying design patterns. Handles Extract Method, DRY principle, SOLID principles, behavior validation, and refactoring patterns."
+                   },
+                   {
+                       "name":  "code-review",
+                       "path":  "skills/code-review/SKILL.md",
+                       "description":  "Conduct thorough, constructive code reviews for quality and security. Use when reviewing pull requests, checking code quality, identifying bugs, or auditing security. Handles best practices, SOLID principles, security vulnerabilities, performance analysis, and testing coverage."
+                   },
+                   {
+                       "name":  "code-review-excellence",
+                       "path":  "skills/code-review-excellence/SKILL.md",
+                       "description":  "Master effective code review practices to provide constructive feedback, catch bugs early, and foster knowledge sharing while maintaining team morale. Use when reviewing pull requests, establishing review standards, or mentoring developers."
+                   },
+                   {
+                       "name":  "competitor-alternatives",
+                       "path":  "skills/competitor-alternatives/SKILL.md",
+                       "description":  "When the user wants to create competitor comparison or alternative pages for SEO and sales enablement. Also use when the user mentions \u0027alternative page,\u0027 \u0027vs page,\u0027 \u0027competitor comparison,\u0027 \u0027comparison page,\u0027 \u0027[Product] vs [Product],\u0027 \u0027[Product] alternative,\u0027 \u0027competitive landing pages,\u0027 \u0027how do we"
+                   },
+                   {
+                       "name":  "confluence",
+                       "path":  "skills/confluence/SKILL.md",
+                       "description":  "| Confluence integration. Manage document management data, records, and workflows. Use when the user wants to interact with Confluence data."
+                   },
+                   {
+                       "name":  "content-strategy",
+                       "path":  "skills/content-strategy/SKILL.md",
+                       "description":  "When the user wants to plan a content strategy, decide what content to create, or figure out what topics to cover. Also use when the user mentions \"content strategy,\" \"what should I write about,\" \"content ideas,\" \"blog strategy,\" \"topic clusters,\" \"content planning,\" \"editorial calendar,\" \"content m"
+                   },
+                   {
+                       "name":  "copywriting",
+                       "path":  "skills/copywriting/SKILL.md",
+                       "description":  "When the user wants to write, rewrite, or improve marketing copy for any page â€” including homepage, landing pages, pricing pages, feature pages, about pages, or product pages. Also use when the user says \"write copy for,\" \"improve this copy,\" \"rewrite this page,\" \"marketing copy,\" \"headline help,\" o..."
+                   },
+                   {
+                       "name":  "customer-persona",
+                       "path":  "skills/customer-persona/SKILL.md",
+                       "description":  "Research-backed customer persona creation with market data and avatar generation. Covers demographics, psychographics, jobs-to-be-done, journey mapping, and anti-personas. Use for: marketing strategy, product development, UX research, sales enablement, content strategy. Triggers: customer persona, b"
+                   },
+                   {
+                       "name":  "data-analysis",
+                       "path":  "skills/data-analysis/SKILL.md",
+                       "description":  "Analyze datasets to extract insights, identify patterns, and generate reports. Use when exploring data, creating visualizations, or performing statistical analysis. Handles CSV, JSON, SQL queries, and Python pandas operations."
+                   },
+                   {
+                       "name":  "design-md",
+                       "path":  "skills/design-md/SKILL.md",
+                       "description":  "Analyze Stitch projects and synthesize a semantic design system into DESIGN.md files"
+                   },
+                   {
+                       "name":  "docx",
+                       "path":  "skills/docx/SKILL.md",
+                       "description":  "Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers include: any mention of \u0027Word doc\u0027, \u0027word document\u0027, \u0027.docx\u0027, or requests to produce professional documents with formatting like tables of contents, headings, page numbers, or letterhea..."
+                   },
+                   {
+                       "name":  "dogfood",
+                       "path":  "skills/dogfood/SKILL.md",
+                       "description":  "Systematically explore and test a web application to find bugs, UX issues, and other problems. Use when asked to \"dogfood\", \"QA\", \"exploratory test\", \"find issues\", \"bug hunt\", \"test this app/site/platform\", or review the quality of a web application. Produces a structured report with full reproduct"
+                   },
+                   {
+                       "name":  "dotnet-10-csharp-14",
+                       "path":  "skills/dotnet-10-csharp-14/SKILL.md",
+                       "description":  "Use when building .NET 10 or C# 14 applications; when using minimal APIs, modular monolith patterns, or feature folders; when implementing HTTP resilience, Options pattern, Channels, or validation; when seeing outdated patterns like old extension method syntax"
+                   },
+                   {
+                       "name":  "dotnet-advisor",
+                       "path":  "skills/dotnet-advisor/SKILL.md",
+                       "description":  "Routes .NET/C# work to domain skills. Loads coding-standards for code paths.",
+                       "user_invocable":  true
+                   },
+                   {
+                       "name":  "dotnet-api",
+                       "path":  "skills/dotnet-api/SKILL.md",
+                       "description":  "Builds ASP.NET Core APIs, data access, and backend services including minimal APIs, middleware, EF Core, gRPC, SignalR/SSE, resilience (Polly), HTTP client, API versioning, OpenAPI, security (OWASP, secrets, crypto), background services, Aspire orchestration, Semantic Kernel AI integration, architec...",
+                       "user_invocable":  false
+                   },
+                   {
+                       "name":  "dotnet-backend-patterns",
+                       "path":  "skills/dotnet-backend-patterns/SKILL.md",
+                       "description":  "Master C#/.NET backend development patterns for building robust APIs, MCP servers, and enterprise applications. Covers async/await, dependency injection, Entity Framework Core, Dapper, configuration, caching, and testing with xUnit. Use when developing .NET backends, reviewing C# code, or designing ..."
+                   },
+                   {
+                       "name":  "dotnet-best-practices",
+                       "path":  "skills/dotnet-best-practices/SKILL.md",
+                       "description":  "Ensure .NET/C# code meets best practices for the solution/project."
+                   },
+                   {
+                       "name":  "dotnet-core-expert",
+                       "path":  "skills/dotnet-core-expert/SKILL.md",
+                       "description":  "Use when building .NET 8 applications with minimal APIs, clean architecture, or cloud-native microservices. Invoke for Entity Framework Core, CQRS with MediatR, JWT authentication, AOT compilation."
+                   },
+                   {
+                       "name":  "dotnet-csharp",
+                       "path":  "skills/dotnet-csharp/SKILL.md",
+                       "description":  "Guides C# language patterns, coding standards, and .NET runtime features including async/await, dependency injection, configuration, source generators, nullable reference types, serialization, channels, LINQ optimization, domain modeling, SOLID principles, concurrency, analyzers, editorconfig, file ...",
+                       "user_invocable":  false
+                   },
+                   {
+                       "name":  "dotnet-debugging",
+                       "path":  "skills/dotnet-debugging/SKILL.md",
+                       "description":  "Debugs Windows applications using WinDbg and crash dump analysis including MCP server integration, live process attach, dump file triage, hang detection, high-CPU diagnosis, memory leak investigation, kernel debugging, symbol configuration, scenario command packs, diagnostic report generation, and S...",
+                       "user_invocable":  true
+                   },
+                   {
+                       "name":  "dotnet-devops",
+                       "path":  "skills/dotnet-devops/SKILL.md",
+                       "description":  "Configures CI/CD pipelines, packaging, and operational tooling for .NET targeting GitHub Actions (build/test, deploy, publish, patterns), Azure DevOps (build/test, publish, patterns, environments), containers (Dockerfiles, deployment), NuGet authoring, MSIX packaging, GitHub Releases, release manage...",
+                       "user_invocable":  false
+                   },
+                   {
+                       "name":  "dotnet-testing",
+                       "path":  "skills/dotnet-testing/SKILL.md",
+                       "description":  "Defines .NET test strategy, xUnit v3, integration/E2E, snapshots (Verify), Playwright, benchmarks, and quality gates.",
+                       "user_invocable":  false
+                   },
+                   {
+                       "name":  "dotnet-tooling",
+                       "path":  "skills/dotnet-tooling/SKILL.md",
+                       "description":  "Manages .NET project setup, build systems, and developer tooling including solution structure, MSBuild (authoring, tasks, Directory.Build), build optimization, performance patterns, profiling (dotnet-counters/trace/dump), Native AOT publishing, trimming, GC/memory tuning, CLI app architecture (Syste...",
+                       "user_invocable":  true
+                   },
+                   {
+                       "name":  "e2e-testing-patterns",
+                       "path":  "skills/e2e-testing-patterns/SKILL.md",
+                       "description":  "Master end-to-end testing with Playwright and Cypress to build reliable test suites that catch bugs, improve confidence, and enable fast deployment. Use when implementing E2E tests, debugging flaky tests, or establishing testing standards."
+                   },
+                   {
+                       "name":  "electron",
+                       "path":  "skills/electron/SKILL.md",
+                       "description":  "Automate Electron desktop apps (VS Code, Slack, Discord, Figma, Notion, Spotify, etc.) using agent-browser via Chrome DevTools Protocol. Use when the user needs to interact with an Electron app, automate a desktop app, connect to a running app, control a native app, or test an Electron application. "
+                   },
+                   {
+                       "name":  "email-sequence",
+                       "path":  "skills/email-sequence/SKILL.md",
+                       "description":  "When the user wants to create or optimize an email sequence, drip campaign, automated email flow, or lifecycle email program. Also use when the user mentions \"email sequence,\" \"drip campaign,\" \"nurture sequence,\" \"onboarding emails,\" \"welcome sequence,\" \"re-engagement emails,\" \"email automation,\" or..."
+                   },
+                   {
+                       "name":  "enhance-prompt",
+                       "path":  "skills/enhance-prompt/SKILL.md",
+                       "description":  "Transforms vague UI ideas into polished, Stitch-optimized prompts. Enhances specificity, adds UI/UX keywords, injects design system context, and structures output for better generation results."
+                   },
+                   {
+                       "name":  "entra-app-registration",
+                       "path":  "skills/entra-app-registration/SKILL.md",
+                       "description":  "Guides Microsoft Entra ID app registration, OAuth 2.0 authentication, and MSAL integration. USE FOR: create app registration, register Azure AD app, configure OAuth, set up authentication, add API permissions, generate service principal, MSAL example, console app auth, Entra ID setup, Azure AD authe"
+                   },
+                   {
+                       "name":  "find-skills",
+                       "path":  "skills/find-skills/SKILL.md",
+                       "description":  "Helps users discover and install agent skills when they ask questions like \"how do I do X\", \"find a skill for X\", \"is there a skill that can...\", or express interest in extending capabilities. This skill should be used when the user is looking for functionality that might exist as an installable ski..."
+                   },
+                   {
+                       "name":  "flux-best-practices",
+                       "path":  "skills/flux-best-practices/SKILL.md",
+                       "description":  "Comprehensive guide for BFL FLUX image generation models. Covers prompting, T2I, I2I, structured JSON, hex colors, typography, multi-reference editing, and model-specific best practices for FLUX.2 and FLUX.1 families."
+                   },
+                   {
+                       "name":  "flux-image",
+                       "path":  "skills/flux-image/SKILL.md",
+                       "description":  "Generate images with FLUX models (Black Forest Labs) via inference.sh CLI. Models: FLUX Dev LoRA, FLUX.2 Klein LoRA with custom style adaptation. Capabilities: text-to-image, image-to-image, LoRA fine-tuning, custom styles. Triggers: flux, flux.2, flux dev, flux schnell, flux pro, black forest labs,"
+                   },
+                   {
+                       "name":  "frontend-design",
+                       "path":  "skills/frontend-design/SKILL.md",
+                       "description":  "Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, artifacts, posters, or applications (examples include websites, landing pages, dashboards, React components, HTML/CSS layouts, or when styling/beautify..."
+                   },
+                   {
+                       "name":  "frontend-responsive-design-standards",
+                       "path":  "skills/frontend-responsive-design-standards/SKILL.md",
+                       "description":  "Build responsive, mobile-first layouts using fluid containers, flexible units, media queries, and touch-friendly design that works across all screen sizes. Use this skill when creating or modifying UI layouts, responsive grids, breakpoint styles, mobile navigation, or any interface that needs to ada..."
+                   },
+                   {
+                       "name":  "game-3d-assets",
+                       "path":  "skills/game-3d-assets/SKILL.md",
+                       "description":  "3D asset engineer that finds, downloads, and integrates GLB/GLTF models into Three.js browser games. Use when a 3D game needs real models instead of primitive BoxGeometry/SphereGeometry shapes."
+                   },
+                   {
+                       "name":  "game-architecture",
+                       "path":  "skills/game-architecture/SKILL.md",
+                       "description":  "Game architecture patterns and best practices for browser games. Use when designing game systems, planning architecture, structuring a game project, or making architectural decisions about game code."
+                   },
+                   {
+                       "name":  "game-assets",
+                       "path":  "skills/game-assets/SKILL.md",
+                       "description":  "Game asset engineer that creates pixel art sprites, animated characters, and visual entities for browser games. Use when a game needs better character art, enemy sprites, item visuals, or any upgrade from basic geometric shapes to recognizable pixel art."
+                   },
+                   {
+                       "name":  "game-audio",
+                       "path":  "skills/game-audio/SKILL.md",
+                       "description":  "Game audio engineer using Web Audio API for procedural music and sound effects in browser games. Zero dependencies. Use when adding music or SFX to a game."
+                   },
+                   {
+                       "name":  "game-designer",
+                       "path":  "skills/game-designer/SKILL.md",
+                       "description":  "Game UI/UX designer that analyzes and improves the visual polish, atmosphere, and player experience of browser games. Use when a game needs visual improvements, better backgrounds, particles, animations, screen transitions, juice/feel, or overall aesthetic upgrades."
+                   },
+                   {
+                       "name":  "game-engine",
+                       "path":  "skills/game-engine/SKILL.md",
+                       "description":  "Expert skill for building web-based game engines and games using HTML5, Canvas, WebGL, and JavaScript. Use when asked to create games, build game engines, implement game physics, handle collision detection, set up game loops, manage sprites, add game controls, or work with 2D/3D rendering. Covers te"
+                   },
+                   {
+                       "name":  "game-qa",
+                       "path":  "skills/game-qa/SKILL.md",
+                       "description":  "Game QA testing with Playwright â€” visual regression, gameplay verification, performance, and accessibility for browser games. Use when writing or running game tests, debugging test failures, or building QA infrastructure. This is the reference skill â€” use qa-game for the user-facing command."
+                   },
+                   {
+                       "name":  "gemini-api-dev",
+                       "path":  "skills/gemini-api-dev/SKILL.md",
+                       "description":  "Use this skill when building applications with Gemini models, Gemini API, working with multimodal content (text, images, audio, video), implementing function calling, using structured outputs, or needing current model specifications. Covers SDK usage (google-genai for Python, @google/genai for JavaS..."
+                   },
+                   {
+                       "name":  "git-commit",
+                       "path":  "skills/git-commit/SKILL.md",
+                       "description":  "Execute git commit with conventional commit message analysis, intelligent staging, and message generation. Use when user asks to commit changes, create a git commit, or mentions \"/commit\". Supports: (1) Auto-detecting type and scope from changes, (2) Generating conventional commit messages from diff..."
+                   },
+                   {
+                       "name":  "interface-design",
+                       "path":  "skills/interface-design/SKILL.md",
+                       "description":  "This skill is for interface design â€” dashboards, admin panels, apps, tools, and interactive products. NOT for marketing design (landing pages, marketing sites, campaigns)."
+                   },
+                   {
+                       "name":  "landing-page-design",
+                       "path":  "skills/landing-page-design/SKILL.md",
+                       "description":  "Landing page conversion optimization with layout rules, hero section design, and CTA psychology. Covers above-the-fold formula, social proof placement, mobile design, and F-pattern reading. Use for: startup landing pages, product pages, SaaS marketing, conversion optimization. Triggers: landing page"
+                   },
+                   {
+                       "name":  "launch-strategy",
+                       "path":  "skills/launch-strategy/SKILL.md",
+                       "description":  "When the user wants to plan a product launch, feature announcement, or release strategy. Also use when the user mentions \u0027launch,\u0027 \u0027Product Hunt,\u0027 \u0027feature release,\u0027 \u0027announcement,\u0027 \u0027go-to-market,\u0027 \u0027beta launch,\u0027 \u0027early access,\u0027 \u0027waitlist,\u0027 or \u0027product update.\u0027 This skill covers phased launches, cha..."
+                   },
+                   {
+                       "name":  "lead-magnets",
+                       "path":  "skills/lead-magnets/SKILL.md",
+                       "description":  "When the user wants to create, plan, or optimize a lead magnet for email capture or lead generation. Also use when the user mentions \"lead magnet,\" \"gated content,\" \"content upgrade,\" \"downloadable,\" \"ebook,\" \"cheat sheet,\" \"checklist,\" \"template download,\" \"opt-in,\" \"freebie,\" \"PDF download,\" \"reso"
+                   },
+                   {
+                       "name":  "linkedin-content",
+                       "path":  "skills/linkedin-content/SKILL.md",
+                       "description":  "LinkedIn post writing with hook formulas, formatting rules, and engagement patterns. Covers post types, algorithm signals, character limits, and content pillars. Use for: LinkedIn posts, professional content, thought leadership, B2B content, personal branding. Triggers: linkedin post, linkedin conte"
+                   },
+                   {
+                       "name":  "llm-models",
+                       "path":  "skills/llm-models/SKILL.md",
+                       "description":  "Access Claude, Gemini, Kimi, GLM and 100+ LLMs via inference.sh CLI using OpenRouter. Models: Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, Gemini 3 Pro, Kimi K2, GLM-4.6, Intellect 3. One API for all models with automatic fallback and cost optimization. Use for: AI assistants, code generati"
+                   },
+                   {
+                       "name":  "log-analysis",
+                       "path":  "skills/log-analysis/SKILL.md",
+                       "description":  "Analyze application logs to identify errors, performance issues, and security anomalies. Use when debugging issues, monitoring system health, or investigating incidents. Handles various log formats including Apache, Nginx, application logs, and JSON logs."
+                   },
+                   {
+                       "name":  "logo-design-guide",
+                       "path":  "skills/logo-design-guide/SKILL.md",
+                       "description":  "Logo design principles and AI image generation best practices for creating logos. Covers logo types, prompting techniques, scalability rules, and iteration workflows. Use for: brand identity, startup logos, app icons, favicons, logo concepts. Triggers: logo design, create logo, brand logo, logo gene"
+                   },
+                   {
+                       "name":  "marketing-psychology",
+                       "path":  "skills/marketing-psychology/SKILL.md",
+                       "description":  "When the user wants to apply psychological principles, mental models, or behavioral science to marketing. Also use when the user mentions \u0027psychology,\u0027 \u0027mental models,\u0027 \u0027cognitive bias,\u0027 \u0027persuasion,\u0027 \u0027behavioral science,\u0027 \u0027why people buy,\u0027 \u0027decision-making,\u0027 \u0027consumer behavior,\u0027 \u0027anchoring,\u0027 \u0027socia"
+                   },
+                   {
+                       "name":  "memory-merger",
+                       "path":  "skills/memory-merger/SKILL.md",
+                       "description":  "Merges mature lessons from a domain memory file into its instruction file. Syntax: `/memory-merger \u003edomain [scope]` where scope is `global` (default), `user`, `workspace`, or `ws`."
+                   },
+                   {
+                       "name":  "microservices-patterns",
+                       "path":  "skills/microservices-patterns/SKILL.md",
+                       "description":  "Design microservices architectures with service boundaries, event-driven communication, and resilience patterns. Use when building distributed systems, decomposing monoliths, or implementing microservices."
+                   },
+                   {
+                       "name":  "microsoft-foundry",
+                       "path":  "skills/microsoft-foundry/SKILL.md",
+                       "description":  "Deploy, evaluate, and manage Foundry agents end-to-end: Docker build, ACR push, hosted/prompt agent create, container start, batch eval, prompt optimization, prompt optimizer workflows, agent.yaml, dataset curation from traces. USE FOR: deploy agent to Foundry, hosted agent, create agent, invoke age"
+                   },
+                   {
+                       "name":  "mongodb",
+                       "path":  "skills/mongodb/SKILL.md",
+                       "description":  "Work with MongoDB databases using best practices. Use when designing schemas, writing queries, building aggregation pipelines, or optimizing performance. Triggers on MongoDB, Mongoose, NoSQL, aggregation pipeline, document database, MongoDB Atlas."
+                   },
+                   {
+                       "name":  "mongodb-aggregation-pipeline",
+                       "path":  "skills/mongodb-aggregation-pipeline/SKILL.md",
+                       "description":  "Master MongoDB aggregation pipeline for complex data transformations. Learn pipeline stages, grouping, filtering, and data transformation. Use when analyzing data, creating reports, or transforming documents."
+                   },
+                   {
+                       "name":  "mongodb-atlas",
+                       "path":  "skills/mongodb-atlas/SKILL.md",
+                       "description":  "MongoDB Atlas cloud database management including clusters, schemas, aggregation pipelines, and Prisma ORM integration. Activate for MongoDB queries, schema design, indexing, and Atlas administration."
+                   },
+                   {
+                       "name":  "mongodb-indexing-optimization",
+                       "path":  "skills/mongodb-indexing-optimization/SKILL.md",
+                       "description":  "Master MongoDB indexing and query optimization. Learn index types, explain plans, performance tuning, and query analysis. Use when optimizing slow queries, analyzing performance, or designing indexes."
+                   },
+                   {
+                       "name":  "mongodb-query-and-index-optimize",
+                       "path":  "skills/mongodb-query-and-index-optimize/SKILL.md",
+                       "description":  "MongoDB query optimization and indexing strategies. Use when writing queries, creating indexes, building aggregation pipelines, debugging slow operations, or optimizing built-in $text search on self-managed deployments. Triggers on \"slow query\", \"create index\", \"optimize query\", \"aggregation pipelin"
+                   },
+                   {
+                       "name":  "mongodb-query-patterns",
+                       "path":  "skills/mongodb-query-patterns/SKILL.md",
+                       "description":  "Use when writing ANY Mongoose query (.find, .findOne, .findById, .aggregate, .populate), adding database operations to services or controllers, wiring data between services, building endpoints that read or write to MongoDB, or reviewing code that chains service calls. TRIGGER especially when about t"
+                   },
+                   {
+                       "name":  "mongodb-security-admin",
+                       "path":  "skills/mongodb-security-admin/SKILL.md",
+                       "description":  "Master MongoDB security, authentication, authorization, encryption, and backup. Learn role-based access control, TLS/SSL, encryption, and disaster recovery. Use when securing deployments, managing users, or implementing compliance."
+                   },
+                   {
+                       "name":  "n8n-workflow-patterns",
+                       "path":  "skills/n8n-workflow-patterns/SKILL.md",
+                       "description":  "Proven workflow architectural patterns from real n8n workflows. Use when building new workflows, designing workflow structure, choosing workflow patterns, planning workflow architecture, or asking about webhook processing, HTTP API integration, database operations, AI agent workflows, or scheduled t"
+                   },
+                   {
+                       "name":  "nano-banana-2",
+                       "path":  "skills/nano-banana-2/SKILL.md",
+                       "description":  "Generate images with Google Gemini 3.1 Flash Image Preview (Nano Banana 2) via inference.sh CLI. Capabilities: text-to-image, image editing, multi-image input (up to 14 images), Google Search grounding. Triggers: nano banana 2, nanobanana 2, gemini 3.1 flash image, gemini 3 1 flash image preview, go"
+                   },
+                   {
+                       "name":  "next-best-practices",
+                       "path":  "skills/next-best-practices/SKILL.md",
+                       "description":  "Next.js best practices - file conventions, RSC boundaries, data patterns, async APIs, metadata, error handling, route handlers, image/font optimization, bundling",
+                       "user_invocable":  false
+                   },
+                   {
+                       "name":  "next-cache-components",
+                       "path":  "skills/next-cache-components/SKILL.md",
+                       "description":  "Next.js 16 Cache Components - PPR, use cache directive, cacheLife, cacheTag, updateTag"
+                   },
+                   {
+                       "name":  "next-upgrade",
+                       "path":  "skills/next-upgrade/SKILL.md",
+                       "description":  "Upgrade Next.js to the latest version following official migration guides and codemods"
+                   },
+                   {
+                       "name":  "nextjs-app-router-patterns",
+                       "path":  "skills/nextjs-app-router-patterns/SKILL.md",
+                       "description":  "Master Next.js 14+ App Router with Server Components, streaming, parallel routes, and advanced data fetching. Use when building Next.js applications, implementing SSR/SSG, or optimizing React Server Components."
+                   },
+                   {
+                       "name":  "notebooklm",
+                       "path":  "skills/notebooklm/SKILL.md",
+                       "description":  "Use this skill to query your Google NotebookLM notebooks directly from Claude Code for source-grounded, citation-backed answers from Gemini. Browser automation, library management, persistent auth. Drastically reduced hallucinations through document-only responses."
+                   },
+                   {
+                       "name":  "notion-api",
+                       "path":  "skills/notion-api/SKILL.md",
+                       "description":  "\u003e This skill provides comprehensive instructions for interacting with the Notion API via REST calls. This skill should be used whenever the user asks to interact with Notion, including reading, creating, updating, or deleting pages, databases, blocks, comments, or any other Notion content. The skill"
+                   },
+                   {
+                       "name":  "onboarding-cro",
+                       "path":  "skills/onboarding-cro/SKILL.md",
+                       "description":  "When the user wants to optimize post-signup onboarding, user activation, first-run experience, or time-to-value. Also use when the user mentions \"onboarding flow,\" \"activation rate,\" \"user activation,\" \"first-run experience,\" \"empty states,\" \"onboarding checklist,\" \"aha moment,\" \"new user experience"
+                   },
+                   {
+                       "name":  "organization-best-practices",
+                       "path":  "skills/organization-best-practices/SKILL.md",
+                       "description":  "Configure multi-tenant organizations, manage members and invitations, define custom roles and permissions, set up teams, and implement RBAC using Better Auth\u0027s organization plugin. Use when users need org setup, team management, member roles, access control, or the Better Auth organization plugin."
+                   },
+                   {
+                       "name":  "paid-ads",
+                       "path":  "skills/paid-ads/SKILL.md",
+                       "description":  "When the user wants help with paid advertising campaigns on Google Ads, Meta (Facebook/Instagram), LinkedIn, Twitter/X, or other ad platforms. Also use when the user mentions \u0027PPC,\u0027 \u0027paid media,\u0027 \u0027ROAS,\u0027 \u0027CPA,\u0027 \u0027ad campaign,\u0027 \u0027retargeting,\u0027 \u0027audience targeting,\u0027 \u0027Google Ads,\u0027 \u0027Facebook ads,\u0027 \u0027Linked"
+                   },
+                   {
+                       "name":  "pdf",
+                       "path":  "skills/pdf/SKILL.md",
+                       "description":  "Use this skill whenever the user wants to do anything with PDF files. This includes reading or extracting text/tables from PDFs, combining or merging multiple PDFs into one, splitting PDFs apart, rotating pages, adding watermarks, creating new PDFs, filling PDF forms, encrypting/decrypting PDFs, ext..."
+                   },
+                   {
+                       "name":  "performance-optimization",
+                       "path":  "skills/performance-optimization/SKILL.md",
+                       "description":  "Optimize application performance for speed, efficiency, and scalability. Use when improving page load times, reducing bundle size, optimizing database queries, or fixing performance bottlenecks. Handles React optimization, lazy loading, caching, code splitting, and profiling."
+                   },
+                   {
+                       "name":  "persona-content-creator",
+                       "path":  "skills/persona-content-creator/SKILL.md",
+                       "description":  "Create, organize, and distribute content across Workspace."
+                   },
+                   {
+                       "name":  "persona-customer-support",
+                       "path":  "skills/persona-customer-support/SKILL.md",
+                       "description":  "Manage customer support â€” track tickets, respond, escalate issues."
+                   },
+                   {
+                       "name":  "persona-event-coordinator",
+                       "path":  "skills/persona-event-coordinator/SKILL.md",
+                       "description":  "Plan and manage events â€” scheduling, invitations, and logistics."
+                   },
+                   {
+                       "name":  "persona-hr-coordinator",
+                       "path":  "skills/persona-hr-coordinator/SKILL.md",
+                       "description":  "Handle HR workflows â€” onboarding, announcements, and employee comms."
+                   },
+                   {
+                       "name":  "persona-it-admin",
+                       "path":  "skills/persona-it-admin/SKILL.md",
+                       "description":  "Administer IT â€” monitor security and configure Workspace."
+                   },
+                   {
+                       "name":  "persona-project-manager",
+                       "path":  "skills/persona-project-manager/SKILL.md",
+                       "description":  "Coordinate projects â€” track tasks, schedule meetings, and share docs."
+                   },
+                   {
+                       "name":  "persona-sales-ops",
+                       "path":  "skills/persona-sales-ops/SKILL.md",
+                       "description":  "Manage sales workflows â€” track deals, schedule calls, client comms."
+                   },
+                   {
+                       "name":  "plan-harder",
+                       "path":  "skills/plan-harder/SKILL.md",
+                       "description":  "\u003e"
+                   },
+                   {
+                       "name":  "playwright-best-practices",
+                       "path":  "skills/playwright-best-practices/SKILL.md",
+                       "description":  "Use when writing Playwright tests, fixing flaky tests, debugging failures, implementing Page Object Model, configuring CI/CD, optimizing performance, mocking APIs, handling authentication or OAuth, testing accessibility (axe-core), file uploads/downloads, date/time mocking, WebSockets, geolocation, "
+                   },
+                   {
+                       "name":  "playwright-cli",
+                       "path":  "skills/playwright-cli/SKILL.md",
+                       "description":  "Automates browser interactions for web testing, form filling, screenshots, and data extraction. Use when the user needs to navigate websites, interact with web pages, fill forms, take screenshots, test web applications, or extract information from web pages."
+                   },
+                   {
+                       "name":  "playwright-explore-website",
+                       "path":  "skills/playwright-explore-website/SKILL.md",
+                       "description":  "Website exploration for testing using Playwright MCP"
+                   },
+                   {
+                       "name":  "polish",
+                       "path":  "skills/polish/SKILL.md",
+                       "description":  "Final quality pass before shipping. Fixes alignment, spacing, consistency, and detail issues that separate good from great."
+                   },
+                   {
+                       "name":  "pptx",
+                       "path":  "skills/pptx/SKILL.md",
+                       "description":  "Use this skill any time a .pptx file is involved in any way â€” as input, output, or both. This includes: creating slide decks, pitch decks, or presentations; reading, parsing, or extracting text from any .pptx file (even if the extracted content will be used elsewhere, like in an email or summary); e..."
+                   },
+                   {
+                       "name":  "pricing-strategy",
+                       "path":  "skills/pricing-strategy/SKILL.md",
+                       "description":  "When the user wants help with pricing decisions, packaging, or monetization strategy. Also use when the user mentions \u0027pricing,\u0027 \u0027pricing tiers,\u0027 \u0027freemium,\u0027 \u0027free trial,\u0027 \u0027packaging,\u0027 \u0027price increase,\u0027 \u0027value metric,\u0027 \u0027Van Westendorp,\u0027 \u0027willingness to pay,\u0027 or \u0027monetization.\u0027 This skill covers pric..."
+                   },
+                   {
+                       "name":  "proactive-agent",
+                       "path":  "skills/proactive-agent/SKILL.md",
+                       "description":  "Transform AI agents from task-followers into proactive partners that anticipate needs and continuously improve. Now with WAL Protocol, Working Buffer for context survival, Compaction Recovery, and battle-tested security patterns. Part of the Hal Stack ðŸ¦ž"
+                   },
+                   {
+                       "name":  "product-photography",
+                       "path":  "skills/product-photography/SKILL.md",
+                       "description":  "AI product photography with studio lighting, lifestyle shots, and packshot conventions. Covers angles, backgrounds, shadow types, hero shots, and e-commerce image requirements. Use for: product photos, e-commerce images, Amazon listings, packshots, lifestyle photography. Triggers: product photograph"
+                   },
+                   {
+                       "name":  "query-token-audit",
+                       "path":  "skills/query-token-audit/SKILL.md",
+                       "description":  "| Query token security audit to detect scams, honeypots, and malicious contracts before trading. Returns comprehensive security analysis including contract risks, trading risks, and scam detection. Use when users ask \"is this token safe?\", \"check token security\", \"audit token\", or before any swap."
+                   },
+                   {
+                       "name":  "react-native-best-practices",
+                       "path":  "skills/react-native-best-practices/SKILL.md",
+                       "description":  "Provides React Native performance optimization guidelines for FPS, TTI, bundle size, memory leaks, re-renders, and animations. Applies to tasks involving Hermes optimization, JS thread blocking, bridge overhead, FlashList, native modules, or debugging jank and frame drops."
+                   },
+                   {
+                       "name":  "referral-program",
+                       "path":  "skills/referral-program/SKILL.md",
+                       "description":  "When the user wants to create, optimize, or analyze a referral program, affiliate program, or word-of-mouth strategy. Also use when the user mentions \u0027referral,\u0027 \u0027affiliate,\u0027 \u0027ambassador,\u0027 \u0027word of mouth,\u0027 \u0027viral loop,\u0027 \u0027refer a friend,\u0027 \u0027partner program,\u0027 \u0027referral incentive,\u0027 \u0027how to get referrals"
+                   },
+                   {
+                       "name":  "remembering-conversations",
+                       "path":  "skills/remembering-conversations/SKILL.md",
+                       "description":  "Use when user asks \u0027how should I...\u0027 or \u0027what\u0027s the best approach...\u0027 after exploring code, OR when you\u0027ve tried to solve something and are stuck, OR for unfamiliar workflows, OR when user references past work. Searches conversation history."
+                   },
+                   {
+                       "name":  "schema-markup",
+                       "path":  "skills/schema-markup/SKILL.md",
+                       "description":  "When the user wants to add, fix, or optimize schema markup and structured data on their site. Also use when the user mentions \"schema markup,\" \"structured data,\" \"JSON-LD,\" \"rich snippets,\" \"schema.org,\" \"FAQ schema,\" \"product schema,\" \"review schema,\" or \"breadcrumb schema.\" For broader SEO issues,..."
+                   },
+                   {
+                       "name":  "security-review",
+                       "path":  "skills/security-review/SKILL.md",
+                       "description":  "Use this skill when adding authentication, handling user input, working with secrets, creating API endpoints, or implementing payment/sensitive features. Provides comprehensive security checklist and patterns."
+                   },
+                   {
+                       "name":  "seo-audit",
+                       "path":  "skills/seo-audit/SKILL.md",
+                       "description":  "When the user wants to audit, review, or diagnose SEO issues on their site. Also use when the user mentions \"SEO audit,\" \"technical SEO,\" \"why am I not ranking,\" \"SEO issues,\" \"on-page SEO,\" \"meta tags review,\" or \"SEO health check.\" For building pages at scale to target keywords, see programmatic-s..."
+                   },
+                   {
+                       "name":  "seo-geo",
+                       "path":  "skills/seo-geo/SKILL.md",
+                       "description":  "SEO \u0026 GEO (Generative Engine Optimization) for websites. Analyze keywords, generate schema markup, optimize for AI search engines (ChatGPT, Perplexity, Gemini, Copilot, Claude) and traditional search (Google, Bing). Use when user wants to improve search visibility, search optimization, search rankin"
+                   },
+                   {
+                       "name":  "storyboard-creation",
+                       "path":  "skills/storyboard-creation/SKILL.md",
+                       "description":  "Film and video storyboarding with shot vocabulary, continuity rules, and panel layout. Covers shot types, camera angles, movement, 180-degree rule, and annotation format. Use for: video planning, film pre-production, ad storyboards, music video planning, animation. Triggers: storyboard, storyboardin"
+                   },
+                   {
+                       "name":  "subagent-driven-development",
+                       "path":  "skills/subagent-driven-development/SKILL.md",
+                       "description":  "Use when executing implementation plans with independent tasks in the current session"
+                   },
+                   {
+                       "name":  "super-search",
+                       "path":  "skills/super-search/SKILL.md",
+                       "description":  "Search your coding memory. Use when user asks about past work, previous sessions, how something was implemented, what they worked on before, or wants to recall information from earlier sessions."
+                   },
+                   {
+                       "name":  "swarm-planner",
+                       "path":  "skills/swarm-planner/SKILL.md",
+                       "description":  "\u003e"
+                   },
+                   {
+                       "name":  "tailwind-design-system",
+                       "path":  "skills/tailwind-design-system/SKILL.md",
+                       "description":  "Build scalable design systems with Tailwind CSS v4, design tokens, component libraries, and responsive patterns. Use when creating component libraries, implementing design systems, or standardizing UI patterns."
+                   },
+                   {
+                       "name":  "task-estimation",
+                       "path":  "skills/task-estimation/SKILL.md",
+                       "description":  "Estimate software development tasks accurately using various techniques. Use when planning sprints, roadmaps, or project timelines. Handles story points, t-shirt sizing, planning poker, and estimation best practices."
+                   },
+                   {
+                       "name":  "task-planning",
+                       "path":  "skills/task-planning/SKILL.md",
+                       "description":  "Plan and organize software development tasks effectively. Use when breaking down features, creating user stories, or planning sprints. Handles task breakdown, user stories, acceptance criteria, and backlog management."
+                   },
+                   {
+                       "name":  "technical-blog-writing",
+                       "path":  "skills/technical-blog-writing/SKILL.md",
+                       "description":  "Technical blog post writing with structure, code examples, and developer audience conventions. Covers post types, code formatting, explanation depth, and developer-specific engagement patterns. Use for: engineering blogs, dev tutorials, technical writing, developer content, documentation posts. Trig"
+                   },
+                   {
+                       "name":  "testing-strategies",
+                       "path":  "skills/testing-strategies/SKILL.md",
+                       "description":  "Design comprehensive testing strategies for software quality assurance. Use when planning test coverage, implementing test pyramids, or setting up testing infrastructure. Handles unit testing, integration testing, E2E testing, TDD, and testing best practices."
+                   },
+                   {
+                       "name":  "threejs-animation",
+                       "path":  "skills/threejs-animation/SKILL.md",
+                       "description":  "Three.js animation - keyframe animation, skeletal animation, morph targets, animation mixing. Use when animating objects, playing GLTF animations, creating procedural motion, or blending animations."
+                   },
+                   {
+                       "name":  "threejs-fundamentals",
+                       "path":  "skills/threejs-fundamentals/SKILL.md",
+                       "description":  "Three.js scene setup, cameras, renderer, Object3D hierarchy, coordinate systems. Use when setting up 3D scenes, creating cameras, configuring renderers, managing object hierarchies, or working with transforms."
+                   },
+                   {
+                       "name":  "threejs-geometry",
+                       "path":  "skills/threejs-geometry/SKILL.md",
+                       "description":  "Three.js geometry creation - built-in shapes, BufferGeometry, custom geometry, instancing. Use when creating 3D shapes, working with vertices, building custom meshes, or optimizing with instanced rendering."
+                   },
+                   {
+                       "name":  "threejs-interaction",
+                       "path":  "skills/threejs-interaction/SKILL.md",
+                       "description":  "Three.js interaction - raycasting, controls, mouse/touch input, object selection. Use when handling user input, implementing click detection, adding camera controls, or creating interactive 3D experiences."
+                   },
+                   {
+                       "name":  "threejs-lighting",
+                       "path":  "skills/threejs-lighting/SKILL.md",
+                       "description":  "Three.js lighting - light types, shadows, environment lighting. Use when adding lights, configuring shadows, setting up IBL, or optimizing lighting performance."
+                   },
+                   {
+                       "name":  "threejs-loaders",
+                       "path":  "skills/threejs-loaders/SKILL.md",
+                       "description":  "Three.js asset loading - GLTF, textures, images, models, async patterns. Use when loading 3D models, textures, HDR environments, or managing loading progress."
+                   },
+                   {
+                       "name":  "threejs-materials",
+                       "path":  "skills/threejs-materials/SKILL.md",
+                       "description":  "Three.js materials - PBR, basic, phong, shader materials, material properties. Use when styling meshes, working with textures, creating custom shaders, or optimizing material performance."
+                   },
+                   {
+                       "name":  "threejs-postprocessing",
+                       "path":  "skills/threejs-postprocessing/SKILL.md",
+                       "description":  "Three.js post-processing - EffectComposer, bloom, DOF, screen effects. Use when adding visual effects, color grading, blur, glow, or creating custom screen-space shaders."
+                   },
+                   {
+                       "name":  "threejs-shaders",
+                       "path":  "skills/threejs-shaders/SKILL.md",
+                       "description":  "Three.js shaders - GLSL, ShaderMaterial, uniforms, custom effects. Use when creating custom visual effects, modifying vertices, writing fragment shaders, or extending built-in materials."
+                   },
+                   {
+                       "name":  "threejs-textures",
+                       "path":  "skills/threejs-textures/SKILL.md",
+                       "description":  "Three.js textures - texture types, UV mapping, environment maps, texture settings. Use when working with images, UV coordinates, cubemaps, HDR environments, or texture optimization."
+                   },
+                   {
+                       "name":  "tools-ui",
+                       "path":  "skills/tools-ui/SKILL.md",
+                       "description":  "Tool lifecycle UI components for React/Next.js from ui.inference.sh. Display tool calls: pending, progress, approval required, results. Capabilities: tool status, progress indicators, approval flows, results display. Use for: showing agent tool calls, human-in-the-loop approvals, tool output. Trigge"
+                   },
+                   {
+                       "name":  "turborepo",
+                       "path":  "skills/turborepo/SKILL.md",
+                       "description":  "|"
+                   },
+                   {
+                       "name":  "twitter",
+                       "path":  "skills/twitter/SKILL.md",
+                       "description":  "Twitter/X data lookup â€” search tweets, user profiles, followers, replies. Use when the user asks about Twitter activity, social signals, or wants to look up accounts."
+                   },
+                   {
+                       "name":  "ue-ai-navigation",
+                       "path":  "skills/ue-ai-navigation/SKILL.md",
+                       "description":  "Use this skill when implementing AI, AIController, behavior tree, blackboard, AI perception, NavMesh, EQS, navigation, pathfinding, State Tree, or Smart Objects in Unreal Engine. See references/behavior-tree-patterns.md for BT patterns and references/eqs-reference.md for EQS configuration. For AI ab"
+                   },
+                   {
+                       "name":  "ue-animation-system",
+                       "path":  "skills/ue-animation-system/SKILL.md",
+                       "description":  "Use this skill when working with Unreal Engine animation: AnimInstance, montage playback, blend space, state machine, anim notify, IK, AnimGraph, skeletal mesh, or linked anim graphs. See references/anim-notify-reference.md for notify patterns and references/locomotion-setup.md for locomotion setup."
+                   },
+                   {
+                       "name":  "ue-async-threading",
+                       "path":  "skills/ue-async-threading/SKILL.md",
+                       "description":  "Use this skill when working with Unreal Engine async operations, threading, parallel execution, or concurrency. Also use when the user mentions \u0027FRunnable\u0027, \u0027FAsyncTask\u0027, \u0027TaskGraph\u0027, \u0027UE::Tasks\u0027, \u0027ParallelFor\u0027, \u0027TFuture\u0027, \u0027TPromise\u0027, \u0027Async()\u0027, \u0027thread safety\u0027, \u0027FCriticalSection\u0027, \u0027FRWLock\u0027, \u0027backg"
+                   },
+                   {
+                       "name":  "ue-audio-system",
+                       "path":  "skills/ue-audio-system/SKILL.md",
+                       "description":  "Use this skill when working with audio, sound, music, UAudioComponent, PlaySoundAtLocation, SoundCue, MetaSound, attenuation, submix, concurrency, SFX, or spatial audio in Unreal Engine. See references/audio-setup-patterns.md for music system and ambient soundscape architectures. For VFX audio synch"
+                   },
+                   {
+                       "name":  "ue-cpp-foundations",
+                       "path":  "skills/ue-cpp-foundations/SKILL.md",
+                       "description":  "Use when writing Unreal Engine C++ code involving UPROPERTY, UFUNCTION, UCLASS, TArray, TMap, delegates, FString, garbage collection, or smart pointers. Also use when the user asks about \"UE C++\", USTRUCT, UENUM, FName, FText, TObjectPtr, TWeakObjectPtr, UObject lifetime, UE_LOG, or UE subsystems. F"
+                   },
+                   {
+                       "name":  "ue-materials-rendering",
+                       "path":  "skills/ue-materials-rendering/SKILL.md",
+                       "description":  "Use when the user is working with material, shader, MID, dynamic material, material instance, post-process, render target, parameter collection, decal, Nanite, Lumen, or rendering in Unreal Engine. See references/material-parameter-reference.md for parameter patterns and references/post-process-sett"
+                   },
+                   {
+                       "name":  "ue-niagara-effects",
+                       "path":  "skills/ue-niagara-effects/SKILL.md",
+                       "description":  "Use this skill when working with Niagara particle systems, VFX, effects, emitter, Niagara component, or Niagara parameter in Unreal Engine C++. Covers spawning systems, setting parameters, data interfaces (SkeletalMesh, StaticMesh, Curve, Array), OnSystemFinished delegate, and performance tuning. Se"
+                   },
+                   {
+                       "name":  "ue-physics-collision",
+                       "path":  "skills/ue-physics-collision/SKILL.md",
+                       "description":  "Use when implementing collision detection, trace queries, physics simulation, or physical interactions in Unreal Engine. Triggers on: \u0027collision\u0027, \u0027trace\u0027, \u0027LineTrace\u0027, \u0027line trace\u0027, \u0027overlap\u0027, \u0027physics\u0027, \u0027hit result\u0027, \u0027sweep\u0027, \u0027collision channel\u0027, \u0027physics body\u0027, \u0027Chaos\u0027, \u0027raytrace\u0027, \u0027OnHit\u0027, \u0027OnBe"
+                   },
+                   {
+                       "name":  "ue-procedural-generation",
+                       "path":  "skills/ue-procedural-generation/SKILL.md",
+                       "description":  "Use this skill when working with procedural generation in Unreal Engine: PCG framework, ProceduralMesh, instanced mesh, HISM, spline, runtime mesh, noise, terrain generation, or dungeon generation. See references/pcg-node-reference.md for PCG node types and references/procedural-mesh-patterns.md for"
+                   },
+                   {
+                       "name":  "ue-project-context",
+                       "path":  "skills/ue-project-context/SKILL.md",
+                       "description":  "When the user wants to create or update their Unreal Engine project context document. Use when the user says \u0027project context,\u0027 \u0027set up context,\u0027 \u0027UE context,\u0027 \u0027configure project,\u0027 or wants to avoid repeating their project setup across UE development tasks. Creates `.agents/ue-project-context.md` th"
+                   },
+                   {
+                       "name":  "ue-sequencer-cinematics",
+                       "path":  "skills/ue-sequencer-cinematics/SKILL.md",
+                       "description":  "Use this skill when working with Sequencer, LevelSequence, cutscene, cinematic, camera, movie scene, sequencer event, or Movie Render Queue in Unreal Engine. See references/sequencer-patterns.md for dialogue cutscene, in-game camera, and scripted event patterns. For animation playback, see ue-animat"
+                   },
+                   {
+                       "name":  "ue-testing-debugging",
+                       "path":  "skills/ue-testing-debugging/SKILL.md",
+                       "description":  "Use when writing automation tests, functional tests, or any test in Unreal Engine. Also use when the user asks about \"UE_LOG\", logging, log categories, assertion, check, ensure, verify, DrawDebug, debug draw, console command, profiling, Unreal Insights, stat commands, or debugging techniques. See ue"
+                   },
+                   {
+                       "name":  "ue5-blueprint-audio",
+                       "path":  "skills/ue5-blueprint-audio/SKILL.md",
+                       "description":  "Unreal Engine 5 Blueprint audio specialist. Use when working with Blueprint audio logic, game event detection, parameter wiring, audio components, scanning blueprints for audio nodes, listing project assets, or connecting game state to audio systems via UE5."
+                   },
+                   {
+                       "name":  "ui-ux-pro-max",
+                       "path":  "skills/ui-ux-pro-max/SKILL.md",
+                       "description":  "UI/UX design intelligence for web and mobile. Includes 50+ styles, 161 color palettes, 57 font pairings, 161 product types, 99 UX guidelines, and 25 chart types across 10 stacks (React, Next.js, Vue, Svelte, SwiftUI, React Native, Flutter, Tailwind, shadcn/ui, and HTML/CSS). Actions: plan, build, cr"
+                   },
+                   {
+                       "name":  "unity-csharp-fundamentals",
+                       "path":  "skills/unity-csharp-fundamentals/SKILL.md",
+                       "description":  "Unity C# fundamental patterns including TryGetComponent, SerializeField, RequireComponent, and safe coding practices. Essential patterns for robust Unity development. Use PROACTIVELY for any Unity C# code to ensure best practices."
+                   },
+                   {
+                       "name":  "unity-developer",
+                       "path":  "skills/unity-developer/SKILL.md",
+                       "description":  "Build Unity games with optimized C# scripts, efficient rendering, and proper asset management. Masters Unity 6 LTS, URP/HDRP pipelines, and cross-platform deployment. Handles gameplay systems, UI implementation, and platform optimization. Use PROACTIVELY for Unity performance issues, game mechanics,"
+                   },
+                   {
+                       "name":  "unity-mcp",
+                       "path":  "skills/unity-mcp/SKILL.md",
+                       "description":  "| Unity Editorì™€ AI ì—ì´ì „íŠ¸ë¥¼ ì—°ê²°í•˜ëŠ” MCP ë¸Œë¦¬ì§€ ìŠ¤í‚¬. Unity3D ê²Œìž„ ê°œë°œ ìž‘ì—…ì„ AIë¡œ ìžë™í™”í•  ë•Œ ì‚¬ìš©. ì”¬ ì œì–´, C# ìŠ¤í¬ë¦½íŠ¸ ìƒì„±Â·ê²€ì¦, ì—ì…‹ íŒŒì´í”„ë¼ì¸, UI/ë¹„ì£¼ì–¼, í…ŒìŠ¤íŠ¸Â·ë””ë²„ê¹…ì„ ì§€ì›. PMÂ·ë””ìžì´ë„ˆÂ·ê²Œìž„ê°œë°œìž ì—­í• ë³„ ìµœì  ë„êµ¬ ë§¤í•‘ ì œê³µ."
+                   },
+                   {
+                       "name":  "unity-networking",
+                       "path":  "skills/unity-networking/SKILL.md",
+                       "description":  "Implement multiplayer games with Unity Netcode, Mirror, or Photon. Masters client-server architecture, state synchronization, and lag compensation. Use for multiplayer features, networking issues, or real-time synchronization."
+                   },
+                   {
+                       "name":  "unity-performance",
+                       "path":  "skills/unity-performance/SKILL.md",
+                       "description":  "Optimize Unity game performance through profiling, draw call reduction, and resource management. Masters batching, LOD, occlusion culling, and mobile optimization. Use for performance bottlenecks, frame rate issues, or optimization strategies."
+                   },
+                   {
+                       "name":  "unity-unitask",
+                       "path":  "skills/unity-unitask/SKILL.md",
+                       "description":  "UniTask library expert specializing in allocation-free async/await patterns, coroutine migration, and Unity-optimized asynchronous programming. Masters UniTask performance optimizations, cancellation handling, and memory-efficient async operations. Use PROACTIVELY for UniTask implementation, async o"
+                   },
+                   {
+                       "name":  "unreal-development",
+                       "path":  "skills/unreal-development/SKILL.md",
+                       "description":  "Unreal Engine development: C++/Blueprint patterns, Gameplay Framework, Niagara, Lumen/Nanite, multiplayer, and packaging."
+                   },
+                   {
+                       "name":  "unreal-engine",
+                       "path":  "skills/unreal-engine/SKILL.md",
+                       "description":  "Building AAA-quality games and real-time experiences with Unreal Engine 5Use when \"unreal, ue5, ue4, unreal engine, blueprints, blueprint, actor component, gameplay ability, gas unreal, niagara, nanite, lumen, world partition, level streaming, unreal multiplayer, unreal replication, gamemode, gamest"
+                   },
+                   {
+                       "name":  "unreal-llm-integration",
+                       "path":  "skills/unreal-llm-integration/SKILL.md",
+                       "description":  "Integrating local and cloud LLMs into Unreal Engine games for AI NPCs and intelligent behaviorsUse when \"unreal llm, ue5 ai npc, unreal chatgpt, blueprint llm, unreal engine ai, ue5 dialogue, unreal, ue5, llm, blueprint, cpp, game-ai, npc\" mentioned."
+                   },
+                   {
+                       "name":  "using-superpowers",
+                       "path":  "skills/using-superpowers/SKILL.md",
+                       "description":  "Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions"
+                   },
+                   {
+                       "name":  "vercel-cli",
+                       "path":  "skills/vercel-cli/SKILL.md",
+                       "description":  "Deploy, manage, and develop projects on Vercel from the command line"
+                   },
+                   {
+                       "name":  "vercel-react-best-practices",
+                       "path":  "skills/vercel-react-best-practices/SKILL.md",
+                       "description":  "React and Next.js performance optimization guidelines from Vercel Engineering. This skill should be used when writing, reviewing, or refactoring React/Next.js code to ensure optimal performance patterns. Triggers on tasks involving React components, Next.js pages, data fetching, bundle optimization,..."
+                   },
+                   {
+                       "name":  "verification-before-completion",
+                       "path":  "skills/verification-before-completion/SKILL.md",
+                       "description":  "Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always"
+                   },
+                   {
+                       "name":  "vite",
+                       "path":  "skills/vite/SKILL.md",
+                       "description":  "Vite build tool configuration, plugin API, SSR, and Vite 8 Rolldown migration. Use when working with Vite projects, vite.config.ts, Vite plugins, or building libraries/SSR apps with Vite."
+                   },
+                   {
+                       "name":  "vitest",
+                       "path":  "skills/vitest/SKILL.md",
+                       "description":  "Vitest fast unit testing framework powered by Vite with Jest-compatible API. Use when writing tests, mocking, configuring coverage, or working with test filtering and fixtures."
+                   },
+                   {
+                       "name":  "wallet",
+                       "path":  "skills/wallet/SKILL.md",
+                       "description":  "Multi-chain wallet operations - balance, transfers, signing, and transaction history via Privy Server Wallets (EVM + Solana)"
+                   },
+                   {
+                       "name":  "wallet-policy",
+                       "path":  "skills/wallet-policy/SKILL.md",
+                       "description":  "Generate Privy wallet policy rules from natural language. Use when the user wants to set up, modify, or review wallet security policies â€” transfer limits, address allowlists, method restrictions, time windows, etc."
+                   },
+                   {
+                       "name":  "web-accessibility",
+                       "path":  "skills/web-accessibility/SKILL.md",
+                       "description":  "Implement web accessibility (a11y) standards following WCAG 2.1 guidelines. Use when building accessible UIs, fixing accessibility issues, or ensuring compliance with disability standards. Handles ARIA attributes, keyboard navigation, screen readers, semantic HTML, and accessibility testing."
+                   },
+                   {
+                       "name":  "web-design-guidelines",
+                       "path":  "skills/web-design-guidelines/SKILL.md",
+                       "description":  "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my site against best practices\"."
+                   },
+                   {
+                       "name":  "webapp-testing",
+                       "path":  "skills/webapp-testing/SKILL.md",
+                       "description":  "Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs."
+                   },
+                   {
+                       "name":  "widgets-ui",
+                       "path":  "skills/widgets-ui/SKILL.md",
+                       "description":  "Declarative UI widgets from JSON for React/Next.js from ui.inference.sh. Render rich interactive UIs from structured agent responses. Capabilities: forms, buttons, cards, layouts, inputs, selects, checkboxes. Use for: agent-generated UIs, dynamic forms, data display, interactive cards. Triggers: wid"
+                   },
+                   {
+                       "name":  "writing-plans",
+                       "path":  "skills/writing-plans/SKILL.md",
+                       "description":  "Use when you have a spec or requirements for a multi-step task, before touching code"
+                   },
+                   {
+                       "name":  "xlsx",
+                       "path":  "skills/xlsx/SKILL.md",
+                       "description":  "Use this skill any time a spreadsheet file is the primary input or output. This means any task where the user wants to: open, read, edit, or fix an existing .xlsx, .xlsm, .csv, or .tsv file (e.g., adding columns, computing formulas, formatting, charting, cleaning messy data); create a new spreadshee..."
+                   },
+                   {
+                       "name":  "youtube-thumbnail-design",
+                       "path":  "skills/youtube-thumbnail-design/SKILL.md",
+                       "description":  "YouTube thumbnail design with specific dimensions, contrast rules, and mobile preview optimization. Covers safe zones, text placement, face expression psychology, and A/B testing. Use for: YouTube thumbnails, video cover images, click-through optimization. Triggers: youtube thumbnail, thumbnail desi"
+                   },
+                   {
+                       "name":  "social-community",
+                       "path":  "skills/social-community/SKILL.md",
+                       "description":  "Expert in building community presence across social platforms - Twitter/X, Reddit, Farcaster, and forums. Covers platform-specific strategies, cross-platform coordination, and leveraging social for community growth. Use when \u0027twitter community\u0027, \u0027reddit strategy\u0027, \u0027forum engagement\u0027, \u0027community growth\u0027, \u0027social community management\u0027."
+                   },
+                   {
+                       "name":  "social-growth-engineer",
+                       "path":  "skills/social-growth-engineer/SKILL.md",
+                       "description":  "Master viral app growth engineering using proven social media strategies. TikTok/Instagram Reels marketing, UGC networks, viral hooks, content formats, monetization, and scaling tactics. Use for viral growth, social media growth hacking, TikTok strategy, Instagram Reels, UGC campaigns."
+                   },
+                   {
+                       "name":  "social-media-intelligence",
+                       "path":  "skills/social-media-intelligence/SKILL.md",
+                       "description":  "Social media monitoring, narrative tracking, and open-source intelligence for journalists. Use when tracking viral content spread, analyzing coordinated campaigns, monitoring breaking news on social platforms, or investigating accounts."
+                   },
+                   {
+                       "name":  "social-media-management",
+                       "path":  "skills/social-media-management/SKILL.md",
+                       "description":  "Comprehensive social media management for all platforms (LinkedIn, Twitter/X, Instagram, TikTok, Facebook, Pinterest, YouTube). Covers content creation, content pillars, hook formulas, repurposing across platforms, content calendar, engagement strategy, analytics/ROI analysis, and AI-powered content generation."
+                   },
+                   {
+                       "name":  "social-media-marketing",
+                       "path":  "skills/social-media-marketing/SKILL.md",
+                       "description":  "SMM expert for Instagram, Facebook, TikTok, LinkedIn strategies, content plans, and community management. Use for social media marketing strategy, paid social, organic growth, content planning."
+                   },
+                   {
+                       "name":  "social-media-seo",
+                       "path":  "skills/social-media-seo/SKILL.md",
+                       "description":  "Optimize social media content for maximum discoverability using 2025-proven SEO strategies. Includes 100+ caption formulas, thread structures, viral patterns, and platform-specific optimization playbooks for Instagram, X/Twitter, and Threads."
+                   },
+                   {
+                       "name":  "social-media-strategist",
+                       "path":  "skills/social-media-strategist/SKILL.md",
+                       "description":  "MUST be used whenever a user asks for social media content, Instagram Reels, TikTok ideas, or a content calendar for a local or small business. Discovers trending content across TikTok and Google Trends, then generates a customized content strategy."
+                   },
+                   {
+                       "name":  "social-media-trends-research",
+                       "path":  "skills/social-media-trends-research/SKILL.md",
+                       "description":  "Programmatic social media and marketing research using free tools: pytrends (Google Trends), yars (Reddit without API keys), and Perplexity MCP (Twitter/TikTok/Web). Use when finding trending topics in a niche, tracking keywords, or researching viral content."
+                   },
+                   {
+                       "name":  "social-orchestrator",
+                       "path":  "skills/social-orchestrator/SKILL.md",
+                       "description":  "Unified social channels orchestrator - coordinates Instagram, Telegram and WhatsApp in a single workflow. Cross-channel publishing, unified metrics, and content reuse. Use for multi-platform social media automation and orchestration."
+                   },
+                   {
+                       "name":  "social-producer-agent",
+                       "path":  "skills/social-producer-agent/SKILL.md",
+                       "description":  "Create multiple social media assets as a coordinated pack. Orchestrates images, short videos, and audio for social platforms. Use for content packs, launch kits, campaign assets, content calendars, Instagram/TikTok content, marketing kits."
+                   },
+                   {
+                       "name":  "social-scraping",
+                       "path":  "skills/social-scraping/SKILL.md",
+                       "description":  "Scrape social media profiles, posts, comments, followers, and search across TikTok, Instagram, Facebook, Reddit, and LinkedIn via StableSocial/x402. Use for social media data collection, influencer analysis, competitive intelligence, cross-platform research."
+                   },
+                   {
+                       "name":  "social-trend-monitor",
+                       "path":  "skills/social-trend-monitor/SKILL.md",
+                       "description":  "Monitor Reddit, Instagram, TikTok and other social platforms for trending topics. Generates cross-platform trend reports to help discover content creation inspiration and market opportunities."
+                   }
+               ]
+}

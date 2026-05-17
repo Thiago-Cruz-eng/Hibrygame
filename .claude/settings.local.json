@@ -1,0 +1,70 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(git log:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh api:*)",
+      "Bash(Select-String -Pattern \"error|Build succeeded|Build FAILED\")",
+      "Bash(Select-String:*)",
+      "Bash(Select-Object:*)",
+      "Bash(python -m base64:*)",
+      "Bash(curl:*)",
+      "Bash(find:*)",
+      "Bash(tee:*)",
+      "Bash(echo:*)",
+      "Bash(dotnet tool list --global)",
+      "Bash(grep -v \"^\\\\.$\")",
+      "Bash(xargs grep:*)",
+      "Bash(wc -l G:/verum-sales-backend/Docs/pacote-c-modulos/*.md)",
+      "Bash(wc -l G:/verum-sales-backend/Docs/pacote-d-jornadas/*.md)",
+      "Bash(dir \"C:\\\\Users\\\\THIAGO.CRUZ\\\\Documents\\\\GitHub\\\\verum-sales-global-backend\" -Recurse -Name -Directory)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\THIAGO.CRUZ\\\\Documents\\\\GitHub\\\\verum-sales-global-backend\" -Directory -Recurse -Depth 3)",
+      "Bash(Get-ChildItem -Path C:\\\\Git\\\\conti-commerce-backend -Force)",
+      "Bash(Select-Object Name, Mode)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Git\\\\conti-commerce-backend\" -Directory)",
+      "Bash(Select-Object -First 20)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:www.notion.so)",
+      "PowerShell(& \".specify\\\\scripts\\\\powershell\\\\setup-plan.ps1\" -Json)",
+      "PowerShell(New-Item *)",
+      "PowerShell(& \".specify\\\\scripts\\\\powershell\\\\setup-tasks.ps1\" -Json)",
+      "PowerShell(& \".specify\\\\scripts\\\\powershell\\\\check-prerequisites.ps1\" -Json -RequireTasks -IncludeTasks)",
+      "PowerShell(.specify/scripts/powershell/setup-plan.ps1 -Json)",
+      "PowerShell(head *)",
+      "mcp__atlassian__getAccessibleAtlassianResources",
+      "mcp__atlassian__getJiraIssue",
+      "mcp__claude_ai_Atlassian__getJiraIssue",
+      "mcp__claude_ai_Atlassian__editJiraIssue",
+      "mcp__claude_ai_Atlassian__createJiraIssue",
+      "mcp__claude_ai_Atlassian__getJiraProjectIssueTypesMetadata",
+      "mcp__claude_ai_Atlassian__getTransitionsForJiraIssue",
+      "mcp__claude_ai_Atlassian__transitionJiraIssue",
+      "mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$raw = [Console]::In.ReadToEnd(); $json = $raw | ConvertFrom-Json; $fp = $json.tool_input.file_path; if ($fp -match '\\.(cs|csproj)$') { Set-Location 'C:\\Users\\THIAGO.CRUZ\\Documents\\GitHub\\verum-sales-global-backend'; dotnet build --no-restore 2>&1 | Where-Object { $_ -match 'error CS|Build succeeded|Build FAILED' } | Select-Object -First 20 }",
+            "shell": "powershell",
+            "timeout": 120,
+            "statusMessage": "Building..."
+          }
+        ]
+      }
+    ]
+  }
+}
