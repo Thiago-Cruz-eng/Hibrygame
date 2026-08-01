@@ -57,7 +57,7 @@ respeitado, mas nada no servidor o liga automaticamente — `Finish()` nunca é 
 | Hash | PBKDF2 (`Rfc2898DeriveBytes`, SHA256, 100.000 iterações, salt 16B, chave 32B) |
 | Serialização | `System.Text.Json` com `ReferenceHandler.Preserve` na API. O motor não serializa nada — o contrato de fio é `ToString()` em `ChessHub.MapSquare`, PascalCase. `Newtonsoft.Json` foi removido |
 | Testes | xUnit 2.9 + Moq 4.20 (sem FluentAssertions) |
-| CI | GitHub Actions — `.github/workflows/dotnet-test.yml` (build + test) |
+| CI | GitHub Actions — `dotnet-test.yml` (build + suíte, sem dependência externa) e `e2e.yml` (API real + MongoDB + suíte Playwright do KrockSide, para guardar o contrato com o front) |
 
 Dependência externa nova entra **atrás de interface**: contrato em `UseCases/Interfaces/` (regra
 de aplicação) ou `Infra/Interfaces/` (persistência), implementação em `Infra/`. Nunca SDK de
