@@ -30,6 +30,22 @@ builder.Services.Configure<JwtSettings>(
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
     ?? throw new InvalidOperationException("Jwt settings are missing.");
 
+// HS256 exige chave de no minimo 256 bits. A chave que vinha no appsettings.json tinha
+// 240, e o efeito era desagradavel de diagnosticar: a aplicacao subia normalmente e
+// TODO login falhava, porque CreateAccessToken estourava IDX10720 la dentro e o
+// use case devolvia um "Login failed" generico com 401 — indistinguivel de senha errada.
+// Melhor falhar aqui, na subida, dizendo o motivo.
+const int minimumKeyBytes = 32;
+var signingKey = jwtSettings.Key ?? string.Empty;
+var keyBytes = Encoding.UTF8.GetByteCount(signingKey);
+if (keyBytes < minimumKeyBytes)
+{
+    throw new InvalidOperationException(
+        $"Jwt:Key tem {keyBytes} bytes; HS256 exige pelo menos {minimumKeyBytes} " +
+        "(256 bits). Com uma chave menor nenhum token pode ser assinado e todo login " +
+        "falha. Ajuste Jwt:Key na configuracao.");
+}
+
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -46,7 +62,7 @@ builder.Services.AddAuthentication(x =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtSettings.Issuer,
         ValidAudience = jwtSettings.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key)),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
         ClockSkew = TimeSpan.Zero
     };
     x.Events = new JwtBearerEvents
