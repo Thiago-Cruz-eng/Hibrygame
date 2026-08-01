@@ -26,7 +26,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      # Histórico completo: o diff-cover compara com a base do PR.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -35,16 +38,62 @@ jobs:
       - name: Restore
         run: dotnet restore Hibrygame.sln
 
+      # Directory.Build.props liga TreatWarningsAsErrors: warning quebra aqui, e é de propósito.
+      # Também liga NuGetAudit, então pacote com vulnerabilidade conhecida falha no restore.
       - name: Build
         run: dotnet build Hibrygame.sln --no-restore -c Release
 
       - name: Test
-        run: dotnet test Hibrygame.sln --no-build -c Release --logger "trx;LogFileName=test-results.trx"
+        run: >
+          dotnet test Hibrygame.sln --no-build -c Release
+          --logger "trx;LogFileName=test-results.trx"
+          --collect:"XPlat Code Coverage"
+          --results-directory ./TestResults
+
+      # Piso por projeto: nenhum pode cair abaixo de 75% de linhas.
+      #
+      # Hoje o motor está em 96,3% e o Orchestrator em 76,5% — o piso é a menor das duas,
+      # arredondada para baixo. É catraca, não meta: subiu, suba o piso no mesmo PR.
+      - name: Piso de cobertura
+        run: |
+          python3 - <<'PY'
+          import glob, sys, xml.etree.ElementTree as ET
+
+          FLOOR = 0.75
+          files = glob.glob('TestResults/**/coverage.cobertura.xml', recursive=True)
+          if not files:
+              sys.exit('Nenhum relatório de cobertura encontrado — o passo de teste coletou algo?')
+
+          failed = False
+          for f in files:
+              rate = float(ET.parse(f).getroot().get('line-rate', 0))
+              pkgs = [p.get('name') for p in ET.parse(f).getroot().iter('package')]
+              name = pkgs[0] if pkgs else f
+              status = 'ok  ' if rate >= FLOOR else 'BAIXO'
+              print(f'{status} {name}: {rate:.2%} (piso {FLOOR:.0%})')
+              if rate < FLOOR:
+                  failed = True
+          sys.exit(1 if failed else 0)
+          PY
+
+      # Catraca sobre o código NOVO. Ver a justificativa no ci.yml do KrockSide: o piso impede
+      # queda, este passo cobra que o que você adiciona agora venha testado.
+      - name: Cobertura do código novo
+        if: github.event_name == 'pull_request'
+        run: |
+          pip install --quiet diff-cover
+          diff-cover $(find TestResults -name 'coverage.cobertura.xml' | tr '\n' ' ') \
+            --compare-branch=origin/${{ github.base_ref }} \
+            --fail-under=80 \
+            --markdown-report=coverage-diff.md
+          cat coverage-diff.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: '**/TestResults/*.trx'
+          path: |
+            **/TestResults/*.trx
+            TestResults/**/coverage.cobertura.xml
           retention-days: 14

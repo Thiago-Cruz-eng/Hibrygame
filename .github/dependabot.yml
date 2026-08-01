@@ -1,0 +1,44 @@
+version: 2
+
+# Atualização automática de dependências.
+#
+# A maior parte da superfície de ataque deste projeto é código que ninguém aqui escreveu e cujos
+# diffs ninguém lê. Sem isto, um CVE numa transitiva é invisível até alguém procurar.
+#
+# Há uma sinergia com o gate de E2E que vale registrar: PR de bump só é útil se existir uma suíte
+# em que se confie para aprová-lo. Sem ela, bumps viram uma fila que ninguém quer revisar e a
+# automação piora as coisas. Com o E2E rodando a API real contra o front real, a maioria dos
+# bumps se auto-verifica.
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    groups:
+      # Agrupados de propósito: o ecossistema .NET versiona famílias inteiras juntas, e cinco PRs
+      # separados para o mesmo salto de versão só geram cinco execuções de CI e cinco revisões.
+      microsoft:
+        patterns:
+          - 'Microsoft.*'
+          - 'System.*'
+      testing:
+        patterns:
+          - 'xunit*'
+          - 'Moq'
+          - 'coverlet*'
+      mongodb:
+        patterns:
+          - 'MongoDB.*'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - ci

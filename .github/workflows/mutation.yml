@@ -1,0 +1,77 @@
+name: mutation
+
+# Teste de mutação sobre o motor de xadrez.
+#
+# Responde a pergunta que cobertura não responde: os testes CONSEGUEM falhar? O Stryker quebra o
+# código de propósito — inverte condição, troca operador, remove linha — e verifica se algum
+# teste percebe. Mutante que sobrevive é código que você acha que está testado e não está.
+#
+# Está aqui por causa de um padrão concreto desta base, não por completude: os quatro
+# bloqueadores que impediam jogar pela interface tinham teste unitário VERDE do lado que os
+# continha. Os handlers do MSW na rota errada. O `page.route('**/get/**')` espelhando o próprio
+# bug do código. Teste que existe, roda, passa e não prova nada é o modo de falha recorrente
+# aqui, e mutação é o único gate automatizado que o ataca de frente.
+#
+# Alvo: só o projeto Hibrygame (motor). São funções puras, determinísticas, sem I/O — condição
+# ideal para mutação — e simultaneamente o código mais crítico do sistema. Rodar sobre o
+# Orchestrator custaria muito mais e renderia muito menos.
+#
+# FORA do caminho do PR de propósito: roda a suíte uma vez por mutante, centenas de vezes. É
+# relatório para agir, não bloqueio. E o score é métrica gameável como qualquer outra —
+# perseguir 100% é desperdício. O uso certo é olhar os mutantes SOBREVIVENTES específicos e
+# escrever o teste que falta.
+on:
+  schedule:
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+    inputs:
+      threshold_break:
+        description: 'Score abaixo do qual o job falha (0 = só relatar)'
+        required: false
+        default: '0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mutation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  stryker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Instalar Stryker
+        run: dotnet tool install -g dotnet-stryker
+
+      - name: Build
+        run: dotnet build Hibrygame.sln -c Release
+
+      - name: Mutar o motor
+        working-directory: Hibrygame.Test
+        run: >
+          dotnet stryker
+          --project Hibrygame.csproj
+          --break-at ${{ inputs.threshold_break || 0 }}
+          --reporter html
+          --reporter progress
+          --output ../StrykerOutput
+
+      # O HTML é o entregável: lista cada mutante sobrevivente com arquivo, linha e a mutação
+      # aplicada. É o que transforma o relatório em lista de testes a escrever.
+      - name: Upload do relatório
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: StrykerOutput/**/reports/
+          retention-days: 30
+          if-no-files-found: warn
