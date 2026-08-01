@@ -10,14 +10,6 @@ public static class Common
                  newPosition.Column is >= 0 and < 8;
     }
 
-    public static bool IsValidMove(Board board, Position newPosition, Position initialPosition)
-    {
-        if (!IsInsideTheBoard(newPosition)) return false;
-
-        if (board.Positions[newPosition.Row, newPosition.Column].Piece?.Type == null) return true;
-        return board.Positions[newPosition.Row, newPosition.Column].Piece?.Color != initialPosition.Piece?.Color;
-    }
-
     public static List<Position> GetOpponentPositions(Board board, ColorEnum color)
     {
         var opponent = color == ColorEnum.Black ? ColorEnum.White : ColorEnum.Black;
@@ -28,23 +20,6 @@ public static class Common
                 pos.Add(position);
         }
         return pos;
-    }
-
-    public static (List<Position> possibleMoves, Piece? actualPieceTrigger) GetPieceByColorPositions(Board board, ColorEnum color, PieceEnum excludePiece)
-    {
-        var friends = new List<Position>();
-        Piece? trigger = null;
-        foreach (var position in board.Positions)
-        {
-            if (position?.Piece?.Color != color) continue;
-            if (position.Piece.Type == excludePiece)
-            {
-                trigger = position.Piece;
-                continue;
-            }
-            friends.Add(position);
-        }
-        return (friends, trigger);
     }
 
     public class PositionComparer : EqualityComparer<Position>
