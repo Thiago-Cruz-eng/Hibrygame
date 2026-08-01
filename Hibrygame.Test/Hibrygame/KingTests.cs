@@ -62,10 +62,18 @@ public class KingTests
         Assert.Empty(result.possibleMoves);
     }
     
+    // As quatro asserções abaixo foram corrigidas durante a Fase 1 do refactor.
+    // As expectativas antigas (3, 2, 4 e 7) documentavam o comportamento quebrado do
+    // gerador: ao encontrar o rei inimigo durante a varredura, ele abandonava a peça
+    // consultada e devolvia as casas de fuga DO REI. Uma consulta sobre a torre preta
+    // respondia sobre o rei branco.
+
     [Fact]
-    public void GetMovesKing_WithPossibleWithAllOpponentAcrossMoves_Correctly()
+    public void GetMovesKing_BoxedInByThreeDefendedRooks_HasNoLegalMove()
     {
-        // Arrange
+        // Arrange — rei branco em h1, torres pretas em g1, g2 e h2.
+        // Está em xeque e cada captura possível cai numa casa defendida
+        // por outra torre: xeque-mate, zero lances legais.
         var board = new Board();
         board.StartBoard();
         board.Positions[6,6].Piece = new Rook(ColorEnum.Black);
@@ -79,13 +87,15 @@ public class KingTests
 
         // Assert
         Assert.NotNull(result.possibleMoves);
-        Assert.Equal(3, result.possibleMoves.Count);
+        Assert.Empty(result.possibleMoves);
     }
-    
+
     [Fact]
-    public void GetMovesKing_WithPossibleOpponentAcross_Correctly()
+    public void GetMovesKing_InCheckWithEveryCaptureDefended_HasNoLegalMove()
     {
-        // Arrange
+        // Arrange — rei branco em h1 com a própria torre em g1 tapando a fuga.
+        // As torres pretas g2 e h2 defendem-se mutuamente, então nenhuma pode
+        // ser capturada, e a torre h2 mantém o xeque pela coluna h.
         var board = new Board();
         board.StartBoard();
         board.Positions[6,6].Piece = new Rook(ColorEnum.Black);
@@ -99,13 +109,13 @@ public class KingTests
 
         // Assert
         Assert.NotNull(result.possibleMoves);
-        Assert.Equal(2, result.possibleMoves.Count);
+        Assert.Empty(result.possibleMoves);
     }
-    
+
     [Fact]
-    public void GetMovesKing_WhenIsInTreat_Correctly()
+    public void GetMovesRook_GivingCheck_AnswersAboutTheRookAndNotTheKing()
     {
-        // Arrange
+        // Arrange — torre preta em d7 dá xeque ao rei branco em d2.
         var board = new Board();
         board.StartBoard();
         board.Positions[3,1].Piece = new Rook(ColorEnum.Black);
@@ -116,15 +126,16 @@ public class KingTests
         var piece = new Rook(ColorEnum.Black);
         var result = piece.GetPossibleMove(board, new Position(3,1));
 
-        // Assert
+        // Assert — d8; d6..d2 pela coluna, parando no rei; e7..h7; c7..a7.
         Assert.NotNull(result.possibleMoves);
-        Assert.Equal(4, result.possibleMoves.Count);
+        Assert.Equal(13, result.possibleMoves.Count);
     }
-    
+
     [Fact]
-    public void GetMovesKing_WhenIsInTreatWithFriendAside_Correctly()
+    public void GetMovesRook_GivingCheckWithEnemyQueenElsewhere_AnswersAboutTheRook()
     {
-        // Arrange
+        // Arrange — a dama branca em h4 não intercepta nem a coluna d nem a 7ª fileira,
+        // logo não altera em nada os lances da torre preta em d7.
         var board = new Board();
         board.StartBoard();
         board.Positions[3,1].Piece = new Rook(ColorEnum.Black);
@@ -137,11 +148,11 @@ public class KingTests
 
         // Assert
         Assert.NotNull(result.possibleMoves);
-        Assert.Equal(7, result.possibleMoves.Count);
+        Assert.Equal(13, result.possibleMoves.Count);
     }
-    
+
     [Fact]
-    public async void GetMovesKing_WhenIsInTreatByOwnMove_Correctly()
+    public async Task GetMovesKing_WhenIsInTreatByOwnMove_Correctly()
     {
         // Arrange
         var board = new Board();
@@ -166,7 +177,7 @@ public class KingTests
     }
     
     [Fact]
-    public async void GetMovesKing_WhenIsInSaveByOwnMove_Correctly()
+    public async Task GetMovesKing_WhenIsInSaveByOwnMove_Correctly()
     {
         // Arrange
         var board = new Board();
