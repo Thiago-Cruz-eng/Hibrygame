@@ -22,7 +22,8 @@ Saíram desta lista naquela rodada: **DT-01** (engine sem pacotes ASP.NET Core),
 com `ILogger`, membros mortos e filtro permissivo removidos — sobrou só a decisão sobre
 `email`/`day`, ver DT-20), **DT-10** (`EnumMember` inerte e errado removido), **DT-11**
 (cavalo reescrito com oito deltas, sem mutar o tabuleiro; `Skip` removido), **DT-12**
-(`Position` com igualdade de valor), **DT-14** (`CreateRoom.AlreadyExisted` via `TryAdd`).
+(`Position` com igualdade de valor), **DT-14** (`CreateRoom.AlreadyExisted` via `TryAdd`) e
+**DT-06** (`appsettings.json` renomeado para a seção `Mongo:*` que o código realmente lê).
 
 ## Severidade alta — segurança
 
@@ -98,18 +99,6 @@ reclama — a fronteira é só convenção.
 - **Saída**: mover `CollectionNameAttribute` para `Domain/` (é metadado de domínio, não de
   infraestrutura) e remover os `using` de `Infra.Mongo` que não são usados. O arquivo ainda está
   grafado `CollectionNameAtribute.cs` (um "t"): renomear no mesmo PR.
-
-### DT-06 — chave de configuração do Mongo divergente
-
-`Program.cs` lê `Mongo:ConnectionString` e `Mongo:Database`; `appsettings.json` declara
-`HibrygameDatabase:{ConnectionString,DatabaseName,HibrygameCollectionName}`. As chaves nunca
-casam, então o app **sempre** usa o fallback (`mongodb://localhost:27017`, base `Hibrygame`) e o
-`appsettings.json` é decorativo. Trocar o Mongo pelo arquivo de configuração hoje não tem efeito.
-
-- **Arquivos**: `Orchestrator/Program.cs`, `Orchestrator/appsettings.json`
-- **Saída**: escolher uma das duas nomenclaturas e alinhar `README.md`,
-  `docs/ARCHITECTURE.md` e `.claude/CLAUDE.md` no mesmo PR (os três documentam `Mongo:*`, que é
-  o lado que o código lê).
 
 ### DT-09 — sem escala horizontal: estado do hub em processo
 
