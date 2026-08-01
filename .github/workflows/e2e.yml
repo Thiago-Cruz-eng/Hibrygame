@@ -50,13 +50,37 @@ jobs:
         with:
           path: backend
 
-      # O frontend traz a suíte. A ref é uma variável de repositório: enquanto o front novo
-      # não estiver em main, aponte KROCKSIDE_REF para a branch dele; depois do merge,
-      # apague a variável e ela volta a main sozinha.
+      # Qual frontend testar.
+      #
+      # O E2E exercita o CONTRATO entre back e front, e as duas pontas evoluem em PRs
+      # separados. Fixar `main` reprovaria toda mudança coordenada; e uma variável de
+      # repositório, sendo global, desviaria também os PRs que nada têm a ver com ela.
+      #
+      # Então: se existe no frontend uma branch com o MESMO nome desta, é ela — é o sinal
+      # mais barato de "estes dois PRs são as duas metades da mesma mudança", e não exige
+      # lembrar de configurar nada. Senão, main.
+      - name: Resolver ref do frontend
+        id: frontend-ref
+        run: |
+          repo="https://github.com/${{ github.repository_owner }}/KrockSide.git"
+          override="${{ vars.KROCKSIDE_REF }}"
+          branch="${{ github.head_ref || github.ref_name }}"
+
+          if [ -n "$override" ]; then
+            echo "ref=$override" >> "$GITHUB_OUTPUT"
+            echo "Ref vinda da variável KROCKSIDE_REF: $override"
+          elif git ls-remote --exit-code --heads "$repo" "$branch" >/dev/null 2>&1; then
+            echo "ref=$branch" >> "$GITHUB_OUTPUT"
+            echo "Branch homônima encontrada no frontend: $branch"
+          else
+            echo "ref=main" >> "$GITHUB_OUTPUT"
+            echo "Sem branch '$branch' no frontend; testando contra main."
+          fi
+
       - uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/KrockSide
-          ref: ${{ vars.KROCKSIDE_REF || 'main' }}
+          ref: ${{ steps.frontend-ref.outputs.ref }}
           path: frontend
 
       - uses: actions/setup-node@v4
