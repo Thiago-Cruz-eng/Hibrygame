@@ -26,6 +26,10 @@ ser editado à mão.
 5. **Débito técnico — [`docs/debito-tecnico.md`](docs/debito-tecnico.md)** antes de "corrigir"
    algo que parece errado: pode ser desvio já conhecido e deliberado, ou item que exige decisão
    humana.
+6. **Fluxo de trabalho — [`docs/fluxo-de-trabalho.md`](docs/fluxo-de-trabalho.md)** antes de abrir
+   branch ou escrever teste: define em qual das três camadas o teste da sua mudança mora (xUnit,
+   Vitest ou Playwright no repo do front) e como coordenar branch e merge quando a mudança toca
+   as duas pontas do contrato.
 
 ## Visão geral
 
