@@ -10,6 +10,7 @@ como abrir, testar e mergear uma demanda em cada um dos três formatos possívei
 - [Cenário 3 — só front](#cenário-3--só-front)
 - [A janela entre os dois merges](#a-janela-entre-os-dois-merges)
 - [Como o CI escolhe o outro lado](#como-o-ci-escolhe-o-outro-lado)
+- [Com vários devs](#com-vários-devs)
 
 ---
 
@@ -205,6 +206,99 @@ gh variable list                                  # ver o que está configurado
 gh variable set HIBRYGAME_REF --body "minha-branch"
 gh variable delete HIBRYGAME_REF                  # sempre, depois do merge
 ```
+
+---
+
+## Com vários devs
+
+Tudo acima continua valendo. O que muda é que três suposições silenciosas do fluxo deixam de se
+sustentar sozinhas, e passam a precisar de regra explícita.
+
+### 1. O nome da branch vira identificador, e precisa ser único
+
+O pareamento automático assume que um nome de branch identifica **uma** mudança. Com um dev, é
+verdade por construção. Com seis, dois `fix/turno` em repos diferentes, de pessoas diferentes,
+seriam pareados com toda a confiança — e o resultado é **verde enganoso**, que é pior que
+vermelho: o gate afirma ter verificado uma integração que nunca existiu.
+
+Por isso o nome da branch **precisa conter o identificador da tarefa**:
+
+```bash
+git checkout -b feat/HIB-123-promocao-de-peao     # nos DOIS repos
+```
+
+Isto é verificado pelo CI, não apenas recomendado. Se existe branch homônima no outro repo e o
+nome não tem identificador de tarefa, o job **falha** com a instrução de renomear. Falhar é a
+opção certa aqui: as duas alternativas — parear assim mesmo, ou cair para `main` calado —
+produzem verde falso em direções opostas.
+
+O identificador pode ser qualquer coisa que a equipe use de forma única: chave de Jira
+(`HIB-123`), número de issue (`#1234` → `1234`), o que for. A verificação exige apenas
+`letras-números` ou uma sequência de 3+ dígitos.
+
+### 2. A variável de override passa de inconveniente a perigosa
+
+`HIBRYGAME_REF` / `KROCKSIDE_REF` são variáveis **de repositório**. Com um dev, esquecer de
+apagar é chateação. Com uma equipe, enquanto ela existir **todo PR de todo mundo** é testado
+contra a branch de uma pessoa — e ninguém tem por que desconfiar disso.
+
+Mitigado, não resolvido: quando o override está em uso, o job emite uma anotação de
+**warning visível na aba de checks de cada PR afetado**, dizendo contra o que aquele PR foi
+testado e como apagar a variável. Fica difícil de passar despercebido.
+
+Ainda assim, com equipe a regra é: **prefira renomear as branches a usar a variável.** Ela existe
+para o caso raro em que renomear não é possível.
+
+### 3. `main` vermelho para de ser problema seu
+
+Com um dev, um `main` quebrado é um incômodo pessoal. Com uma equipe, é bloqueio coletivo:
+ninguém consegue distinguir "quebrei agora" de "já estava quebrado", e o hábito de ignorar
+vermelho começa exatamente aí.
+
+Consequências práticas:
+
+- **Contrato retrocompatível deixa de ser preferência e vira obrigação.** É o que mantém `main`
+  válido durante a [janela entre merges](#a-janela-entre-os-dois-merges).
+- **Os checks precisam ser obrigatórios** (Settings → Branches → Require status checks). Hoje eles
+  rodam e reportam, mas nada impede mergear no vermelho — o que, com uma pessoa, é disciplina, e
+  com seis é só questão de tempo.
+- **Considere merge queue** quando o volume justificar. Ele testa a combinação *pós-merge*, não a
+  branch isolada, e é o que pega a quebra semântica entre dois PRs que passam sozinhos.
+
+### 4. Suíte E2E é bem comum, e degrada em silêncio
+
+O E2E é o único teste compartilhado entre as duas equipes, e o mais fácil de deixar apodrecer.
+Duas regras que evitam isso:
+
+- **Nunca "é só re-rodar".** A suíte já roda com `retries: 2` no CI: o que você vê vermelho já
+  falhou três vezes. Re-rodar sem diagnosticar é como o hábito de ignorar começa. Se for
+  genuinamente instável, marque `test.fixme` com link para a issue — o teste sai do caminho
+  **registrado**, não esquecido.
+- **Mantenha-a fina.** Hoje são 28 testes em ~2 min. Ela cobre caminho crítico e junção; detalhe
+  desce para xUnit ou Vitest. Uma suíte E2E de 20 minutos é uma suíte que a equipe vai contornar.
+
+### 5. O que ainda não escala, e é bom saber antes
+
+- **Estado do hub é estático e em processo** (`ConcurrentDictionary` no `ChessHub`). No CI não
+  incomoda: cada job tem a sua API e o seu MongoDB isolados. Mas um **ambiente compartilhado de
+  homologação com mais de uma instância** não funciona sem backplane de Redis. Está no
+  [`debito-tecnico.md`](./debito-tecnico.md).
+- **A suíte semeia três usuários de e-mail fixo.** Isolado por job, tudo bem. Contra um MongoDB
+  compartilhado, duas execuções simultâneas disputam os mesmos usuários. Se um dia apontar o E2E
+  para banco compartilhado, os e-mails precisam virar únicos por execução.
+- **Nomes de sala já são únicos por teste** (`newRoom()`), então paralelismo dentro do job é
+  seguro. Foi de propósito.
+
+### Resumo do que muda
+
+| | Um dev | Equipe |
+|---|---|---|
+| Nome da branch | qualquer | **com identificador de tarefa** (verificado pelo CI) |
+| Variável de override | incômodo se esquecer | evitar; avisa em todo PR afetado |
+| Contrato retrocompatível | recomendado | **obrigatório** |
+| Checks obrigatórios | opcional | **necessário** |
+| Merge queue | desnecessário | considerar conforme o volume |
+| E2E instável | irrita | apodrece a suíte — `test.fixme` com issue |
 
 ---
 

@@ -59,6 +59,12 @@ jobs:
       # Então: se existe no frontend uma branch com o MESMO nome desta, é ela — é o sinal
       # mais barato de "estes dois PRs são as duas metades da mesma mudança", e não exige
       # lembrar de configurar nada. Senão, main.
+      #
+      # O pareamento por nome só é seguro se o nome identificar UMA mudança. Com vários devs
+      # isso deixa de ser automático: dois `fix/turno` em repos diferentes, de pessoas
+      # diferentes, seriam pareados com toda a confiança — verde enganoso, que é pior que
+      # vermelho. Daí a exigência de identificador de tarefa no nome (ver
+      # docs/fluxo-de-trabalho.md); nomes genéricos são recusados abaixo.
       - name: Resolver ref do frontend
         id: frontend-ref
         run: |
@@ -68,8 +74,17 @@ jobs:
 
           if [ -n "$override" ]; then
             echo "ref=$override" >> "$GITHUB_OUTPUT"
-            echo "Ref vinda da variável KROCKSIDE_REF: $override"
+            # Anotação, não log: a variável é GLOBAL ao repositório, então enquanto existir
+            # ela desvia todo PR — inclusive os de outras pessoas, que não fazem ideia. Tem
+            # de ser visível na aba de checks de quem for afetado, não enterrada no log.
+            echo "::warning title=E2E desviado por variável::Este PR foi testado contra KrockSide@${override}, e não contra a branch homônima ou main. A variável KROCKSIDE_REF é global e afeta TODOS os PRs deste repositório enquanto existir. Se ela não é sua, avise quem a criou; se é, apague-a assim que o par entrar (gh variable delete KROCKSIDE_REF)."
           elif git ls-remote --exit-code --heads "$repo" "$branch" >/dev/null 2>&1; then
+            # Pareamento por nome exige nome que identifique uma tarefa. Sem isso, a
+            # homonímia pode ser coincidência entre trabalhos de pessoas diferentes.
+            if ! echo "$branch" | grep -qiE '[a-z]+-[0-9]+|[0-9]{3,}'; then
+              echo "::error title=Nome de branch ambíguo para pareamento::Existe uma branch '${branch}' no KrockSide, mas o nome não contém identificador de tarefa, então não dá para afirmar que é a outra metade DESTA mudança — pode ser trabalho de outra pessoa. Renomeie as duas para incluir o identificador (ex.: feat/HIB-123-${branch##*/}). Ver docs/fluxo-de-trabalho.md."
+              exit 1
+            fi
             echo "ref=$branch" >> "$GITHUB_OUTPUT"
             echo "Branch homônima encontrada no frontend: $branch"
           else
