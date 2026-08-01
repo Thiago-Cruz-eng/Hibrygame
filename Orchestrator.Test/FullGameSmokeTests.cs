@@ -116,14 +116,42 @@ public class FullGameSmokeTests
         // O rei preto esta em xeque, e o snapshot leva essa informacao ao frontend.
         Assert.True(Square(afterCapture, "e8").Piece!.IsInCheckState);
 
-        // Em xeque, as pretas nao podem simplesmente jogar outra coisa.
-        var ignoringCheck = await black.MakeMove(room, "a7", "a6");
-        Assert.False(ignoringCheck.Success);
+        // E este xeque e mate: a dama em f7 esta defendida pelo bispo em c4, o rei nao tem
+        // fuga e nada bloqueia ou captura. A partida termina aqui.
+        Assert.Equal("Checkmate", move.Outcome);
+        Assert.Equal("White", move.Winner);
+        Assert.True(afterCapture.Finished);
 
-        var stillInCheck = (await black.GetBoardSnapshot(room))!;
-        Assert.Equal("Black", stillInCheck.CurrentTurn);
-        Assert.Equal(31, stillInCheck.Squares.Count(s => s.Piece is not null));
-        Assert.Equal("Pawn", Square(stillInCheck, "a7").Piece!.Type);
+        // Depois do mate nao se joga mais nada.
+        var afterMate = await black.MakeMove(room, "a7", "a6");
+        Assert.False(afterMate.Success);
+        Assert.Equal("Game already finished.", afterMate.Message);
+
+        var finalBoard = (await black.GetBoardSnapshot(room))!;
+        Assert.Equal("Checkmate", finalBoard.Outcome);
+        Assert.True(finalBoard.Finished);
+        Assert.Equal(31, finalBoard.Squares.Count(s => s.Piece is not null));
+        Assert.Equal("Pawn", Square(finalBoard, "a7").Piece!.Type);
+    }
+
+    [Fact]
+    public async Task AnOrdinaryOpeningMove_ReportsInProgress()
+    {
+        var room = $"smoke-{Guid.NewGuid()}";
+        var white = CreateHub("conn-white");
+        var black = CreateHub("conn-black");
+
+        await white.CreateRoom(room);
+        await white.JoinRoom("Branca", room, "White");
+        await black.JoinRoom("Preta", room, "Black");
+        await white.StartGame(room);
+
+        var move = await white.MakeMove(room, "e2", "e4");
+
+        Assert.True(move.Success);
+        Assert.Equal("InProgress", move.Outcome);
+        Assert.Null(move.Winner);
+        Assert.False(move.Snapshot!.Finished);
     }
 
     [Fact]

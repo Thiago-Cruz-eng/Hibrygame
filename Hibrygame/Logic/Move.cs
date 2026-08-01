@@ -102,6 +102,35 @@ public static class Move
         return inCheck;
     }
 
+    /// <summary>
+    /// O jogador de <paramref name="colorToMove"/> tem algum lance legal? Para em cima do
+    /// primeiro que encontrar, entao no meio-jogo nao chega a varrer o tabuleiro todo.
+    /// </summary>
+    public static bool HasAnyLegalMove(Board board, ColorEnum colorToMove)
+    {
+        foreach (var position in board.Positions)
+        {
+            if (position?.Piece is null || position.Piece.Color != colorToMove) continue;
+            if (LegalMoves(board, position).Count > 0) return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Situacao da partida na vez de <paramref name="colorToMove"/>.
+    ///
+    /// Sem lance legal: em xeque e xeque-mate, sem xeque e afogamento. As duas metades ja
+    /// existiam separadas no motor — <see cref="HasAnyLegalMove"/> e
+    /// <see cref="IsSquareAttacked"/>; aqui elas se juntam.
+    /// </summary>
+    public static GameOutcome EvaluateOutcome(Board board, ColorEnum colorToMove)
+    {
+        if (colorToMove == ColorEnum.None) return GameOutcome.InProgress;
+        if (HasAnyLegalMove(board, colorToMove)) return GameOutcome.InProgress;
+
+        return IsInCheck(board, colorToMove) ? GameOutcome.Checkmate : GameOutcome.Stalemate;
+    }
+
     /// <summary>A casa e atacada por alguma peca de <paramref name="byColor"/>?</summary>
     public static bool IsSquareAttacked(Board board, int row, int column, ColorEnum byColor)
     {

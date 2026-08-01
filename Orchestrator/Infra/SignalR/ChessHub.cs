@@ -195,12 +195,19 @@ public class ChessHub : Hub
 
             gameRoom.SwitchTurn();
 
+            // Fim de partida e sempre avaliado do ponto de vista de quem TEM a vez agora:
+            // sem lance legal e em xeque e mate, sem xeque e afogamento.
+            var evaluated = Move.EvaluateOutcome(gameRoom.Board, gameRoom.CurrentTurn);
+            if (evaluated != GameOutcome.InProgress) gameRoom.Finish();
+
             return new MakeMoveResponse
             {
                 Success = true,
                 From = source.Algebraic,
                 To = target.Algebraic,
                 NextTurn = gameRoom.CurrentTurn.ToString(),
+                Outcome = evaluated.ToString(),
+                Winner = evaluated == GameOutcome.Checkmate ? player.Color.ToString() : null,
                 Snapshot = BuildSnapshot(gameRoom)
             };
         });
@@ -213,8 +220,23 @@ public class ChessHub : Hub
             To = outcome.To,
             ByColor = player.Color.ToString(),
             NextTurn = outcome.NextTurn,
+            Outcome = outcome.Outcome,
+            Winner = outcome.Winner,
             Snapshot = outcome.Snapshot
         });
+
+        // Evento proprio para o fim: o frontend nao precisa inspecionar todo BoardChanged
+        // para descobrir que a partida acabou.
+        if (outcome.Outcome != GameOutcome.InProgress.ToString())
+        {
+            await Clients.Group(room).SendAsync("GameOver", new
+            {
+                Room = room,
+                Outcome = outcome.Outcome,
+                Winner = outcome.Winner,
+                Snapshot = outcome.Snapshot
+            });
+        }
 
         return outcome;
     }
@@ -251,6 +273,11 @@ public class ChessHub : Hub
             CurrentTurn = gameRoom.CurrentTurn.ToString(),
             Started = gameRoom.Started,
             Finished = gameRoom.Finished,
+            // No snapshot para que um cliente que reconecta ou recarrega saiba nao so que a
+            // partida acabou (Finished) mas por que. So faz sentido com a partida em curso.
+            Outcome = gameRoom.Started
+                ? Move.EvaluateOutcome(gameRoom.Board, gameRoom.CurrentTurn).ToString()
+                : GameOutcome.InProgress.ToString(),
             Squares = squares
         };
     }
@@ -323,6 +350,13 @@ public class ChessHub : Hub
         public string? From { get; set; }
         public string? To { get; set; }
         public string? NextTurn { get; set; }
+
+        /// <summary>"InProgress", "Checkmate" ou "Stalemate", na vez de <see cref="NextTurn"/>.</summary>
+        public string? Outcome { get; set; }
+
+        /// <summary>Cor vencedora quando <see cref="Outcome"/> e "Checkmate"; null nos outros casos.</summary>
+        public string? Winner { get; set; }
+
         public BoardSnapshot? Snapshot { get; set; }
 
         public static MakeMoveResponse Failure(string message) => new() { Success = false, Message = message };
@@ -334,6 +368,10 @@ public class ChessHub : Hub
         public string CurrentTurn { get; set; } = string.Empty;
         public bool Started { get; set; }
         public bool Finished { get; set; }
+
+        /// <summary>"InProgress", "Checkmate" ou "Stalemate", na vez de <see cref="CurrentTurn"/>.</summary>
+        public string Outcome { get; set; } = nameof(GameOutcome.InProgress);
+
         public List<SquareDto> Squares { get; set; } = new();
     }
 
