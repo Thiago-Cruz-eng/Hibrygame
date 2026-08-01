@@ -159,6 +159,91 @@ public class ChessHubRegressionTests
     }
 
     // ---------------------------------------------------------------
+    // StartGame concorrente com leitura do tabuleiro
+    // ---------------------------------------------------------------
+
+    [Fact]
+    public async Task StartGame_CalledByBothPlayersAtOnce_KeepsThirtyTwoPieces()
+    {
+        // Encontrado por E2E no navegador: o tabuleiro aparecia com 34 pecas, com peoes
+        // brancos em a2, a3 E a4.
+        //
+        // Causa: BuildSnapshot passou a incluir Outcome, e Outcome vem de
+        // Move.EvaluateOutcome, que para responder "existe lance legal?" SIMULA cada
+        // candidato no tabuleiro e desfaz. Ou seja, montar o snapshot deixou de ser
+        // leitura pura. E StartGame chamava BuildSnapshot FORA do lock da sala.
+        //
+        // Com os dois jogadores chamando StartGame ao mesmo tempo — o que o frontend faz,
+        // porque cada cliente chama StartGame ao conectar e a cada PlayerJoined — duas
+        // simulacoes rodavam concorrentes no mesmo tabuleiro e o desfazer de uma
+        // reescrevia a peca que a outra tinha acabado de mover.
+        //
+        // A assinatura da falha bate: HasAnyLegalMove varre as casas em ordem e encontra o
+        // peao de a2 primeiro, simulando exatamente a3 e a4.
+        for (var attempt = 0; attempt < 20; attempt++)
+        {
+            var room = NewRoomName();
+            var white = CreateHub($"w-{attempt}");
+            var black = CreateHub($"b-{attempt}");
+
+            await white.CreateRoom(room);
+            await white.JoinRoom("Branca", room, "White");
+            await black.JoinRoom("Preta", room, "Black");
+
+            // Os dois disparam StartGame na mesma janela, com a sala recem-cheia.
+            await Task.WhenAll(
+                white.StartGame(room),
+                black.StartGame(room),
+                white.StartGame(room),
+                black.StartGame(room));
+
+            var snapshot = await white.GetBoardSnapshot(room);
+            var pieces = snapshot!.Squares.Count(s => s.Piece is not null);
+
+            Assert.Equal(32, pieces);
+            Assert.Equal(16, snapshot.Squares.Count(s => s.Piece?.Color == "White"));
+            Assert.Equal(16, snapshot.Squares.Count(s => s.Piece?.Color == "Black"));
+        }
+    }
+
+    [Fact]
+    public async Task GetBoardSnapshot_ConcurrentWithMoveEnumeration_KeepsThirtyTwoPieces()
+    {
+        // Montar o snapshot simula lances (por causa do Outcome), entao snapshot e
+        // enumeracao de lances precisam do mesmo lock.
+        var (room, white, black) = await StartedGame();
+
+        for (var round = 0; round < 30; round++)
+        {
+            await Task.WhenAll(
+                white.GetBoardSnapshot(room),
+                black.GetBoardSnapshot(room),
+                white.GetPossibleMoves(room, "a2"),
+                black.GetPossibleMoves(room, "a7"),
+                white.StartGame(room));
+        }
+
+        var snapshot = await white.GetBoardSnapshot(room);
+        Assert.Equal(32, snapshot!.Squares.Count(s => s.Piece is not null));
+    }
+
+    [Fact]
+    public async Task StartGame_AfterAMoveWasPlayed_DoesNotResetTheBoard()
+    {
+        // Start() e guardado por `Started`, mas a garantia importa: chamar StartGame de
+        // novo no meio da partida nao pode devolver as pecas para a casa inicial.
+        var (room, white, _) = await StartedGame();
+        await white.MakeMove(room, "e2", "e4");
+
+        await white.StartGame(room);
+
+        var snapshot = await white.GetBoardSnapshot(room);
+        Assert.Null(snapshot!.Squares.Single(s => s.Algebraic == "e2").Piece);
+        Assert.Equal("Pawn", snapshot.Squares.Single(s => s.Algebraic == "e4").Piece!.Type);
+        Assert.Equal(32, snapshot.Squares.Count(s => s.Piece is not null));
+    }
+
+    // ---------------------------------------------------------------
     // CreateRoom.AlreadyExisted
     // ---------------------------------------------------------------
 

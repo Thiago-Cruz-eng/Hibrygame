@@ -96,8 +96,15 @@ public class ChessHub : Hub
         if (!gameRoom.IsFull)
             return StartGameResponse.Failure("Room needs 2 players to start.");
 
-        gameRoom.Start();
-        var snapshot = BuildSnapshot(gameRoom);
+        // Sob o lock: Start() reescreve as 64 casas, e o snapshot le todas elas. Fora do
+        // lock, dois clientes chamando StartGame ao mesmo tempo — o que o frontend faz,
+        // porque cada um chama ao conectar e a cada PlayerJoined — corrompiam o tabuleiro.
+        var snapshot = await gameRoom.Serialized(() =>
+        {
+            gameRoom.Start();
+            return BuildSnapshot(gameRoom);
+        });
+
         await Clients.Group(room).SendAsync("GameStarted", snapshot);
         return new StartGameResponse { Success = true, Snapshot = snapshot };
     }
@@ -197,8 +204,12 @@ public class ChessHub : Hub
 
             // Fim de partida e sempre avaliado do ponto de vista de quem TEM a vez agora:
             // sem lance legal e em xeque e mate, sem xeque e afogamento.
+            //
+            // Apurado aqui, uma vez por lance e dentro do lock, e guardado na sala. Antes
+            // BuildSnapshot recalculava a cada leitura — e como EvaluateOutcome simula
+            // lances no tabuleiro, isso fazia de "montar snapshot" uma escrita.
             var evaluated = Move.EvaluateOutcome(gameRoom.Board, gameRoom.CurrentTurn);
-            if (evaluated != GameOutcome.InProgress) gameRoom.Finish();
+            gameRoom.SetOutcome(evaluated);
 
             return new MakeMoveResponse
             {
@@ -273,11 +284,9 @@ public class ChessHub : Hub
             CurrentTurn = gameRoom.CurrentTurn.ToString(),
             Started = gameRoom.Started,
             Finished = gameRoom.Finished,
-            // No snapshot para que um cliente que reconecta ou recarrega saiba nao so que a
-            // partida acabou (Finished) mas por que. So faz sentido com a partida em curso.
-            Outcome = gameRoom.Started
-                ? Move.EvaluateOutcome(gameRoom.Board, gameRoom.CurrentTurn).ToString()
-                : GameOutcome.InProgress.ToString(),
+            // Lido do estado da sala, nao recalculado: EvaluateOutcome simula lances no
+            // tabuleiro, e montar o snapshot tem de ser leitura pura. Ver GameRoom.Outcome.
+            Outcome = gameRoom.Outcome.ToString(),
             Squares = squares
         };
     }

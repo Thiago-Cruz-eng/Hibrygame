@@ -26,6 +26,22 @@ public class GameRoom
     public bool Started { get; private set; }
     public bool Finished { get; private set; }
 
+    /// <summary>
+    /// Situacao da partida na vez de <see cref="CurrentTurn"/>, calculada uma vez por
+    /// lance e guardada aqui.
+    ///
+    /// Existe para o snapshot voltar a ser leitura pura. Ao ganhar o campo Outcome, o
+    /// BuildSnapshot passou a chamar Move.EvaluateOutcome, que para responder "existe
+    /// lance legal?" SIMULA cada candidato no tabuleiro e desfaz. Montar o snapshot
+    /// deixou de ser leitura e virou escrita transitoria — e como StartGame o chamava
+    /// fora do lock, dois clientes montando snapshot ao mesmo tempo corrompiam o
+    /// tabuleiro: aparecia peao branco em a2, a3 e a4 ao mesmo tempo, 34 pecas no total.
+    ///
+    /// Recalcular a cada leitura tambem era desperdicio: uma varredura completa de lances
+    /// legais por snapshot, e o snapshot vai em toda difusao de BoardChanged.
+    /// </summary>
+    public GameOutcome Outcome { get; private set; } = GameOutcome.InProgress;
+
     public GameRoom(string name)
     {
         Name = name;
@@ -81,6 +97,11 @@ public class GameRoom
 
     public void Remove(string connectionId) => Players.TryRemove(connectionId, out _);
 
+    /// <summary>
+    /// Monta a posicao inicial. Chame sempre dentro de <see cref="Serialized{T}(Func{T})"/>:
+    /// MakePieceInInitialState reescreve as 64 casas e nao pode correr junto com leitura
+    /// nem com a simulacao de legalidade.
+    /// </summary>
     public void Start()
     {
         if (Started) return;
@@ -88,10 +109,18 @@ public class GameRoom
         Board.MakePieceInInitialState();
         Started = true;
         CurrentTurn = ColorEnum.White;
+        Outcome = GameOutcome.InProgress;
     }
 
     public void SwitchTurn() =>
         CurrentTurn = CurrentTurn == ColorEnum.White ? ColorEnum.Black : ColorEnum.White;
+
+    /// <summary>Registra o resultado apurado depois de um lance. Encerra a sala se for terminal.</summary>
+    public void SetOutcome(GameOutcome outcome)
+    {
+        Outcome = outcome;
+        if (outcome != GameOutcome.InProgress) Finished = true;
+    }
 
     public void Finish() => Finished = true;
 
