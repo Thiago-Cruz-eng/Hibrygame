@@ -421,7 +421,7 @@ public class ValidationControllerTests
     {
         // Arrange
         var (controller, svc) = BuildController(subClaim: "user-1", accessToken: "raw-jwt");
-        svc.Setup(s => s.GetValidationCanMove("user-1", "raw-jwt", "White", "room-1", "user@example.com", "2026-01-01"))
+        svc.Setup(s => s.GetValidationCanMove("user-1", "raw-jwt", "White", "room-1"))
            .ReturnsAsync(true);
 
         var req = new CanMoveValidationRequest
@@ -451,7 +451,7 @@ public class ValidationControllerTests
     {
         // Arrange
         var (controller, svc) = BuildController(subClaim: "user-1", accessToken: "raw-jwt");
-        svc.Setup(s => s.GetValidationCanMove("user-1", "raw-jwt", "White", "room-1", "user@example.com", "2026-01-01"))
+        svc.Setup(s => s.GetValidationCanMove("user-1", "raw-jwt", "White", "room-1"))
            .ReturnsAsync(false);
 
         var req = new CanMoveValidationRequest
@@ -497,8 +497,7 @@ public class ValidationControllerTests
         // Assert
         Assert.IsType<ForbidResult>(result);
         svc.Verify(s => s.GetValidationCanMove(
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 
     // ---------------------------------------------------------------
@@ -526,8 +525,7 @@ public class ValidationControllerTests
         // Assert
         Assert.IsType<ForbidResult>(result);
         svc.Verify(s => s.GetValidationCanMove(
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 
     // ---------------------------------------------------------------
@@ -555,7 +553,6 @@ public class ValidationControllerTests
         // Assert
         Assert.IsType<ForbidResult>(result);
         svc.Verify(s => s.GetValidationCanMove(
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 }

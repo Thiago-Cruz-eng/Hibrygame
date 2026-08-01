@@ -125,8 +125,8 @@ public class ChessHubTests
         var roomName = NewRoomName();
 
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);   // room now full
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);   // room now full
 
         // Act
         var available = await hub1.GetAvailableRooms();
@@ -144,8 +144,8 @@ public class ChessHubTests
         var roomName = NewRoomName();
 
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);
         await hub1.StartGame(roomName);
 
         // Manually mark the room as finished via a MakeMove sequence
@@ -197,7 +197,7 @@ public class ChessHubTests
         var (hub, _, _, _, _, _) = CreateHub("conn-p1");
         var roomName = NewRoomName();
         await hub.CreateRoom(roomName);
-        await hub.JoinRoom("Alice", roomName);
+        await hub.JoinRoom("Alice", roomName, null);
 
         // Act
         var count = await hub.GetPlayersInRoom(roomName);
@@ -214,8 +214,8 @@ public class ChessHubTests
         var (hub2, _, _, _, _, _) = CreateHub("conn-r2");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);
 
         // Act
         var count = await hub1.GetPlayersInRoom(roomName);
@@ -248,7 +248,7 @@ public class ChessHubTests
         var (hub, _, callerProxy, _, _, _) = CreateHub("conn-jrnf");
 
         // Act
-        await hub.JoinRoom("Alice", "ghost-room-" + Guid.NewGuid());
+        await hub.JoinRoom("Alice", "ghost-room-" + Guid.NewGuid(), null);
 
         // Assert — Caller received "RoomNotFound"
         callerProxy.Verify(
@@ -263,7 +263,7 @@ public class ChessHubTests
         var (hub, _, _, _, _, _) = CreateHub("conn-jrnf2");
 
         // Act
-        var response = await hub.JoinRoom("Alice", "ghost-room-" + Guid.NewGuid());
+        var response = await hub.JoinRoom("Alice", "ghost-room-" + Guid.NewGuid(), null);
 
         // Assert
         Assert.Null(response.ConnectionId);
@@ -279,7 +279,7 @@ public class ChessHubTests
         await hub.CreateRoom(roomName);
 
         // Act
-        var response = await hub.JoinRoom("Alice", roomName);
+        var response = await hub.JoinRoom("Alice", roomName, null);
 
         // Assert
         Assert.Equal("White", response.Color);
@@ -293,10 +293,10 @@ public class ChessHubTests
         var (hub2, _, _, _, _, _) = CreateHub("conn-black2");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
 
         // Act
-        var response = await hub2.JoinRoom("Bob", roomName);
+        var response = await hub2.JoinRoom("Bob", roomName, null);
 
         // Assert
         Assert.Equal("Black", response.Color);
@@ -311,11 +311,11 @@ public class ChessHubTests
         var (hub3, _, callerProxy3, _, _, _) = CreateHub("conn-tf3");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);
 
         // Act
-        await hub3.JoinRoom("Charlie", roomName);
+        await hub3.JoinRoom("Charlie", roomName, null);
 
         // Assert
         callerProxy3.Verify(
@@ -332,11 +332,11 @@ public class ChessHubTests
         var (hub3, _, _, _, _, _) = CreateHub("conn-tf6");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);
 
         // Act
-        var response = await hub3.JoinRoom("Charlie", roomName);
+        var response = await hub3.JoinRoom("Charlie", roomName, null);
 
         // Assert
         Assert.Null(response.ConnectionId);
@@ -351,7 +351,7 @@ public class ChessHubTests
         await hub.CreateRoom(roomName);
 
         // Act
-        await hub.JoinRoom("Alice", roomName);
+        await hub.JoinRoom("Alice", roomName, null);
 
         // Assert
         groupsMock.Verify(
@@ -368,7 +368,7 @@ public class ChessHubTests
         await hub.CreateRoom(roomName);
 
         // Act
-        await hub.JoinRoom("Alice", roomName);
+        await hub.JoinRoom("Alice", roomName, null);
 
         // Assert
         groupProxy.Verify(
@@ -385,7 +385,7 @@ public class ChessHubTests
         await hub.CreateRoom(roomName);
 
         // Act
-        var response = await hub.JoinRoom("Alice", roomName);
+        var response = await hub.JoinRoom("Alice", roomName, null);
 
         // Assert — all key fields are populated
         Assert.Equal("conn-resp", response.ConnectionId);
@@ -419,7 +419,7 @@ public class ChessHubTests
         var (hub, _, _, _, _, _) = CreateHub("conn-sf1");
         var roomName = NewRoomName();
         await hub.CreateRoom(roomName);
-        await hub.JoinRoom("Alice", roomName); // only one player
+        await hub.JoinRoom("Alice", roomName, null); // only one player
 
         // Act
         var response = await hub.StartGame(roomName);
@@ -435,7 +435,7 @@ public class ChessHubTests
         var (hub, _, _, _, _, _) = CreateHub("conn-sf2");
         var roomName = NewRoomName();
         await hub.CreateRoom(roomName);
-        await hub.JoinRoom("Alice", roomName);
+        await hub.JoinRoom("Alice", roomName, null);
 
         // Act
         var response = await hub.StartGame(roomName);
@@ -452,8 +452,8 @@ public class ChessHubTests
         var (hub2, _, _, _, _, _) = CreateHub("conn-sg2");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);
 
         // Act
         var response = await hub1.StartGame(roomName);
@@ -470,8 +470,8 @@ public class ChessHubTests
         var (hub2, _, _, _, _, _) = CreateHub("conn-sg4");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);
 
         // Act
         await hub1.StartGame(roomName);
@@ -490,8 +490,8 @@ public class ChessHubTests
         var (hub2, _, _, _, _, _) = CreateHub("conn-sg6");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);
 
         // Act
         var response = await hub1.StartGame(roomName);
@@ -545,7 +545,7 @@ public class ChessHubTests
         var (hub, _, _, _, _, _) = CreateHub("conn-mm1");
         var roomName = NewRoomName();
         await hub.CreateRoom(roomName);
-        await hub.JoinRoom("Alice", roomName);
+        await hub.JoinRoom("Alice", roomName, null);
 
         // Act
         var response = await hub.MakeMove(roomName, "e2", "e4");
@@ -564,8 +564,8 @@ public class ChessHubTests
         var (hub3, _, _, _, _, _) = CreateHub("conn-mm-stranger");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);
         await hub1.StartGame(roomName);
 
         // Act
@@ -584,8 +584,8 @@ public class ChessHubTests
         var (hub2, _, _, _, _, _) = CreateHub("conn-bt1");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);  // White
-        await hub2.JoinRoom("Bob", roomName);    // Black
+        await hub1.JoinRoom("Alice", roomName, null);  // White
+        await hub2.JoinRoom("Bob", roomName, null);    // Black
         await hub1.StartGame(roomName);
 
         // Act — Black moves first (should be rejected)
@@ -604,8 +604,8 @@ public class ChessHubTests
         var (hub2, _, _, _, _, _) = CreateHub("conn-inv2");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);
         await hub1.StartGame(roomName);
 
         // Act — "z9" is not a valid square
@@ -624,8 +624,8 @@ public class ChessHubTests
         var (hub2, _, _, _, _, _) = CreateHub("conn-np2");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);
         await hub1.StartGame(roomName);
 
         // Act
@@ -644,8 +644,8 @@ public class ChessHubTests
         var (hub2, _, _, _, _, _) = CreateHub("conn-pny2");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);  // White
-        await hub2.JoinRoom("Bob", roomName);    // Black
+        await hub1.JoinRoom("Alice", roomName, null);  // White
+        await hub2.JoinRoom("Bob", roomName, null);    // Black
         await hub1.StartGame(roomName);
 
         // e7 is a Black pawn. White's turn — wrong color.
@@ -664,8 +664,8 @@ public class ChessHubTests
         var (hub2, _, _, _, _, _) = CreateHub("conn-il2");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);
         await hub1.StartGame(roomName);
 
         // Act
@@ -688,8 +688,8 @@ public class ChessHubTests
         var (hub2, _, _, _, _, _) = CreateHub("conn-hp2");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);
         await hub1.StartGame(roomName);
 
         // Act
@@ -707,8 +707,8 @@ public class ChessHubTests
         var (hub2, _, _, _, _, _) = CreateHub("conn-hp4");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);
         await hub1.StartGame(roomName);
 
         // Act
@@ -726,8 +726,8 @@ public class ChessHubTests
         var (hub2, _, _, _, _, _) = CreateHub("conn-hp6");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);
         await hub1.StartGame(roomName);
 
         // Act
@@ -747,8 +747,8 @@ public class ChessHubTests
         var (hub2, _, _, _, _, _) = CreateHub("conn-hp8");
         var roomName = NewRoomName();
         await hub1.CreateRoom(roomName);
-        await hub1.JoinRoom("Alice", roomName);
-        await hub2.JoinRoom("Bob", roomName);
+        await hub1.JoinRoom("Alice", roomName, null);
+        await hub2.JoinRoom("Bob", roomName, null);
         await hub1.StartGame(roomName);
 
         // Act
@@ -770,7 +770,7 @@ public class ChessHubTests
         var (hub, _, _, _, groupsMock, _) = CreateHub("conn-leave1");
         var roomName = NewRoomName();
         await hub.CreateRoom(roomName);
-        await hub.JoinRoom("Alice", roomName);
+        await hub.JoinRoom("Alice", roomName, null);
 
         // Act
         await hub.LeaveRoom(roomName);
@@ -788,7 +788,7 @@ public class ChessHubTests
         var (hub, _, _, groupProxy, _, _) = CreateHub("conn-leave2");
         var roomName = NewRoomName();
         await hub.CreateRoom(roomName);
-        await hub.JoinRoom("Alice", roomName);
+        await hub.JoinRoom("Alice", roomName, null);
 
         // Act
         await hub.LeaveRoom(roomName);
@@ -810,7 +810,7 @@ public class ChessHubTests
         var (hub, _, _, groupProxy, _, _) = CreateHub("conn-dc1");
         var roomName = NewRoomName();
         await hub.CreateRoom(roomName);
-        await hub.JoinRoom("Alice", roomName);
+        await hub.JoinRoom("Alice", roomName, null);
 
         // Reset invocation count so we only count the disconnect emission
         groupProxy.Invocations.Clear();

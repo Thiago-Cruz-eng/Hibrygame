@@ -70,8 +70,10 @@ public class ValidationController : ControllerBase
         if (!IsCallerAuthorizedFor(req.UserId, out var token))
             return Forbid();
 
+        // req.UserEmail e req.Day continuam no corpo do request (contrato de FE), mas
+        // nunca chegavam ao filtro — os dois eram descartados dentro do servico. Ver DT-20.
         var canMove = await _validationService.GetValidationCanMove(
-            req.UserId, token, req.PieceColor, req.Room, req.UserEmail, req.Day);
+            req.UserId, token, req.PieceColor, req.Room);
 
         return Ok(new CanMoveValidationResponse { CanMove = canMove });
     }

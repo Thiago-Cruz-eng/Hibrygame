@@ -251,7 +251,7 @@ public class ValidationServiceTests
             .ReturnsAsync(new[] { validation });
 
         // Act
-        var result = await _sut.GetValidationCanMove("user-1", "tok-abc", "White", "room-1", "user@example.com", "2026-01-01");
+        var result = await _sut.GetValidationCanMove("user-1", "tok-abc", "White", "room-1");
 
         // Assert
         Assert.True(result);
@@ -266,7 +266,7 @@ public class ValidationServiceTests
             .ReturnsAsync(Enumerable.Empty<Validation>());
 
         // Act
-        var result = await _sut.GetValidationCanMove("user-1", "tok-abc", "White", "room-1", "user@example.com", "2026-01-01");
+        var result = await _sut.GetValidationCanMove("user-1", "tok-abc", "White", "room-1");
 
         // Assert
         Assert.False(result);
@@ -281,7 +281,7 @@ public class ValidationServiceTests
             .ThrowsAsync(new Exception("DB error"));
 
         // Act
-        var result = await _sut.GetValidationCanMove("user-1", "tok-abc", "White", "room-1", "user@example.com", "2026-01-01");
+        var result = await _sut.GetValidationCanMove("user-1", "tok-abc", "White", "room-1");
 
         // Assert
         Assert.False(result);

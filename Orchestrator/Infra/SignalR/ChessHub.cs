@@ -39,7 +39,13 @@ public class ChessHub : Hub
     public Task<int> GetPlayersInRoom(string room)
         => Task.FromResult(Rooms.TryGetValue(room, out var r) ? r.Players.Count : 0);
 
-    public async Task<JoinRoomResponse> JoinRoom(string playerName, string room)
+    /// <summary>
+    /// Entra na sala. <paramref name="preferredColor"/> e a cor escolhida no lobby
+    /// ("White"/"Black", ou null para deixar o servidor decidir) — atendida quando esta
+    /// livre. Tambem serve para REENTRAR depois de uma reconexao: o SignalR volta com um
+    /// ConnectionId novo, e chamar JoinRoom de novo devolve o assento.
+    /// </summary>
+    public async Task<JoinRoomResponse> JoinRoom(string playerName, string room, string? preferredColor)
     {
         if (!Rooms.TryGetValue(room, out var gameRoom))
         {
@@ -47,7 +53,8 @@ public class ChessHub : Hub
             return JoinRoomResponse.Empty();
         }
 
-        var color = gameRoom.TryAssignColor(Context.ConnectionId, playerName);
+        var preferred = ParseColor(preferredColor);
+        var color = gameRoom.TryAssignColor(Context.ConnectionId, playerName, preferred);
         if (color is null)
         {
             await Clients.Caller.SendAsync("RoomFull", "The room is full. Please try another room.");
@@ -68,9 +75,18 @@ public class ChessHub : Hub
             ConnectionId = Context.ConnectionId,
             Player = playerName,
             Room = room,
-            Color = color.ToString()
+            Color = color.ToString(),
+            AssignedColor = color.ToString(),
+            PreferenceHonoured = preferred is null || preferred == color
         };
     }
+
+    private static ColorEnum? ParseColor(string? value) => value?.Trim().ToLowerInvariant() switch
+    {
+        "white" => ColorEnum.White,
+        "black" => ColorEnum.Black,
+        _ => null
+    };
 
     public async Task<StartGameResponse> StartGame(string room)
     {
@@ -268,7 +284,15 @@ public class ChessHub : Hub
         public string? ConnectionId { get; set; }
         public string? Player { get; set; }
         public string? Room { get; set; }
+
+        /// <summary>Cor efetivamente atribuida. Campo historico, mantido para nao quebrar o FE.</summary>
         public string? Color { get; set; }
+
+        /// <summary>Igual a <see cref="Color"/>, com nome que diz que a decisao e do servidor.</summary>
+        public string? AssignedColor { get; set; }
+
+        /// <summary>Falso quando a cor pedida no lobby estava tomada e outra foi atribuida.</summary>
+        public bool PreferenceHonoured { get; set; }
 
         public static JoinRoomResponse Empty() => new();
     }

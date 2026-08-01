@@ -54,8 +54,8 @@ public class ChessHubRegressionTests
         var black = CreateHub("conn-black");
 
         await white.CreateRoom(room);
-        await white.JoinRoom("Branca", room);
-        await black.JoinRoom("Preta", room);
+        await white.JoinRoom("Branca", room, "White");
+        await black.JoinRoom("Preta", room, "Black");
         await white.StartGame(room);
 
         return (room, white, black);
@@ -65,6 +65,98 @@ public class ChessHubRegressionTests
         string.Join("|", snapshot.Squares
             .OrderBy(s => s.Algebraic, StringComparer.Ordinal)
             .Select(s => $"{s.Algebraic}:{s.Piece?.Color}:{s.Piece?.Type}"));
+
+    // ---------------------------------------------------------------
+    // Cor pedida pelo jogador (o servidor honra quando pode)
+    // ---------------------------------------------------------------
+
+    [Fact]
+    public async Task JoinRoom_WhenTheRequestedColourIsFree_HonoursIt()
+    {
+        // O lobby exige escolher uma cor. Antes o servidor atribuia por ordem de chegada e
+        // ignorava a escolha: quem pedia Preto e entrava primeiro jogava de Brancas.
+        var room = NewRoomName();
+        var hub = CreateHub("conn-1");
+        await hub.CreateRoom(room);
+
+        var response = await hub.JoinRoom("Preta", room, "Black");
+
+        Assert.Equal("Black", response.Color);
+        Assert.Equal("Black", response.AssignedColor);
+        Assert.False(response.PreferenceHonoured is false);
+    }
+
+    [Fact]
+    public async Task JoinRoom_WhenTheRequestedColourIsTaken_GivesTheOtherAndSaysSo()
+    {
+        var room = NewRoomName();
+        var first = CreateHub("conn-1");
+        var second = CreateHub("conn-2");
+        await first.CreateRoom(room);
+
+        await first.JoinRoom("Preta", room, "Black");
+        var response = await second.JoinRoom("Tambem Preta", room, "Black");
+
+        Assert.Equal("White", response.Color);
+        Assert.False(response.PreferenceHonoured);
+    }
+
+    [Fact]
+    public async Task JoinRoom_WithoutAPreference_KeepsTheOldFirstComeOrder()
+    {
+        var room = NewRoomName();
+        var first = CreateHub("conn-1");
+        var second = CreateHub("conn-2");
+        await first.CreateRoom(room);
+
+        var one = await first.JoinRoom("Um", room, null);
+        var two = await second.JoinRoom("Dois", room, null);
+
+        Assert.Equal("White", one.Color);
+        Assert.Equal("Black", two.Color);
+    }
+
+    // ---------------------------------------------------------------
+    // Reentrar na sala depois de reconectar
+    // ---------------------------------------------------------------
+
+    [Fact]
+    public async Task JoinRoom_AfterReconnectingWithANewConnection_RestoresTheSameSeat()
+    {
+        // O SignalR reconecta com um ConnectionId novo, e OnDisconnectedAsync ja tinha
+        // liberado o assento. Reentrar tem de devolver a mesma cor, com a partida em curso.
+        var (room, white, black) = await StartedGame();
+        await white.MakeMove(room, "e2", "e4");
+
+        // Queda das brancas e volta com outra conexao.
+        await white.OnDisconnectedAsync(null);
+        var reconnected = CreateHub("conn-white-2");
+        var rejoin = await reconnected.JoinRoom("Branca", room, "White");
+
+        Assert.Equal("White", rejoin.Color);
+
+        // E a partida continua de onde estava: e a vez das pretas, e2 esta vazia.
+        var snapshot = await black.GetBoardSnapshot(room);
+        Assert.Equal("Black", snapshot!.CurrentTurn);
+        Assert.Null(snapshot.Squares.Single(s => s.Algebraic == "e2").Piece);
+
+        // A conexao nova consegue jogar quando chegar a vez dela.
+        await black.MakeMove(room, "e7", "e5");
+        var afterRejoin = await reconnected.MakeMove(room, "g1", "f3");
+        Assert.True(afterRejoin.Success);
+    }
+
+    [Fact]
+    public async Task MakeMove_FromAStaleConnection_IsRejected()
+    {
+        var (room, white, _) = await StartedGame();
+
+        await white.OnDisconnectedAsync(null);
+        var response = await white.MakeMove(room, "e2", "e4");
+
+        Assert.False(response.Success);
+        Assert.Equal("You are not in this room.", response.Message);
+    }
 
     // ---------------------------------------------------------------
     // CreateRoom.AlreadyExisted

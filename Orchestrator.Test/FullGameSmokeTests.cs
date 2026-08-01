@@ -56,8 +56,8 @@ public class FullGameSmokeTests
         var black = CreateHub("conn-black");
 
         await white.CreateRoom(room);
-        var whiteJoin = await white.JoinRoom("Branca", room);
-        var blackJoin = await black.JoinRoom("Preta", room);
+        var whiteJoin = await white.JoinRoom("Branca", room, "White");
+        var blackJoin = await black.JoinRoom("Preta", room, "Black");
         var started = await white.StartGame(room);
 
         Assert.Equal("White", whiteJoin.Color);
@@ -134,8 +134,8 @@ public class FullGameSmokeTests
         var black = CreateHub("conn-black");
 
         await white.CreateRoom(room);
-        await white.JoinRoom("Branca", room);
-        await black.JoinRoom("Preta", room);
+        await white.JoinRoom("Branca", room, "White");
+        await black.JoinRoom("Preta", room, "Black");
         await white.StartGame(room);
 
         var response = await white.MakeMove(room, "e7", "e5");
@@ -152,8 +152,8 @@ public class FullGameSmokeTests
         var black = CreateHub("conn-black");
 
         await white.CreateRoom(room);
-        await white.JoinRoom("Branca", room);
-        await black.JoinRoom("Preta", room);
+        await white.JoinRoom("Branca", room, "White");
+        await black.JoinRoom("Preta", room, "Black");
         await white.StartGame(room);
 
         // Torre em a1 nao vai a a5: a2 esta ocupada pelo proprio peao.

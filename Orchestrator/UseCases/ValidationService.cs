@@ -39,7 +39,7 @@ public class ValidationService : IValidationService
         }
     }
 
-    public async Task<bool> GetValidationCanMove(string userId, string token, string colorPiece, string room, string email, string day)
+    public async Task<bool> GetValidationCanMove(string userId, string token, string colorPiece, string room)
     {
         try
         {
@@ -47,10 +47,7 @@ public class ValidationService : IValidationService
                 x.AcessToken == token &&
                 x.UserId == userId &&
                 x.Room == room &&
-                x.PieceColor == colorPiece
-                // DECISAO PENDENTE: `email` e `day` sao recebidos e ignorados. Ou entram
-                // no filtro, ou saem da assinatura. Ver DT-05 em docs/debito-tecnico.md.
-                );
+                x.PieceColor == colorPiece);
 
             return validation.FirstOrDefault() is not null;
         }
