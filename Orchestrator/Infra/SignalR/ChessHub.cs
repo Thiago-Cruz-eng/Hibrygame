@@ -13,11 +13,15 @@ public class ChessHub : Hub
 
     public Task<CreateRoomResponse> CreateRoom(string room)
     {
-        var created = Rooms.GetOrAdd(room, name => new GameRoom(name));
+        // TryAdd responde exatamente o que o lobby precisa saber. A versao anterior
+        // comparava `created != Rooms[room]`, sempre a mesma referencia, logo sempre
+        // falso: a sala so era reportada como existente se ja tivesse jogadores.
+        var alreadyExisted = !Rooms.TryAdd(room, new GameRoom(room));
+
         return Task.FromResult(new CreateRoomResponse
         {
-            Room = created.Name,
-            AlreadyExisted = created != Rooms[room] || created.Players.Count > 0
+            Room = Rooms[room].Name,
+            AlreadyExisted = alreadyExisted
         });
     }
 
@@ -83,7 +87,9 @@ public class ChessHub : Hub
     }
 
     public Task<BoardSnapshot?> GetBoardSnapshot(string room)
-        => Task.FromResult(Rooms.TryGetValue(room, out var gameRoom) ? BuildSnapshot(gameRoom) : null);
+        => Rooms.TryGetValue(room, out var gameRoom)
+            ? gameRoom.Serialized<BoardSnapshot?>(() => BuildSnapshot(gameRoom))
+            : Task.FromResult<BoardSnapshot?>(null);
 
     public async Task LeaveRoom(string room)
     {
@@ -105,19 +111,30 @@ public class ChessHub : Hub
         if (!Rooms.TryGetValue(room, out var gameRoom) || !gameRoom.Started)
             return Task.FromResult(PossibleMovesResponse.Failure("Game not started."));
 
+        // Mesma autoridade de servidor que MakeMove ja aplicava: so quem esta na sala
+        // consulta o tabuleiro dela, e cada jogador so enumera as proprias pecas.
+        if (!gameRoom.Players.TryGetValue(Context.ConnectionId, out var player))
+            return Task.FromResult(PossibleMovesResponse.Failure("You are not in this room."));
+
         if (!Position.TryFromAlgebraic(from, out var fromPos) || fromPos is null)
             return Task.FromResult(PossibleMovesResponse.Failure($"Invalid square '{from}'."));
 
-        var source = gameRoom.Board.GetPositionInBoard(fromPos.Row, fromPos.Column);
-        if (source.Piece is null)
-            return Task.FromResult(PossibleMovesResponse.Failure($"No piece on '{from}'."));
-
-        var (moves, _) = source.Piece.GetPossibleMove(gameRoom.Board, source);
-        return Task.FromResult(new PossibleMovesResponse
+        return gameRoom.Serialized(() =>
         {
-            Success = true,
-            From = source.Algebraic,
-            Moves = moves?.Select(MapSquare).ToList() ?? new List<SquareDto>()
+            var source = gameRoom.Board.GetPositionInBoard(fromPos.Row, fromPos.Column);
+            if (source.Piece is null)
+                return PossibleMovesResponse.Failure($"No piece on '{from}'.");
+
+            if (source.Piece.Color != player.Color)
+                return PossibleMovesResponse.Failure("That piece is not yours.");
+
+            var (moves, _) = source.Piece.GetPossibleMove(gameRoom.Board, source);
+            return new PossibleMovesResponse
+            {
+                Success = true,
+                From = source.Algebraic,
+                Moves = moves?.Select(MapSquare).ToList() ?? new List<SquareDto>()
+            };
         });
     }
 
@@ -132,49 +149,58 @@ public class ChessHub : Hub
         if (!gameRoom.Players.TryGetValue(Context.ConnectionId, out var player))
             return MakeMoveResponse.Failure("You are not in this room.");
 
-        if (player.Color != gameRoom.CurrentTurn)
-            return MakeMoveResponse.Failure("Not your turn.");
-
         if (!Position.TryFromAlgebraic(from, out var fromPos) || fromPos is null ||
             !Position.TryFromAlgebraic(to, out var toPos) || toPos is null)
             return MakeMoveResponse.Failure("Invalid square notation.");
 
-        var source = gameRoom.Board.GetPositionInBoard(fromPos.Row, fromPos.Column);
-        if (source.Piece is null)
-            return MakeMoveResponse.Failure($"No piece on '{from}'.");
-
-        if (source.Piece.Color != player.Color)
-            return MakeMoveResponse.Failure("That piece is not yours.");
-
-        var target = gameRoom.Board.GetPositionInBoard(toPos.Row, toPos.Column);
-        var (possibleMoves, _) = source.Piece.GetPossibleMove(gameRoom.Board, source);
-        if (possibleMoves is null || !possibleMoves.Any(p => p.Row == target.Row && p.Column == target.Column))
-            return MakeMoveResponse.Failure("Illegal move.");
-
-        var applied = await Move.MakeMove(gameRoom.Board, possibleMoves, target, source);
-        if (!applied)
-            return MakeMoveResponse.Failure("Move would leave king in check.");
-
-        gameRoom.SwitchTurn();
-
-        var snapshot = BuildSnapshot(gameRoom);
-        await Clients.Group(room).SendAsync("BoardChanged", new
+        // Verificar o turno, validar, aplicar e trocar o turno tem de ser um bloco
+        // indivisivel. Estando separados por um await, dois lances submetidos ao mesmo
+        // tempo passavam ambos pela verificacao de turno e o mesmo jogador jogava duas
+        // vezes na mesma vez.
+        var outcome = await gameRoom.Serialized(async () =>
         {
-            From = source.Algebraic,
-            To = target.Algebraic,
-            ByColor = player.Color.ToString(),
-            NextTurn = gameRoom.CurrentTurn.ToString(),
-            Snapshot = snapshot
+            if (player.Color != gameRoom.CurrentTurn)
+                return MakeMoveResponse.Failure("Not your turn.");
+
+            var source = gameRoom.Board.GetPositionInBoard(fromPos.Row, fromPos.Column);
+            if (source.Piece is null)
+                return MakeMoveResponse.Failure($"No piece on '{from}'.");
+
+            if (source.Piece.Color != player.Color)
+                return MakeMoveResponse.Failure("That piece is not yours.");
+
+            var target = gameRoom.Board.GetPositionInBoard(toPos.Row, toPos.Column);
+            var (possibleMoves, _) = source.Piece.GetPossibleMove(gameRoom.Board, source);
+            if (possibleMoves is null || !possibleMoves.Any(p => p.Row == target.Row && p.Column == target.Column))
+                return MakeMoveResponse.Failure("Illegal move.");
+
+            if (!await Move.MakeMove(gameRoom.Board, possibleMoves, target, source))
+                return MakeMoveResponse.Failure("Move would leave king in check.");
+
+            gameRoom.SwitchTurn();
+
+            return new MakeMoveResponse
+            {
+                Success = true,
+                From = source.Algebraic,
+                To = target.Algebraic,
+                NextTurn = gameRoom.CurrentTurn.ToString(),
+                Snapshot = BuildSnapshot(gameRoom)
+            };
         });
 
-        return new MakeMoveResponse
+        if (!outcome.Success) return outcome;
+
+        await Clients.Group(room).SendAsync("BoardChanged", new
         {
-            Success = true,
-            From = source.Algebraic,
-            To = target.Algebraic,
-            NextTurn = gameRoom.CurrentTurn.ToString(),
-            Snapshot = snapshot
-        };
+            From = outcome.From,
+            To = outcome.To,
+            ByColor = player.Color.ToString(),
+            NextTurn = outcome.NextTurn,
+            Snapshot = outcome.Snapshot
+        });
+
+        return outcome;
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)

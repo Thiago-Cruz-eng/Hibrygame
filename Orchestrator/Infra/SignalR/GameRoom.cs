@@ -6,6 +6,19 @@ namespace Orchestrator.Infra.SignalR;
 
 public class GameRoom
 {
+    /// <summary>
+    /// Serializa o acesso a <see cref="Board"/>. Necessario por dois motivos:
+    ///
+    /// - Avaliar legalidade simula cada lance candidato no tabuleiro e desfaz. Duas
+    ///   chamadas simultaneas na mesma sala intercalam simulacao e desfazer, e o
+    ///   desfazer de uma apaga a peca da outra.
+    /// - Em MakeMove, a verificacao de turno e a troca de turno estao separadas por
+    ///   um await; sem serializacao o mesmo jogador consegue dois lances numa vez.
+    ///
+    /// Use sempre via <see cref="Serialized{T}"/>.
+    /// </summary>
+    private readonly SemaphoreSlim _gate = new(1, 1);
+
     public string Name { get; }
     public Board Board { get; } = new();
     public ConcurrentDictionary<string, PlayerSlot> Players { get; } = new();
@@ -16,6 +29,34 @@ public class GameRoom
     public GameRoom(string name)
     {
         Name = name;
+    }
+
+    /// <summary>Executa <paramref name="action"/> com acesso exclusivo ao tabuleiro da sala.</summary>
+    public async Task<T> Serialized<T>(Func<T> action)
+    {
+        await _gate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            return action();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <inheritdoc cref="Serialized{T}(Func{T})"/>
+    public async Task<T> Serialized<T>(Func<Task<T>> action)
+    {
+        await _gate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            return await action().ConfigureAwait(false);
+        }
+        finally
+        {
+            _gate.Release();
+        }
     }
 
     public bool IsFull => Players.Count >= 2;

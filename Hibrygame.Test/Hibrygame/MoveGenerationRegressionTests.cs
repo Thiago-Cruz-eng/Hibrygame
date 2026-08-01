@@ -579,6 +579,94 @@ public class MoveGenerationRegressionTests
         Assert.Equal(PieceEnum.Rook, board.PieceAt("d8")!.Type);
     }
 
+    // ---------------------------------------------------------------------
+    // Posicoes classicamente quebra-motor (Fase 2)
+    // ---------------------------------------------------------------------
+
+    [Fact]
+    public void DoubleCheck_LeavesNoMoveForAnyPieceExceptTheKing()
+    {
+        // Rei branco em e1 sob xeque duplo: torre preta em e8 pela coluna e,
+        // bispo preto em a5 pela diagonal a5-e1. Em xeque duplo nao existe bloqueio
+        // que sirva: tapar a coluna deixa a diagonal aberta e vice-versa.
+        var board = TestBoards.With(
+            ("e1", new King(ColorEnum.White)),
+            ("h2", new Rook(ColorEnum.White)),
+            ("e8", new Rook(ColorEnum.Black)),
+            ("a5", new Bishop(ColorEnum.Black)));
+
+        Assert.Empty(board.MovesFrom("h2"));
+    }
+
+    [Fact]
+    public void SingleCheck_AllowsOnlyTheMoveThatBlocksIt()
+    {
+        // Torre preta em e8 da xeque. O cavalo em g1 alcanca h3, f3 e e2, mas apenas
+        // e2 intercepta a coluna e.
+        var board = TestBoards.With(
+            ("e1", new King(ColorEnum.White)),
+            ("g1", new Knight(ColorEnum.White)),
+            ("e8", new Rook(ColorEnum.Black)));
+
+        Assert.Equal(TestBoards.Squares("e2"), board.MovesFrom("g1"));
+    }
+
+    [Fact]
+    public void PinnedPiece_MayCaptureThePieceThatPinsIt()
+    {
+        // A torre cravada em e4 pode capturar a torre que a crava, em e8:
+        // continua na linha da cravada e elimina o atacante.
+        var board = TestBoards.With(
+            ("e1", new King(ColorEnum.White)),
+            ("e4", new Rook(ColorEnum.White)),
+            ("e8", new Rook(ColorEnum.Black)));
+
+        Assert.Contains("e8", board.MovesFrom("e4"));
+    }
+
+    [Fact]
+    public void CapturingTheCheckingPiece_IsALegalWayOutOfCheck()
+    {
+        // Torre preta em h1 da xeque pela primeira fileira; a dama branca em h5
+        // captura-a pela coluna h e resolve o xeque.
+        var board = TestBoards.With(
+            ("a1", new King(ColorEnum.White)),
+            ("h5", new Queen(ColorEnum.White)),
+            ("h1", new Rook(ColorEnum.Black)));
+
+        Assert.Contains("h1", board.MovesFrom("h5"));
+    }
+
+    [Fact]
+    public void TwoKings_MayNotStandNextToEachOther()
+    {
+        // Rei preto em e3 cobre d2, e2 e f2, entao o rei branco em e1 so tem d1 e f1.
+        var board = TestBoards.With(
+            ("e1", new King(ColorEnum.White)),
+            ("e3", new King(ColorEnum.Black)));
+
+        Assert.Equal(TestBoards.Squares("d1", "f1"), board.MovesFrom("e1"));
+    }
+
+    [Fact]
+    public void PromotionRankIsReached_ButThePawnStaysAPawn()
+    {
+        // Documenta a ausencia de promocao, que ficou fora do escopo acordado: o peao
+        // chega a oitava fileira e continua peao, sem lance nenhum a partir dali.
+        // Se a promocao for implementada, este teste tem de mudar.
+        var board = TestBoards.With(
+            ("e1", new King(ColorEnum.White)),
+            ("e7", new Pawn(ColorEnum.White) { HasAlreadyOneMove = true }),
+            ("a8", new King(ColorEnum.Black)));
+
+        var source = board.At("e7");
+        var (moves, _) = source.Piece!.GetPossibleMove(board, source);
+        Move.MakeMove(board, moves, board.At("e8"), source).GetAwaiter().GetResult();
+
+        Assert.Equal(PieceEnum.Pawn, board.PieceAt("e8")!.Type);
+        Assert.Empty(board.MovesFrom("e8"));
+    }
+
     [Fact]
     public async Task MakeMove_RejectsATargetThatIsNotAPossibleMove()
     {
