@@ -1,4 +1,3 @@
-﻿using System.Data;
 using Hibrygame.Enums;
 
 namespace Hibrygame;
@@ -23,52 +22,43 @@ public class Board
 
     public void MakePieceInInitialState()
     {
-        var board = StartBoard();
-        board.ForEach(pos =>
+        foreach (var position in Positions)
         {
-            pos.SquareColor = (pos.Row + pos.Column) % 2 == 1 ? ColorEnum.Black : ColorEnum.White;
-            pos.Piece = DefinePiece(pos);
-        });
+            if (position is null) continue;
+            position.SquareColor = (position.Row + position.Column) % 2 == 1 ? ColorEnum.Black : ColorEnum.White;
+            position.Piece = DefinePiece(position);
+        }
     }
 
     private static Piece? DefinePiece(Position pos)
     {
-        Piece singlePiece = null;
-        if (pos.Row == 0 && pos.Column == 7) singlePiece = new Rook(ColorEnum.White);
-        if (pos.Row == 1 && pos.Column == 7) singlePiece = new Knight(ColorEnum.White);
-        if (pos.Row == 2 && pos.Column == 7) singlePiece = new Bishop(ColorEnum.White);
-        if (pos.Row == 3 && pos.Column == 7) singlePiece = new Queen(ColorEnum.White);
-        if (pos.Row == 4 && pos.Column == 7) singlePiece = new King(ColorEnum.White);
-        if (pos.Row == 5 && pos.Column == 7) singlePiece = new Bishop(ColorEnum.White);
-        if (pos.Row == 6 && pos.Column == 7) singlePiece = new Knight(ColorEnum.White);
-        if (pos.Row == 7 && pos.Column == 7) singlePiece = new Rook(ColorEnum.White);
-        if (pos.Row == 0 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-        if (pos.Row == 1 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-        if (pos.Row == 2 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-        if (pos.Row == 3 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-        if (pos.Row == 4 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-        if (pos.Row == 5 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-        if (pos.Row == 6 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-        if (pos.Row == 7 && pos.Column == 6) singlePiece = new Pawn(ColorEnum.White);
-        
-        if (pos.Row == 0 && pos.Column == 0) singlePiece = new Rook(ColorEnum.Black);
-        if (pos.Row == 1 && pos.Column == 0) singlePiece = new Knight(ColorEnum.Black);
-        if (pos.Row == 2 && pos.Column == 0) singlePiece = new Bishop(ColorEnum.Black);
-        if (pos.Row == 3 && pos.Column == 0) singlePiece = new Queen(ColorEnum.Black);
-        if (pos.Row == 4 && pos.Column == 0) singlePiece = new King(ColorEnum.Black);
-        if (pos.Row == 5 && pos.Column == 0) singlePiece = new Bishop(ColorEnum.Black);
-        if (pos.Row == 6 && pos.Column == 0) singlePiece = new Knight(ColorEnum.Black);
-        if (pos.Row == 7 && pos.Column == 0) singlePiece = new Rook(ColorEnum.Black);
-        if (pos.Row == 0 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
-        if (pos.Row == 1 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
-        if (pos.Row == 2 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
-        if (pos.Row == 3 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
-        if (pos.Row == 4 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
-        if (pos.Row == 5 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
-        if (pos.Row == 6 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
-        if (pos.Row == 7 && pos.Column == 1) singlePiece = new Pawn(ColorEnum.Black);
-
-        return singlePiece;
+        if (pos.Column == 7)
+        {
+            return pos.Row switch
+            {
+                0 or 7 => new Rook(ColorEnum.White),
+                1 or 6 => new Knight(ColorEnum.White),
+                2 or 5 => new Bishop(ColorEnum.White),
+                3 => new Queen(ColorEnum.White),
+                4 => new King(ColorEnum.White),
+                _ => null
+            };
+        }
+        if (pos.Column == 6) return new Pawn(ColorEnum.White);
+        if (pos.Column == 1) return new Pawn(ColorEnum.Black);
+        if (pos.Column == 0)
+        {
+            return pos.Row switch
+            {
+                0 or 7 => new Rook(ColorEnum.Black),
+                1 or 6 => new Knight(ColorEnum.Black),
+                2 or 5 => new Bishop(ColorEnum.Black),
+                3 => new Queen(ColorEnum.Black),
+                4 => new King(ColorEnum.Black),
+                _ => null
+            };
+        }
+        return null;
     }
 
     public List<Position> GetPositionsPlaced()
@@ -76,30 +66,38 @@ public class Board
         var pos = new List<Position>();
         foreach (var position in Positions)
         {
+            if (position?.Piece is null) continue;
             pos.Add(position);
         }
         return pos;
     }
-    
-    public List<Position> GetPositionsPlacedInBoard()
+
+    public List<Position> GetAllSquares()
     {
         var pos = new List<Position>();
         foreach (var position in Positions)
         {
-            if(position.Piece is null) continue;
+            if (position is null) continue;
             pos.Add(position);
         }
         return pos;
     }
-    
+
+    public List<Position> GetPositionsPlacedInBoard() => GetPositionsPlaced();
+
     public Position GetPositionInBoard(int row, int column)
     {
         return Positions[row, column];
     }
-    
+
+    public Position GetPositionByAlgebraic(string notation)
+    {
+        var (row, column) = Position.ToIndices(notation);
+        return Positions[row, column];
+    }
+
     public async Task MakeMove(Board board, List<Position> possibleMoves, Position newPosition, Position oldPosition)
     {
         await Move.MakeMove(board, possibleMoves, newPosition, oldPosition);
     }
 }
-

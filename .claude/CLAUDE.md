@@ -1,130 +1,104 @@
-# verum-sales-global-backend
+# Hibrygame
 
-Plataforma B2B de vendas multi-país (US, MX — BR desabilitado via feature flag) da Cantu/Verum. API REST em ASP.NET Core 8 com Clean Architecture.
+Multiplayer chess platform. ASP.NET Core 8 + SignalR + MongoDB + JWT.
+
+> **Canonical instructions live in [`AGENTS.md`](../AGENTS.md).** Read it before any task — it
+> defines the mandatory reading order, the non-negotiable conventions and the critical areas.
+> This file is a quick reference only; where the two differ, `AGENTS.md` wins.
+
+> **Read first:**
+> - [AGENTS.md](../AGENTS.md) — canonical instructions for agents
+> - [.specify/memory/constitution.md](../.specify/memory/constitution.md) — 7 principles (I and II are non-negotiable)
+> - [.agents/skills/](../.agents/skills/) — domain truth, loaded on demand; **precedes patterns inferred from code**
+> - [.agents/maps/functional-map.md](../.agents/maps/functional-map.md) — the 4 business contexts
+> - [docs/debito-tecnico.md](../docs/debito-tecnico.md) — known debt; check before "fixing" what looks wrong
+> - [README.md](../README.md) — full overview
+> - [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) — request flows, hub state machine, design log
+> - [docs/FRONTEND_CHANGES.md](../docs/FRONTEND_CHANGES.md) — FE contract + change history
 
 ## Stack
-
 - **Runtime:** .NET 8 / C# 12
-- **Banco:** MongoDB Atlas (multi-database por país, sem migrations)
-- **Cache:** Redis
-- **Mensageria:** RabbitMQ (event bus)
-- **Real-time:** Azure SignalR Service
-- **Jobs:** Hangfire (persistido no MongoDB)
-- **Auth:** JWT assinado via Azure Key Vault + Azure AD (opcional)
-- **Logging/APM:** Serilog + Datadog
-- **Deploy:** Docker + GitHub Actions → Azure Container Apps
+- **Database:** MongoDB (Guid IDs stored as string)
+- **Real-time:** SignalR (`/chesshub`)
+- **Auth:** JWT Bearer (HmacSha256)
+- **Tests:** xUnit + Moq (453 passing, 1 skip)
 
-## Como rodar localmente
-~~~~
+## Run
 ```bash
 dotnet restore
 dotnet build
-dotnet run --project 2-Core/API
-# Swagger: https://localhost:7237/swagger
+dotnet run --project Orchestrator   # Swagger at https://localhost:5001/swagger
+dotnet test                          # 453 tests
 ```
 
-Toda requisição precisa do header `X-Country: US` (ou `MX`). Sem ele, retorna 400 em modo strict.
+MongoDB on `localhost:27017`. Note: `Program.cs` reads `Mongo:ConnectionString` / `Mongo:Database`
+but `appsettings.json` declares `HibrygameDatabase:*` — the keys never match, so the app always
+falls back to `localhost:27017` / db `Hibrygame` and the config file is decorative (see DT-06 in
+[docs/debito-tecnico.md](../docs/debito-tecnico.md)). The test suite needs neither MongoDB nor
+Docker — repositories are mocked with Moq.
 
-## Estrutura de diretórios
-
-```
-0-Common/
-  BrokerEvents/        # Definições de eventos RabbitMQ
-  Contracts/           # DTOs e modelos compartilhados (214 arquivos)
-  Security/            # Pacote JWT, Azure Key Vault, Azure AD
-  Shared/              # BaseEntity, BaseRepository, Multitenancy, Interfaces
-
-1-Modules/
-  US/                  # Serviços e lógica específica dos EUA
-  MX/                  # Serviços e lógica específica do México
-
-2-Core/
-  API/                 # Controllers, Middleware, Filters, Swagger, Program.cs
-  Application/         # Services, Queries, Jobs (Hangfire), ConsumersBroker (RabbitMQ)
-  Domain/              # Entidades, Enums, Constraints
-  Infrastructure/      # Repositories MongoDB, Persistência
-
-8-Automation/          # Scripts PowerShell para geração de CRUD
-9-Adapters/            # SAP, Zendesk, Verum OMS, ClosedXML, SignalR, Redis, RabbitMQ, Email, PIX
-```
-
-## Arquitetura
-
-Clean Architecture em fluxo unidirecional:
+## Project layout
 
 ```
-Domain → Application → Infrastructure → API
+Hibrygame/        # Chess engine — pure C# library
+  Logic/          # Board, Position, Piece (Pawn/Knight/Bishop/Rook/Queen/King), Move, Common
+Hibrygame.Test/   # Engine tests
+Orchestrator/     # ASP.NET Core Web API
+  Domain/         # Entities (User, RefreshToken, UserAssignment, Validation, BaseEntity, AuditInformation)
+  Infra/
+    BaseRepository/  # IGenericRepository + GenericRepository (Mongo CRUD layer)
+    Interfaces/      # IUserRepositoryNoSql, IRefreshTokenRepositoryNoSql, IValidationRepositoryNoSql
+    Mongo/           # IMongoDbContext + factory
+    Repositories/    # Concrete entity repos (User/RefreshToken/Validation)RepositoryNoSql
+    SignalR/         # ChessHub + GameRoom
+    Settings/        # JwtSettings
+    Utils/           # CollectionNameAttribute, ServiceFactory, EnumStringConverter
+  Presentation/   # Controllers — UserController, ValidationController
+  UseCases/       # Application services (one class per action)
+    Dto/{Request,Response}/
+    Security/     # TokenService, SecureHashingService, MinimumRoleHandler, RoleHierarchy
+  Program.cs
+Orchestrator.Test/
+docs/
 ```
 
-### Multi-tenância por país
+## Architecture (clean-ish)
 
-Cada request carrega `X-Country` header. Isso determina:
-- Qual banco MongoDB usar (`VerumSalesGlobal_US`, `VerumSalesGlobal_MX`, etc.)
-- Qual implementação de service resolver (via `IServiceFactory`)
-- Qual CORS policy e origens aceitar
+```
+Domain → UseCases → Infra → Presentation
+```
 
-### Factory pattern para resolução por país
+- **Domain** — entities + factories, no external deps
+- **UseCases** — one class per action (`CreateUserUseCase`, `LoginAsyncUseCase`, …); orchestrates Domain + repos
+- **Infra** — Mongo repos, SignalR hub, security helpers
+- **Presentation** — thin controllers, delegate to use cases
+- DI wired in `Program.cs` (no Scrutor / auto-scan)
+
+## Conventions
+
+### Entity
+- Inherit `BaseEntity` — `Id : Guid` defaults to `Guid.NewGuid()`, `[BsonId]`
+- `protected` setters, `Create(...)` factory, fluent mutators (`return this`)
+- Mongo collection via `[CollectionName(nameof(EntityType))]`
+- Audit: `CreationInformation` on create, `ModificationInformation` on each mutator
 
 ```csharp
-// No controller — nunca injetar IMyService diretamente
-var service = factory.Create<IMyEntityService>();
-```
-
-`IServiceFactory.Create<T>()` tenta na ordem:
-1. Service registrado com key do país (`"US"`, `"MX"`)
-2. Service registrado com key `"Global"`
-3. Service genérico (sem key)
-
-### UserIdentification
-
-Populado automaticamente pelo middleware de autenticação. Disponível via DI:
-
-```csharp
-[FromServices] UserIdentification userIdentification
-```
-
-Contém: `UserId`, `Name`, `Email`, `Country`, `Assignments` (empresa + role + hierarquia).
-
-## Convenções de nomenclatura
-
-| Tipo | Padrão | Exemplo |
-|---|---|---|
-| Controller | `{Entity}Controller` | `CustomerController` |
-| Service interface | `I{Entity}Service` | `ICustomerService` |
-| Service class | `{Entity}Service` | `CustomerService` |
-| Repository interface | `I{Entity}Repository` | `ICustomerRepository` |
-| Repository class | `{Entity}Repository` | `CustomerRepository` |
-| DTO criação | `{Entity}CreateDto` | `CustomerCreateDto` |
-| DTO atualização | `{Entity}UpdateDto` | `CustomerUpdateDto` |
-| DTO resposta | `{Entity}Dto` | `CustomerDto` |
-| Entidade domain | herda `AuditableEntity` | `Customer : AuditableEntity` |
-| Validador | `{Entity}Validator` | `CustomerValidator` |
-| Módulo país | `{Country}{Entity}Service` | `USCustomerService` |
-| Marker de módulo | `{Country}ApplicationMarker` | `USApplicationMarker` |
-
-## Padrões de código
-
-### Entidade do Domain
-
-```csharp
-[BsonIgnoreExtraElements]
-[CollectionName(nameof(MyEntity))]
-public class MyEntity : AuditableEntity
+[CollectionName(nameof(User))]
+public class User : BaseEntity
 {
-    public string Name { get; protected set; }
-    public string CompanyId { get; protected set; }
+    public string Name { get; protected set; } = null!;
+    public CreationInformation CreationInformations { get; protected set; } = null!;
+    public ModificationInformation? ModificationInformations { get; protected set; }
 
-    protected MyEntity(string name, string companyId, string createdBy)
+    protected User() { }                             // For Mongo deserialization
+    private User(string name, string createdBy)       // Internal constructor
     {
         Name = name;
-        CompanyId = companyId;
         CreationInformations = new CreationInformation(createdBy);
     }
+    public static User Create(string name, string createdBy) => new(name, createdBy);
 
-    public static MyEntity Create(string name, string companyId, string createdBy) =>
-        new(name, companyId, createdBy);
-
-    public MyEntity ChangeName(string name, string modifiedBy)
+    public User ChangeName(string name, string modifiedBy)
     {
         Name = name;
         ModificationInformations = new ModificationInformation(modifiedBy);
@@ -133,170 +107,233 @@ public class MyEntity : AuditableEntity
 }
 ```
 
-- Constructor `protected`, instanciação via factory method `Create()`
-- Setters `protected` — domain invariants ficam na entidade
-- Métodos mutadores retornam `this` (fluent)
-- `[CollectionName]` mapeia para a collection MongoDB
-
 ### Controller
-
 ```csharp
 [ApiController]
-[ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/[controller]")]
-public class MyEntityController(IServiceFactory factory) : ControllerBase
+[Authorize(Policy = "Role:Player")]
+[Route("entities")]
+public class EntityController(EntityUseCase useCase) : ControllerBase
 {
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(
-        string id,
-        [FromServices] UserIdentification userIdentification,
-        CancellationToken cancellationToken)
+    [HttpPost("action")]
+    public async Task<IActionResult> Action([FromBody] ActionRequest req)
     {
-        var service = factory.Create<IMyEntityService>();
-        var result = await service.GetByIdAsync(id, cancellationToken);
-        return result is null ? NotFound() : Ok(result);
+        var result = await useCase.ExecuteAsync(req);
+        return result.Success ? Ok(result) : BadRequest(result);
     }
 }
 ```
 
-- Sempre usar `IServiceFactory.Create<T>()` — nunca injetar o service diretamente
-- `UserIdentification` sempre via `[FromServices]`
-- `CancellationToken` em todos os endpoints async
+- Primary constructor for DI (C# 12)
+- One use case per action — inject directly, no factory/MediatR
+- `[Authorize(Policy = "Role:X")]` at controller or action level
 
-### Service
-
+### UseCase
 ```csharp
-public class MyEntityService : BaseService, IMyEntityService
+public class CreateXUseCase
 {
-    private readonly IGenericRepository _repository;
-    private readonly UserIdentification _userIdentification;
+    private readonly IXRepositoryNoSql _repo;
+    private readonly ILogger<CreateXUseCase> _logger;
 
-    public MyEntityService(
-        IGenericRepository repository,
-        UserIdentification userIdentification)
+    public CreateXUseCase(IXRepositoryNoSql repo, ILogger<CreateXUseCase> logger)
     {
-        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        _userIdentification = userIdentification ?? throw new ArgumentNullException(nameof(userIdentification));
+        _repo = repo;
+        _logger = logger;
     }
 
-    public async Task<MyEntityDto?> GetByIdAsync(string id, CancellationToken cancellationToken)
+    public async Task<CreateXResponse> CreateAsync(CreateXRequest req)
     {
-        var entity = await _repository.GetByIdAsync<MyEntity>(id, cancellationToken);
-        return entity?.MapToDto();
+        try { ... return new CreateXResponse { Success = true, ... }; }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error creating X");
+            return new CreateXResponse { Success = false, Message = "..." };
+        }
     }
 }
 ```
 
-- Herdar de `BaseService`
-- Null checks explícitos no constructor
-- Retornar `null` em caso de não encontrado — não lançar exceção
-- Sempre `async/await` com `CancellationToken`
+- Constructor injection, no inheritance
+- Try/catch with logger, return `Response { Success, Message }` — no exception bubbling to controller
 
-### Repository (para queries específicas)
-
+### Repository
 ```csharp
-public class MyEntityRepository : BaseCountryRepository<MyEntity>, IMyEntityRepository
+public class XRepositoryNoSql : BaseRepositoryNoSql<X>, IXRepositoryNoSql
 {
-    public async Task<IEnumerable<MyEntity>> GetByCompanyIdAsync(
-        string companyId,
-        CancellationToken cancellationToken = default)
-    {
-        var collection = await GetCollectionAsync();
-        return await collection
-            .Find(x => x.CompanyId == companyId)
-            .ToListAsync(cancellationToken);
-    }
+    public XRepositoryNoSql(IGenericRepository generic) : base(generic) { }
 }
 ```
 
-- `GetCollectionAsync()` já resolve o país via `X-Country` header
-- Read: `GetCollectionAsync(isRead: true)` → `SecondaryPreferred`
-- Write: `GetCollectionAsync(isRead: false)` → `PrimaryPreferred`
-- Para queries simples, usar `IGenericRepository` direto no service
+- Inherit `BaseRepositoryNoSql<T>` which delegates to `IGenericRepository`
+- Only add methods to concrete repo if entity needs custom queries beyond the generic CRUD
 
-## Registro de dependências (DI)
+### Naming
+| Type                    | Pattern                              |
+|-------------------------|--------------------------------------|
+| Controller              | `{Entity}Controller`                 |
+| Use case                | `{Action}{Entity}UseCase`            |
+| Service interface       | `I{Entity}Service`                   |
+| Repository interface    | `I{Entity}RepositoryNoSql`           |
+| Repository class        | `{Entity}RepositoryNoSql`            |
+| Domain entity           | inherits `BaseEntity`                |
+| DTO request             | `{Action}Request`                    |
+| DTO response            | `{Action}Response`                   |
+| SignalR hub             | `{Domain}Hub`                        |
 
-Serviços em `Application/Services/*` são registrados automaticamente via Scrutor (scan por namespace + interface matching). Para registros manuais ou jobs:
+## Auth model
 
-```csharp
-// em Application/Extensions/ServiceCollectionExtensions.cs
-services.AddScoped<IMyEntityService, MyEntityService>();
-services.AddScoped<MyEntityJob>();
+### Role hierarchy
+```
+Player (1) < MainPlayer (2) < TeamLeader (3) < Admin (4) < SuperAdmin (5)
+```
+Stored as Portuguese strings: `"jogador"`, `"jogador principal"`, `"lider de time"`, `"adm"`, `"super adm"`.
+
+### Policies (in `Program.cs`)
+`"Role:Player"`, `"Role:MainPlayer"`, `"Role:TeamLeader"`, `"Role:Admin"`, `"Role:SuperAdmin"` — each requires role `>=` minimum via `MinimumRoleHandler`.
+
+### Tokens
+- Access: JWT HS256, 60 min default
+- Refresh: random 64-byte base64, **hashed+salted** in DB, 30 days, **rotated on each refresh**, revocable (`ReplacedByTokenId` chain)
+
+### JWT in SignalR
+- WebSocket can't carry custom headers → SignalR JS client sends as `?access_token=` query string
+- Backend `JwtBearerEvents.OnMessageReceived` reads it **only for `/chesshub` path**
+- REST endpoints stay header-only (`Authorization: Bearer ...`)
+
+### Tokens never in URL (REST)
+- All validation endpoints are **POST** with `Authorization: Bearer` header
+- Server validates `sub` claim == body `userId` (defense in depth → 403 if mismatch)
+
+## Chess engine
+
+### Coordinates (dual)
+- Algebraic: `"e4"`, file `'a'..'h'`, rank `1..8`
+- Internal: `Row 0..7`, `Column 0..7`
+- Mapping: `file = 'a' + row`, `rank = 8 - column`
+- Layout: `Column=7` = White back rank (rank 1), `Column=0` = Black back rank (rank 8)
+
+### Position helpers
+- `Position.FromAlgebraic("e4")` (throws), `TryFromAlgebraic`, `ToIndices`
+- `Position.Algebraic`, `.File`, `.Rank` getters
+
+### Move calculation
+- `Piece.GetPossibleMove(board, pos)` → `(List<Position> moves, Piece? trigger)`
+- `Move.MakeMove(board, possibleMoves, target, source)` applies + rolls back if own king ends in check
+- `Move.IsKingInCheck(board, color)` — finds king, sweeps opponents, returns `king.IsInCheckState` flag
+
+## SignalR `/chesshub`
+
+Requires `[Authorize(Policy = "Role:Player")]`.
+
+### Client invokes
+`CreateRoom(room)`, `GetAvailableRooms()`, `GetPlayersInRoom(room)`, `GetPlayersInEachRoom()`, `JoinRoom(playerName, room)`, `StartGame(room)`, `GetBoardSnapshot(room)`, `GetPossibleMoves(room, from)`, `MakeMove(room, from, to)`, `LeaveRoom(room)`.
+
+`from`/`to` are algebraic (`"e2"`, `"e4"`).
+
+### Server emits
+`PlayerJoined`, `PlayerLeft`, `RoomFull`, `RoomNotFound`, `GameStarted`, `BoardChanged`.
+
+### Server-enforced rules
+1. Turn — `MakeMove` rejects when `player.Color != gameRoom.CurrentTurn`
+2. Identity — `ConnectionId` must be in `gameRoom.Players`
+3. Posse — only your own pieces
+4. Legal moves — server recomputes `GetPossibleMove`, ignores FE assertion
+5. Auto-check — moves that expose own king are rejected, board preserved
+
+### State
+- `ChessHub` holds static `ConcurrentDictionary<string, GameRoom>` — single-instance only. Add Redis backplane for horizontal scale.
+- `OnDisconnectedAsync` removes disconnected player, broadcasts `PlayerLeft`.
+
+## Mongo
+
+- IDs: Guid, stored as string (`GuidSerializer(BsonType.String)` registered globally)
+- Collections named via `[CollectionName(nameof(Entity))]` attribute
+- `IGenericRepository` provides typed CRUD; entity-specific repos wrap it (`UserRepositoryNoSql : BaseRepositoryNoSql<User>`)
+- No transactions yet — single-document atomicity only
+
+## Config (`Orchestrator/appsettings.json`)
+
+```json
+{
+  "Mongo": {
+    "ConnectionString": "mongodb://localhost:27017",
+    "Database": "Hibrygame"
+  },
+  "Jwt": {
+    "Key": "32+chars-strong-secret",
+    "Issuer": "https://localhost:5001",
+    "Audience": "https://localhost:5001",
+    "ExpiresMinutes": 60,
+    "RefreshTokenDays": 30
+  }
+}
 ```
 
-Serviços específicos de país ficam nos módulos (`1-Modules/US/Extensions/ServicesRegister.cs`) e são registrados com key do país:
+Dev only — production must move `Jwt:Key` to env var / Key Vault.
 
-```csharp
-services.AddKeyedScoped<IMyEntityService, USMyEntityService>("US");
+## Known limitations
+
+Full catalogue with severity, affected files and exit path:
+[docs/debito-tecnico.md](../docs/debito-tecnico.md). Check it **before** "fixing" something that
+looks wrong — it may be known debt or an item awaiting a human decision (`[DECISÃO]`).
+Highlights: `POST /users` is anonymous and accepts any role (DT-04); the access token is stored in
+cleartext in the `Validation` collection (DT-07); `ValidationService` swallows exceptions and has a
+permissive `||` filter (DT-05); the engine has known knight edge cases (DT-11) and `Position` has no
+value equality (DT-12).
+
+
+1. Hub state in-process — no horizontal scale without Redis backplane
+2. Knight edge-case bug — `GetMovesKnight_AfterOneMove_Correctly` skipped (test math wrong, engine still has edge cases)
+3. No promotion / castling / en-passant
+4. JSON uses `ReferenceHandler.Preserve` → `$id`/`$ref` markers in payload (FE must handle)
+5. JWT key in `appsettings.json` is dev-only
+
+## Test patterns
+
+- xUnit + Moq, AAA structure
+- Hub tests: mock `IHubCallerClients`, `IGroupManager`, `HubCallerContext`; use unique room names (`$"test-{Guid.NewGuid()}"`) since hub state is static
+- UseCase tests: mock all repos + `ISecureHashingService` / `ITokenService` / `IValidationService`
+- TokenService tests: decode JWT payload via Base64 (version-independent of `Microsoft.IdentityModel.JsonWebTokens`)
+- Controller tests: mock `IAuthenticationService` in `RequestServices` so `HttpContext.GetTokenAsync` resolves
+
+## Agent harness
+
+```
+AGENTS.md                     Canonical instructions — read first, wins over this file
+CLAUDE.md                     Pointer + Spec Kit plan block (machine-managed, do not hand-edit)
+.specify/                     Spec Kit: constitution, templates, PowerShell scripts, git extension
+.agents/skills/               Domain + technical skills (domain truth) and authoring meta-skills
+.agents/maps/                 functional-map.md — the 4 business contexts and their dependencies
+.agents/context/              discovery-answers.md — inherited constraints and pending decisions
+.claude/agents/               8 subagents (see below)
+docs/decisions/               ADRs, immutable once created
 ```
 
-## Autenticação e secrets
+Subagents in `.claude/agents/`: `hibrygame-dotnet-engineer` (surgical implementation, plan before
+code), `code-reviewer`, `unit-test-writer`, `regression-checker`, `spec-reviewer`, `doc-generator`,
+`spec-feedback`, `feature-orchestrator` (chains the others).
 
-- Nunca colocar secrets em `appsettings.json` — usar referências ao Azure Key Vault
-- Formato de referência: `"Azure--SecretName"` no appsettings é resolvido via `ISecretProvider`
-- Para acessar secrets no código: `await _secretProvider.GetSecretAsync("External:ApiKey:US")`
-- Em desenvolvimento: `FallbackSecretProvider` usa appsettings diretamente
+Spec Kit skills: `speckit-specify`, `speckit-clarify`, `speckit-plan`, `speckit-tasks`,
+`speckit-analyze`, `speckit-checklist`, `speckit-implement`, `speckit-constitution`,
+`speckit-taskstoissues`, plus the git extension (`speckit-git-feature`, `speckit-git-commit`, …).
+Scripts are PowerShell and require a `NNN-slug` branch — they fail on `main` by design.
 
-## Geração automática de CRUD
+## CI gates
 
-Para novo domínio completo, usar o script PowerShell em `8-Automation/`:
+`.github/workflows/dotnet-test.yml` runs restore + build + test on push and PR to `main`.
 
-```powershell
-./Generate-Crud.ps1 -EntityName "MinhaEntidade" -Countries "US,MX"
-```
+Before merge:
+- [ ] `dotnet build` 0 errors
+- [ ] `dotnet test` all green (453 expected pass, 1 expected skip)
+- [ ] Constitution respected — Principles I (layering) and II (server authority)
+- [ ] If FE contract changed: update `docs/FRONTEND_CHANGES.md` (append a dated history entry)
+- [ ] If debt was created or resolved: update `docs/debito-tecnico.md`
+- [ ] If a domain rule changed: update the matching `.agents/skills/{skill}/SKILL.md`
+- [ ] If structure or convention changed: update `AGENTS.md` + `README.md` + this file
 
-Gera controller, DTOs, service, interface, repository, entidade, AutoMapper profile e registro DI.
+## What NOT to do
 
-## Integrações externas (9-Adapters)
-
-| Adapter | Uso |
-|---|---|
-| `SapAdapter` | Pedidos, margens, crédito via SAP CPI |
-| `ZendeskAdapter` | Criação de tickets de suporte |
-| `VerumOMSAdapter` | Order Management System |
-| `EmailAdapter` | Envio via SendGrid |
-| `RabbitMQAdapter` | Publicação/consumo de eventos |
-| `RedisCachingAdapter` | Cache distribuído |
-| `SignalRAdapter` | Notificações real-time |
-| `ClosedXmlAdapter` | Import/export Excel |
-| `PixQrCodeAdapter` | QR Code PIX |
-
-## Testes
-
-Cobertura atual: apenas `0-Common/Security/Tests/` (3 testes unitários — JWT, Key Vault, MongoContext).
-
-```bash
-dotnet test
-```
-
-## Observações importantes
-
-- **Feature flags por país:** `Features:EnableUS`, `Features:EnableMX`, `Features:EnableBR` em appsettings
-- **Localização:** Suporte a `en-US`, `pt-BR`, `es-MX` via `ITextResourceProvider`
-- **Auditoria:** Toda entidade que herda `AuditableEntity` rastreia criador/modificador automaticamente
-- **SignalR:** JWT pode ser passado via query string para `/hubs/notifications` (WebSocket handshake)
-- **Swagger:** Protegido por role `SwaggerReader-US` em produção
-- **Read preference MongoDB:** reads vão para réplica secundária, writes para primária
-
-## Documentação por Domínio
-
-Cada arquivo documenta o fluxo completo de cada funcionalidade: Controller → Middleware → Service → Repository → Resposta.
-
-| Arquivo | Domínio | Controllers cobertos |
-|---------|---------|----------------------|
-| [docs/00-fluxos-compartilhados.md](../docs/00-fluxos-compartilhados.md) | **Base/Infra** — middleware, JWT, IServiceFactory, IGenericRepository, AuditableEntity | Todos |
-| [docs/01-autenticacao.md](../docs/01-autenticacao.md) | **Autenticação** — login, refresh token, reset de senha | `AuthController` |
-| [docs/02-usuarios.md](../docs/02-usuarios.md) | **Usuários** — CRUD, hierarquia, importação em lote | `UserController`, `SalespersonController` |
-| [docs/03-empresa-hierarquia.md](../docs/03-empresa-hierarquia.md) | **Empresa e Hierarquia** — empresas, nós hierárquicos, roles | `CompanyController`, `HierarchyNodeController`, `RoleController` |
-| [docs/04-clientes.md](../docs/04-clientes.md) | **Clientes** — ciclo de vida, revisão, clustering, credenciais API | `CustomerController`, `ClusterController`, `CustomerAPICredentialController` |
-| [docs/05-oportunidades.md](../docs/05-oportunidades.md) | **Oportunidades** — CRUD, detalhes por seção, motivos de decisão | `OpportunityController`, `OpportunityDetailController`, `OpportunityReasonsController` |
-| [docs/06-catalogo.md](../docs/06-catalogo.md) | **Catálogo** — produtos, armazéns, estoque, expedição | `ProductController`, `WarehouseController`, `StockController` |
-| [docs/07-precos.md](../docs/07-precos.md) | **Preços** — preço base, markups, exportação Excel | `ProductPriceController` |
-| [docs/08-pagamento.md](../docs/08-pagamento.md) | **Pagamento** — formas e condições de pagamento | `PaymentMethodController`, `PaymentTermController` |
-| [docs/09-logistica.md](../docs/09-logistica.md) | **Logística** — transportadoras, frete promocional | `CarrierController`, `FreightController` |
-| [docs/10-tarefas.md](../docs/10-tarefas.md) | **Tarefas** — CRM tasks (call, visit, email), atribuição, status | `TaskController` |
-| [docs/11-notificacoes.md](../docs/11-notificacoes.md) | **Notificações** — push SignalR, persistência, leitura | `NotificationsController` |
-| [docs/12-configuracoes.md](../docs/12-configuracoes.md) | **Configurações** — estados, países, impostos MX, filtros de catálogo | `ConfigurationController`, `TaxesController`, `ReasonForExemptionController`, `FilterController` |
-| [docs/13-dashboard-relatorios.md](../docs/13-dashboard-relatorios.md) | **Dashboard e Relatórios** — rankings, totais, exportação assíncrona Hangfire | `SalesDashboardController`, `ReportsController` |
-| [docs/14-integracoes.md](../docs/14-integracoes.md) | **Integrações** — SAP (crédito, margem, pedido), Zendesk (clientes/tickets) | `SapIntegrationController`, `ZendeskController` |
-| [docs/15-arquivos-templates.md](../docs/15-arquivos-templates.md) | **Arquivos e Templates** — upload/download, templates de e-mail | `FileController`, `EmailTemplateController` |
+- Don't inject services directly when a `UseCase` exists — controllers go through use cases
+- Don't put secrets in `appsettings.json` (Jwt:Key currently dev-only — flag if hardening for prod)
+- Don't track `bin/`, `obj/`, `.dll` (already in `.gitignore`)
+- Don't add new GET endpoints that take tokens in URL — use POST + `Authorization` header
+- Don't bypass `MinimumRoleHandler` — always use `[Authorize(Policy = "Role:X")]`, never raw `[Authorize(Roles = ...)]`

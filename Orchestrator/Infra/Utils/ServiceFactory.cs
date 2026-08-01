@@ -19,7 +19,7 @@ public class ServiceFactory(IServiceProvider provider) : IServiceFactory
         {
             // Log the exception if necessary
             Console.WriteLine($"Error creating service of type {typeof(T).Name}.");
-            throw e;
+            throw;
         }
     }
 }

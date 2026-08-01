@@ -219,7 +219,7 @@ public static class Move
             board.Positions[oldPosition.Row, oldPosition.Column].Piece = oldPosition.Piece;
             return false;
         };
-        var pos = board.GetPositionsPlaced();
+        var pos = board.GetAllSquares();
         pos.ForEach(x =>
         {
             x.HighlightedPosition = false;
@@ -231,19 +231,28 @@ public static class Move
         return true;
     }
 
-    public static async Task<bool> IsKingInCheck(Board board, ColorEnum? color)
+    public static Task<bool> IsKingInCheck(Board board, ColorEnum? color)
     {
-        var piecesEnemy = Common.GetOpponentPositions(board, color ?? ColorEnum.None);
-        foreach (var position in piecesEnemy)
+        if (color is null || color == ColorEnum.None) return Task.FromResult(false);
+
+        Position? kingPos = null;
+        foreach (var pos in board.Positions)
         {
-            var inCheckState = false;
-            var pos = position.Piece?.GetPossibleMove(board, position);
-            pos?.possibleMoves.ForEach(x =>
+            if (pos?.Piece?.Type == PieceEnum.King && pos.Piece.Color == color)
             {
-                if(x.Piece?.Type == PieceEnum.King) inCheckState = true;
-            });
-            return inCheckState;
+                kingPos = pos;
+                break;
+            }
         }
-        return false;
+        if (kingPos?.Piece is null) return Task.FromResult(false);
+
+        kingPos.Piece.IsInCheckState = false;
+
+        foreach (var pos in Common.GetOpponentPositions(board, color.Value))
+        {
+            pos.Piece?.GetPossibleMove(board, pos);
+        }
+
+        return Task.FromResult(kingPos.Piece.IsInCheckState);
     }
 }

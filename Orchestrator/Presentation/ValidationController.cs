@@ -1,11 +1,17 @@
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Orchestrator.UseCases;
+using Orchestrator.UseCases.Dto.Request;
+using Orchestrator.UseCases.Dto.Response;
 using Orchestrator.UseCases.Interfaces;
 
 namespace Orchestrator.Presentation;
 
 [ApiController]
-[Route("api/v1/[controller]")]
+[Authorize(Policy = "Role:Player")]
+[Route("validation")]
 public class ValidationController : ControllerBase
 {
     private readonly IValidationService _validationService;
@@ -15,38 +21,73 @@ public class ValidationController : ControllerBase
         _validationService = validationService;
     }
 
-    [HttpPost("/generate-validation")]
-    public async Task<IActionResult> GenerateValidation(ValidationDto req)
+    [HttpPost("verify")]
+    public async Task<IActionResult> Verify([FromBody] VerifyValidationRequest req)
     {
-        var result = await _validationService.CreateValidation(req);
-        return Ok(result);
+        if (!IsCallerAuthorizedFor(req.UserId, out var token))
+            return Forbid();
+
+        var validation = await _validationService.GetValidationByUserToken(req.UserId, token);
+        return Ok(new VerifyValidationResponse { Valid = validation is not null });
     }
-    
-    [HttpGet("/get-validation/{userId}/{token}")]
-    public async Task<IActionResult> GetValidation(string userId, string token)
+
+    [HttpPost("get")]
+    public async Task<IActionResult> Get([FromBody] GetValidationRequest req)
     {
-        var result = await _validationService.GetValidationByUserToken(userId, token);
-        return Ok(result);
+        if (!IsCallerAuthorizedFor(req.UserId, out var token))
+            return Forbid();
+
+        var validation = await _validationService.GetValidationByUserToken(req.UserId, token);
+        if (validation is null)
+            return NotFound();
+
+        return Ok(new GetValidationResponse
+        {
+            Id = validation.Id.ToString(),
+            UserId = validation.UserId,
+            UserEmail = validation.UserEmail,
+            Room = validation.Room,
+            PieceColor = validation.PieceColor,
+            DayOfGame = validation.DayOfGame
+        });
     }
-    
-    [HttpGet("/get-validation-can-move/{userId}/{token}/{colorPiece}/{room}/{email}/{day}")]
-    public async Task<IActionResult> GetValidationIfCanMove(string userId, string token, string colorPiece, string room, string email, string day)
+
+    [HttpPost("update/{id}")]
+    public async Task<IActionResult> Update(string id, [FromBody] UpdateValidationRequest req)
     {
-        var result = await _validationService.GetValidationCanMove(userId, token, colorPiece, room, email, day);
-        return Ok(result);
+        if (!IsCallerAuthorizedFor(req.UserId, out var token))
+            return Forbid();
+
+        var updated = await _validationService.UpdateValidationByUserToken(
+            req.UserId, token, req.PieceColor, req.Room);
+
+        return Ok(new UpdateValidationResponse { Updated = updated });
     }
-    
-    [HttpGet("/verify-validation/{userId}/{token}")]
-    public async Task<IActionResult> VerifyValidation(string userId, string token)
+
+    [HttpPost("can-move")]
+    public async Task<IActionResult> CanMove([FromBody] CanMoveValidationRequest req)
     {
-        var result = await _validationService.GetValidationByUserToken(userId, token);
-        return Ok(result);
+        if (!IsCallerAuthorizedFor(req.UserId, out var token))
+            return Forbid();
+
+        var canMove = await _validationService.GetValidationCanMove(
+            req.UserId, token, req.PieceColor, req.Room, req.UserEmail, req.Day);
+
+        return Ok(new CanMoveValidationResponse { CanMove = canMove });
     }
-    
-    [HttpGet("/update-validation/{userId}/{token}/{pieceColor}/{room}")]
-    public async Task<IActionResult> UpdateValidation(string userId, string token, string pieceColor, string room)
+
+    private bool IsCallerAuthorizedFor(string requestUserId, out string token)
     {
-        var result = await _validationService.UpdateValidationByUserToken(userId, token, pieceColor, room);
-        return Ok(result);
+        token = string.Empty;
+        var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        if (string.IsNullOrEmpty(sub) || !string.Equals(sub, requestUserId, StringComparison.Ordinal))
+            return false;
+
+        var raw = HttpContext.GetTokenAsync("access_token").GetAwaiter().GetResult();
+        if (string.IsNullOrEmpty(raw))
+            return false;
+
+        token = raw;
+        return true;
     }
 }

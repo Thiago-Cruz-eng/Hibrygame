@@ -1,0 +1,50 @@
+name: dotnet-test
+
+# Gate de qualidade do repositório: build + suíte completa.
+# Baseline esperado: 453 aprovados, 1 ignorado (KnightTests.GetMovesKnight_AfterOneMove_Correctly).
+# A suíte não precisa de MongoDB nem de Docker — os repositórios são mockados com Moq.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dotnet-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dotnet-test:
+    # PRs sempre rodam (head_commit não existe em pull_request); [skip ci] só vale para push.
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore Hibrygame.sln
+
+      - name: Build
+        run: dotnet build Hibrygame.sln --no-restore -c Release
+
+      - name: Test
+        run: dotnet test Hibrygame.sln --no-build -c Release --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/TestResults/*.trx'
+          retention-days: 14

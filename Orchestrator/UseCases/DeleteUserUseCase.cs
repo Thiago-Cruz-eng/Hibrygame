@@ -24,7 +24,9 @@ public class DeleteUserUseCase
             if (user is null)
                 return new DeleteUserResponse { Message = "User not found", Success = false };
 
-            _userRepository.Delete(user.Id.ToString(), user);
+            var deleted = await _userRepository.Delete(user.Id.ToString(), user);
+            if (!deleted)
+                return new DeleteUserResponse { Message = "User not deleted", Success = false };
             return new DeleteUserResponse { Message = "User deleted", Success = true };
         }
         catch (Exception e)

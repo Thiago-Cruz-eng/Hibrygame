@@ -1,11 +1,79 @@
 # IDE folders
 .idea/
 .vs/
+.vscode/
 
 # IDE user settings
 *.DotSettings.user
 *.suo
 *.user
+*.userosscache
+*.sln.docstates
 
 # Build artifacts
+**/bin/
 **/obj/
+**/out/
+**/[Bb]uild/
+**/[Pp]ublish/
+*.dll
+
+# .NET CLI artifacts
+*.pdb
+*.dll.config
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Test output
+**/TestResults/
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# Rider / ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# NuGet
+*.nupkg
+*.snupkg
+**/packages/
+!**/packages/build/
+.nuget/
+nuget.config.user
+
+# Local config / secrets
+appsettings.Local.json
+appsettings.*.local.json
+*.local.json
+secrets.json
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# OS junk
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editor swap / temp
+*.swp
+*.swo
+*.tmp
+*~
+
+# Claude / agent local state
+.claude/projects/
+.claude/worktrees/
+# Permissões locais por-máquina — o harness versionado é .claude/settings.json
+.claude/settings.local.json
+# Estado runtime do Spec Kit (feature ativa é local, não convenção do repo)
+.specify/scheduled_tasks.lock

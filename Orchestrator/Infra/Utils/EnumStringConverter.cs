@@ -5,7 +5,7 @@ namespace Orchestrator.Infra.Utils;
 
 public class EnumStringConverter<TEnum> : StringEnumConverter where TEnum : Enum
 {
-    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
     {
         if (value is TEnum)
         {

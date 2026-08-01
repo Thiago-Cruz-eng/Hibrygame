@@ -9,7 +9,12 @@ namespace Orchestrator.Infra.BaseRepository;
 
 public class GenericRepository : IGenericRepository
 {
-    private IMongoDbContext _context;
+    private readonly IMongoDbContext _context;
+
+    public GenericRepository(IMongoDbContext context)
+    {
+        _context = context;
+    }
 
     public IMongoCollection<T> GetCollection<T>() where T : BaseEntity
     {

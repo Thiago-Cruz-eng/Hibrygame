@@ -5,7 +5,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
+using MongoDB.Driver;
+using Orchestrator.Infra.BaseRepository;
+using Orchestrator.Infra.Interfaces;
 using Orchestrator.Infra.Mongo;
+using Orchestrator.Infra.Repositories;
 using Orchestrator.Infra.Settings;
 using Orchestrator.Infra.SignalR;
 using Orchestrator.UseCases;
@@ -45,6 +49,19 @@ builder.Services.AddAuthentication(x =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key)),
         ClockSkew = TimeSpan.Zero
     };
+    x.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = ctx =>
+        {
+            var accessToken = ctx.Request.Query["access_token"];
+            var path = ctx.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chesshub"))
+            {
+                ctx.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization(options =>
@@ -81,6 +98,22 @@ builder.Services.AddCors(options =>
 builder.Services.AddSignalR();
 
 builder.Services.AddSingleton<IMongoDbContextFactory, MongoDbContextFactory>();
+builder.Services.AddSingleton<IMongoClient>(sp =>
+{
+    var connection = builder.Configuration.GetSection("Mongo:ConnectionString").Value
+                     ?? "mongodb://localhost:27017";
+    return new MongoClient(connection);
+});
+builder.Services.AddSingleton<IMongoDbContext>(sp =>
+{
+    var client = sp.GetRequiredService<IMongoClient>();
+    var databaseName = builder.Configuration.GetSection("Mongo:Database").Value ?? "Hibrygame";
+    return new MongoDbContext(client.GetDatabase(databaseName));
+});
+builder.Services.AddScoped<IGenericRepository, GenericRepository>();
+builder.Services.AddScoped<IUserRepositoryNoSql, UserRepositoryNoSql>();
+builder.Services.AddScoped<IRefreshTokenRepositoryNoSql, RefreshTokenRepositoryNoSql>();
+builder.Services.AddScoped<IValidationRepositoryNoSql, ValidationRepositoryNoSql>();
 
 builder.Services.AddScoped<CreateUserUseCase>();
 builder.Services.AddScoped<GetUserUseCase>();
@@ -102,18 +135,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowReactDevelopment");
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller}/{action}/{id?}");
-app.MapHub<ChessHub>("/chesshub");
-
 app.UseHttpsRedirection();
+app.UseCors("AllowReactDevelopment");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<ChessHub>("/chesshub");
 
 app.Run();

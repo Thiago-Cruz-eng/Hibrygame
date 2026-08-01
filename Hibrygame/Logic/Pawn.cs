@@ -13,7 +13,7 @@ public class Pawn : Piece
     public override (List<Position> possibleMoves, Piece? actualPieceTrigger) GetPossibleMove(Board board, Position pos)
     {
         
-         var squares = pos.Piece!.HasAlreadyOneMove ? 1 :  2;
+         var squares = HasAlreadyOneMove ? 1 :  2;
         var direction = Color == ColorEnum.Black
             ? new List<Direction> { Direction.South, Direction.SouthEast, Direction.SouthWest }
             : new List<Direction> { Direction.North, Direction.NorthEast, Direction.NorthWest };

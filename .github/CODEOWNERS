@@ -1,0 +1,9 @@
+* @Thiago-Cruz-eng
+
+# Harness de agentes e contrato de arquitetura — mudança aqui altera como todo agente
+# se comporta no repositório, então passa pela mesma revisão que código.
+AGENTS.md              @Thiago-Cruz-eng
+.specify/**            @Thiago-Cruz-eng
+.agents/**             @Thiago-Cruz-eng
+.claude/**             @Thiago-Cruz-eng
+.github/**             @Thiago-Cruz-eng

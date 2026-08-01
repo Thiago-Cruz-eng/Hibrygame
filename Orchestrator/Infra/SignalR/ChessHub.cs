@@ -1,183 +1,307 @@
+using System.Collections.Concurrent;
 using Hibrygame;
 using Hibrygame.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using Newtonsoft.Json;
 
-namespace Orchestrator.Infra.SignalR
+namespace Orchestrator.Infra.SignalR;
+
+[Authorize(Policy = "Role:Player")]
+public class ChessHub : Hub
 {
-    public class ChessHub : Hub
-    {                           //room name / board game
-        private static Dictionary<string, Board> games = new();
-                                //conectionId / room name
-        private static Dictionary<string, string> Rooms = new();
-                                //playerName / roomName
-        private static Dictionary<string, string> playersInRoom = new();
+    private static readonly ConcurrentDictionary<string, GameRoom> Rooms = new();
 
-        public async Task<string> CreateRoom(string room)
+    public Task<CreateRoomResponse> CreateRoom(string room)
+    {
+        var created = Rooms.GetOrAdd(room, name => new GameRoom(name));
+        return Task.FromResult(new CreateRoomResponse
         {
-            var newRoom = Rooms[Context.ConnectionId] = room;
-            await Clients.All.SendAsync("CreateRoom", newRoom);
-            return newRoom;
+            Room = created.Name,
+            AlreadyExisted = created != Rooms[room] || created.Players.Count > 0
+        });
+    }
+
+    public Task<List<string>> GetAvailableRooms()
+        => Task.FromResult(Rooms.Values.Where(r => !r.IsFull && !r.Finished).Select(r => r.Name).ToList());
+
+    public Task<Dictionary<string, List<string>>> GetPlayersInEachRoom()
+    {
+        var snapshot = Rooms.ToDictionary(
+            kv => kv.Key,
+            kv => kv.Value.Players.Values.Select(p => p.Name).ToList());
+        return Task.FromResult(snapshot);
+    }
+
+    public Task<int> GetPlayersInRoom(string room)
+        => Task.FromResult(Rooms.TryGetValue(room, out var r) ? r.Players.Count : 0);
+
+    public async Task<JoinRoomResponse> JoinRoom(string playerName, string room)
+    {
+        if (!Rooms.TryGetValue(room, out var gameRoom))
+        {
+            await Clients.Caller.SendAsync("RoomNotFound", room);
+            return JoinRoomResponse.Empty();
         }
 
-        public List<string> GetAvailableRoom()
+        var color = gameRoom.TryAssignColor(Context.ConnectionId, playerName);
+        if (color is null)
         {
-            var availableRooms = new List<string>();
-            foreach (var room in Rooms.Values.Distinct())
-            {
-                if (Rooms.Count > 0)
-                {
-                    availableRooms.Add(room);
-                }
-            }
-            return availableRooms;
-        }
-
-        public Dictionary<string, string> GetPlayersInEachRoom()
-        {
-            return playersInRoom;
-        }
-        
-        public int GetPlayersInRoom(string room)
-        {
-            return playersInRoom.Values.Count(p => p == room);
-        }
-        
-        public async Task<JoinRoomResponse> JoinRoom(string playerName, string room)
-        {
-            if (!IsRoomFull(room))
-            {
-                await Groups.AddToGroupAsync(Context.ConnectionId, room);
-                
-                playersInRoom.Add(playerName, room); 
-
-                await Clients.All.SendAsync("PlayerJoined", playersInRoom);
-                
-                return new JoinRoomResponse
-                {
-                    ConnectionId = Context.ConnectionId,
-                    Player = playerName,
-                    Room = room
-                };
-            }
             await Clients.Caller.SendAsync("RoomFull", "The room is full. Please try another room.");
-            return new JoinRoomResponse
-            {
-                ConnectionId = null,
-                Player = null,
-                Room = null,
-            };
+            return JoinRoomResponse.Empty();
         }
-        
-        public async Task ReadyToGame(string connectionId, bool ready)
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, room);
+        await Clients.Group(room).SendAsync("PlayerJoined", new
         {
-            var room = Rooms[connectionId];
-            if (games.ContainsKey(room) && IsRoomFull(room))
+            Room = room,
+            Player = playerName,
+            Color = color.ToString(),
+            Players = gameRoom.Players.Values.Select(p => new { p.Name, Color = p.Color.ToString() })
+        });
+
+        return new JoinRoomResponse
+        {
+            ConnectionId = Context.ConnectionId,
+            Player = playerName,
+            Room = room,
+            Color = color.ToString()
+        };
+    }
+
+    public async Task<StartGameResponse> StartGame(string room)
+    {
+        if (!Rooms.TryGetValue(room, out var gameRoom))
+            return StartGameResponse.Failure($"Room '{room}' not found.");
+
+        if (!gameRoom.IsFull)
+            return StartGameResponse.Failure("Room needs 2 players to start.");
+
+        gameRoom.Start();
+        var snapshot = BuildSnapshot(gameRoom);
+        await Clients.Group(room).SendAsync("GameStarted", snapshot);
+        return new StartGameResponse { Success = true, Snapshot = snapshot };
+    }
+
+    public Task<BoardSnapshot?> GetBoardSnapshot(string room)
+        => Task.FromResult(Rooms.TryGetValue(room, out var gameRoom) ? BuildSnapshot(gameRoom) : null);
+
+    public async Task LeaveRoom(string room)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, room);
+        if (Rooms.TryGetValue(room, out var gameRoom))
+        {
+            gameRoom.Remove(Context.ConnectionId);
+            await Clients.Group(room).SendAsync("PlayerLeft", new
             {
-                await Clients.Group(room).SendAsync("Ready", connectionId);
-                StartGame(room);
+                Room = room,
+                ConnectionId = Context.ConnectionId,
+                Players = gameRoom.Players.Values.Select(p => new { p.Name, Color = p.Color.ToString() })
+            });
+        }
+    }
+
+    public Task<PossibleMovesResponse> GetPossibleMoves(string room, string from)
+    {
+        if (!Rooms.TryGetValue(room, out var gameRoom) || !gameRoom.Started)
+            return Task.FromResult(PossibleMovesResponse.Failure("Game not started."));
+
+        if (!Position.TryFromAlgebraic(from, out var fromPos) || fromPos is null)
+            return Task.FromResult(PossibleMovesResponse.Failure($"Invalid square '{from}'."));
+
+        var source = gameRoom.Board.GetPositionInBoard(fromPos.Row, fromPos.Column);
+        if (source.Piece is null)
+            return Task.FromResult(PossibleMovesResponse.Failure($"No piece on '{from}'."));
+
+        var (moves, _) = source.Piece.GetPossibleMove(gameRoom.Board, source);
+        return Task.FromResult(new PossibleMovesResponse
+        {
+            Success = true,
+            From = source.Algebraic,
+            Moves = moves?.Select(MapSquare).ToList() ?? new List<SquareDto>()
+        });
+    }
+
+    public async Task<MakeMoveResponse> MakeMove(string room, string from, string to)
+    {
+        if (!Rooms.TryGetValue(room, out var gameRoom) || !gameRoom.Started)
+            return MakeMoveResponse.Failure("Game not started.");
+
+        if (gameRoom.Finished)
+            return MakeMoveResponse.Failure("Game already finished.");
+
+        if (!gameRoom.Players.TryGetValue(Context.ConnectionId, out var player))
+            return MakeMoveResponse.Failure("You are not in this room.");
+
+        if (player.Color != gameRoom.CurrentTurn)
+            return MakeMoveResponse.Failure("Not your turn.");
+
+        if (!Position.TryFromAlgebraic(from, out var fromPos) || fromPos is null ||
+            !Position.TryFromAlgebraic(to, out var toPos) || toPos is null)
+            return MakeMoveResponse.Failure("Invalid square notation.");
+
+        var source = gameRoom.Board.GetPositionInBoard(fromPos.Row, fromPos.Column);
+        if (source.Piece is null)
+            return MakeMoveResponse.Failure($"No piece on '{from}'.");
+
+        if (source.Piece.Color != player.Color)
+            return MakeMoveResponse.Failure("That piece is not yours.");
+
+        var target = gameRoom.Board.GetPositionInBoard(toPos.Row, toPos.Column);
+        var (possibleMoves, _) = source.Piece.GetPossibleMove(gameRoom.Board, source);
+        if (possibleMoves is null || !possibleMoves.Any(p => p.Row == target.Row && p.Column == target.Column))
+            return MakeMoveResponse.Failure("Illegal move.");
+
+        var applied = await Move.MakeMove(gameRoom.Board, possibleMoves, target, source);
+        if (!applied)
+            return MakeMoveResponse.Failure("Move would leave king in check.");
+
+        gameRoom.SwitchTurn();
+
+        var snapshot = BuildSnapshot(gameRoom);
+        await Clients.Group(room).SendAsync("BoardChanged", new
+        {
+            From = source.Algebraic,
+            To = target.Algebraic,
+            ByColor = player.Color.ToString(),
+            NextTurn = gameRoom.CurrentTurn.ToString(),
+            Snapshot = snapshot
+        });
+
+        return new MakeMoveResponse
+        {
+            Success = true,
+            From = source.Algebraic,
+            To = target.Algebraic,
+            NextTurn = gameRoom.CurrentTurn.ToString(),
+            Snapshot = snapshot
+        };
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        foreach (var (name, gameRoom) in Rooms)
+        {
+            if (gameRoom.Players.TryRemove(Context.ConnectionId, out var slot))
+            {
+                await Clients.Group(name).SendAsync("PlayerLeft", new
+                {
+                    Room = name,
+                    ConnectionId = Context.ConnectionId,
+                    Player = slot.Name,
+                    Players = gameRoom.Players.Values.Select(p => new { p.Name, Color = p.Color.ToString() })
+                });
             }
         }
+        await base.OnDisconnectedAsync(exception);
+    }
 
-        public async Task<string> StartGame(string room)
+    private static BoardSnapshot BuildSnapshot(GameRoom gameRoom)
+    {
+        var squares = new List<SquareDto>();
+        foreach (var position in gameRoom.Board.Positions)
         {
-            //if (!games.ContainsKey(room) || !IsRoomFull(room)) return "Game cannot start";
-            if (!games.ContainsKey(room))
+            if (position is null) continue;
+            squares.Add(MapSquare(position));
+        }
+        return new BoardSnapshot
+        {
+            Room = gameRoom.Name,
+            CurrentTurn = gameRoom.CurrentTurn.ToString(),
+            Started = gameRoom.Started,
+            Finished = gameRoom.Finished,
+            Squares = squares
+        };
+    }
+
+    private static SquareDto MapSquare(Position position) => new()
+    {
+        File = position.File.ToString(),
+        Rank = position.Rank,
+        Algebraic = position.Algebraic,
+        Row = position.Row,
+        Column = position.Column,
+        SquareColor = position.SquareColor.ToString(),
+        Piece = position.Piece is null
+            ? null
+            : new PieceDto
             {
-                games.TryAdd(room, new Board());
-                games[room].StartBoard();
-                games[room].MakePieceInInitialState();
+                Type = position.Piece.Type.ToString(),
+                Color = position.Piece.Color.ToString(),
+                IsInCheckState = position.Piece.IsInCheckState
             }
-            
-            var game = games[room].GetPositionsPlaced();
-            await Clients.Group(room).SendAsync("GameWillStart", room);
-            
-            var gameJson = JsonConvert.SerializeObject(game);
-            return gameJson;
-        }
+    };
 
-        public async Task LeaveRoom(string roomName)
-        {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomName);
-            await Clients.Group(roomName).SendAsync("PlayerLeft", Context.ConnectionId);
-        }
+    public class CreateRoomResponse
+    {
+        public string Room { get; set; } = string.Empty;
+        public bool AlreadyExisted { get; set; }
+    }
 
-        public class PosDto
-        {
-            public int Row { get; set; } 
-            public int Column { get; set; } 
-        }
+    public class JoinRoomResponse
+    {
+        public string? ConnectionId { get; set; }
+        public string? Player { get; set; }
+        public string? Room { get; set; }
+        public string? Color { get; set; }
 
-        public class PieceDto
-        {
-            public PieceEnum Type { get; set; } 
-            public ColorEnum Color { get; set; } 
-            public bool IsInCheckState { get; set; }
-        }
+        public static JoinRoomResponse Empty() => new();
+    }
 
-        public async Task<List<Position>> SendPossiblesMoves(string user, string room, int row, int column)
-        {
-            var connect = "";
-            foreach (var rooms in Rooms.Where(rooms => rooms.Value == room))
-            {
-                connect = rooms.Key;
-            }
-            var roomName = Rooms[connect];
-            var game = games[roomName];
-            var actualPositionInBoard = game.GetPositionInBoard(row, column);
-            var actualPosition = new Position(actualPositionInBoard.Row, actualPositionInBoard.Column);
-            actualPosition.SquareColor = actualPositionInBoard.SquareColor;
-            actualPosition.Piece = actualPositionInBoard.Piece;
+    public class StartGameResponse
+    {
+        public bool Success { get; set; }
+        public string? Message { get; set; }
+        public BoardSnapshot? Snapshot { get; set; }
 
-            foreach (var gamePosition in game.Positions)
-            {
-                if (gamePosition.Piece == null || gamePosition.Piece != actualPosition.Piece) continue;
-                var possibleMoves = gamePosition.Piece.GetPossibleMove(game, actualPosition);
-                return possibleMoves.possibleMoves;
-            }
-            await Clients.Caller.SendAsync("InvalidMove", "Invalid move, please try again.");
-            return new List<Position>();
-        }
-        
-        public async Task<bool> MakeMove(string user, string room, int startRow, int endRow, int startColumn, int endColumn, bool isHighlight)
-        {
-            if (isHighlight) return false;
-            var newPosition = GetPositionInBoard(room, endRow, endColumn);
-            var oldPosition = GetPositionInBoard(room, startRow, startColumn);
-            var possibleMoves = await SendPossiblesMoves(user, room, startRow, startColumn);
-            if (!possibleMoves.Contains(newPosition)) return false;
-            var game = games[room];
-            var makeMove = game.MakeMove(game, possibleMoves, newPosition, oldPosition);
-            await Clients.Group(room).SendAsync("BoardChange", true);
-            return true;
-        }
-        
-        public Position GetPositionInBoard(string room, int row, int column)
-        {
-            var game = games[room];
-            return game.GetPositionInBoard(row, column);
-        }
-        public string GetPositionPlaced(string room)
-        {
-            var game = games[room];
-            var gameJson = JsonConvert.SerializeObject(game);
-            return gameJson;
-        }
-        
-        private bool IsRoomFull(string room)
-        {
-            var x = playersInRoom.Count();
-            return playersInRoom.Count(p => p.Value == room) == 2;
-        }
+        public static StartGameResponse Failure(string message) => new() { Success = false, Message = message };
+    }
 
-        public class JoinRoomResponse
-        {
-            public string ConnectionId { get; set; }
-            public string Player { get; set; }
-            public string Room { get; set; }
-            //AO RENDERIZAR A TELA UM NOVO GAME/INSTACIA É CHAMADA
-            //AO PEDIR O SMOVIMENTOS DO CAVALO QUANDO PEAO NA FRENTE, ELE BUGA 
-            //AO MOVER O BISPO, CAVALO BUGA E RAINHA BUGA 
-        }
+    public class PossibleMovesResponse
+    {
+        public bool Success { get; set; }
+        public string? Message { get; set; }
+        public string? From { get; set; }
+        public List<SquareDto> Moves { get; set; } = new();
+
+        public static PossibleMovesResponse Failure(string message) => new() { Success = false, Message = message };
+    }
+
+    public class MakeMoveResponse
+    {
+        public bool Success { get; set; }
+        public string? Message { get; set; }
+        public string? From { get; set; }
+        public string? To { get; set; }
+        public string? NextTurn { get; set; }
+        public BoardSnapshot? Snapshot { get; set; }
+
+        public static MakeMoveResponse Failure(string message) => new() { Success = false, Message = message };
+    }
+
+    public class BoardSnapshot
+    {
+        public string Room { get; set; } = string.Empty;
+        public string CurrentTurn { get; set; } = string.Empty;
+        public bool Started { get; set; }
+        public bool Finished { get; set; }
+        public List<SquareDto> Squares { get; set; } = new();
+    }
+
+    public class SquareDto
+    {
+        public string File { get; set; } = string.Empty;
+        public int Rank { get; set; }
+        public string Algebraic { get; set; } = string.Empty;
+        public int Row { get; set; }
+        public int Column { get; set; }
+        public string SquareColor { get; set; } = string.Empty;
+        public PieceDto? Piece { get; set; }
+    }
+
+    public class PieceDto
+    {
+        public string Type { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
+        public bool IsInCheckState { get; set; }
     }
 }
