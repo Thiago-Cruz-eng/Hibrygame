@@ -4,7 +4,7 @@ Multiplayer chess platform. ASP.NET Core 8 backend with SignalR real-time gamepl
 
 ## Stack
 
-- **Runtime:** .NET 8 / C# 12
+- **Runtime:** .NET 10 (LTS) / C# 14
 - **Database:** MongoDB (Guid IDs stored as string)
 - **Real-time:** SignalR (`/chesshub`)
 - **Auth:** JWT Bearer (HmacSha256, symmetric key)
@@ -17,7 +17,7 @@ Multiplayer chess platform. ASP.NET Core 8 backend with SignalR real-time gamepl
 Hibrygame.sln
 ├── Hibrygame/                 # Chess engine — pure C# library, no web/db deps
 │   └── Logic/                 # Board, Position, Piece (Pawn/Knight/Bishop/Rook/Queen/King), Move, Common
-├── Hibrygame.Test/            # Engine tests (73 passing, 1 skip)
+├── Hibrygame.Test/            # Engine tests (146 passing)
 ├── Orchestrator/              # ASP.NET Core Web API
 │   ├── Domain/                # User, RefreshToken, UserAssignment, Validation, AuditInformation, BaseEntity
 │   ├── Infra/
@@ -42,7 +42,7 @@ Hibrygame.sln
 ## How to run
 
 ### Prereqs
-- .NET 8 SDK
+- .NET 10 SDK
 - MongoDB running locally on `27017` (or set `Mongo:ConnectionString`)
 
 ### Run
@@ -73,7 +73,7 @@ dotnet run --project Orchestrator
 ### Tests
 ```bash
 dotnet test
-# Hibrygame.Test:    73 pass, 1 skip
+# Hibrygame.Test:    146 pass
 # Orchestrator.Test: 380 pass
 ```
 

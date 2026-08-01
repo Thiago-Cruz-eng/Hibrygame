@@ -48,7 +48,7 @@ respeitado, mas nada no servidor o liga automaticamente — `Finish()` nunca é 
 
 | Área | Tecnologia |
 |---|---|
-| Runtime | .NET 8 / C# 12 (`net8.0`, `Nullable` e `ImplicitUsings` habilitados) |
+| Runtime | .NET 10 LTS / C# 14 (`net10.0`, `Nullable` e `ImplicitUsings` habilitados) |
 | Engine | Biblioteca própria `Hibrygame` (namespace raiz `Hibrygame`) |
 | API | ASP.NET Core 8, controllers clássicos, Swashbuckle 6 (Swagger só em Development) |
 | Real-time | SignalR 1.1 — hub único `/chesshub`, estado `static` em processo |
@@ -63,16 +63,15 @@ Dependência externa nova entra **atrás de interface**: contrato em `UseCases/I
 de aplicação) ou `Infra/Interfaces/` (persistência), implementação em `Infra/`. Nunca SDK de
 terceiro instanciado dentro de caso de uso ou controller.
 
-`MediatR` e `Polly` estão referenciados no `.csproj` mas **não estão em uso** no pipeline de
-request (`AddShared()` em `ServiceCollectionExtensions` nem é chamado no `Program.cs`). Não
-escreva código novo assumindo que existe mediator ou política de resiliência — ver DT-03 em
-`docs/debito-tecnico.md`.
+Não existe mediator nem política de resiliência no pipeline de request. `MediatR`, `Polly` e todo
+o cluster `ServiceFactory`/`AddShared()` foram removidos no refactor de 2026-08-01 por não terem
+um único chamador. `Program.cs` registra tudo à mão, de propósito.
 
 ## Estrutura do repositório
 
 ```
 Hibrygame/Logic/            Engine — Board, Position, Piece + 6 peças, Move, Common, Enums/
-Hibrygame.Test/Hibrygame/   Testes da engine (73 pass, 1 skip)
+Hibrygame.Test/Hibrygame/   Testes da engine (146 pass)
 Orchestrator/
   Domain/                   User, UserAssignment, RefreshToken, Validation, BaseEntity, AuditInformation
   UseCases/                 Um caso de uso por ação + Dto/{Request,Response}/ + Interfaces/ + Security/
@@ -121,22 +120,29 @@ docs/                       README de arquitetura, contrato de FE e débito téc
 
 ### Áreas críticas (maior risco de regressão)
 
-- **`Move.CalculatePossibleMove`** — função de ~75 linhas com o caso do cavalo tratado por
-  desvio dentro do laço de direção, mutando `newPosition.Piece` durante o cálculo. É a origem
-  dos casos de borda conhecidos. Mexa com teste antes e rode a suíte da engine inteira.
-- **`Move.MakeMove`** — aplica a jogada, detecta auto-xeque e faz rollback manual dos dois
-  quadrados. Qualquer campo novo de peça precisa entrar no rollback ou a jogada rejeitada deixa
-  estado sujo.
-- **`Move.IsKingInCheck`** — depende de efeito colateral: zera `IsInCheckState` do rei e varre
-  os oponentes chamando `GetPossibleMove` só para que alguém marque a flag. Alterar o cálculo de
-  movimento pode silenciosamente quebrar a detecção de xeque.
+- **`Move.cs`** — reescrito por dentro no refactor de 2026-08-01, em três camadas:
+  `AttackedSquares` (geometria pura — a única que a detecção de xeque consulta),
+  `CandidateMoves` (geometria + ocupação do destino) e `LegalMovesFor` (candidatos menos os que
+  expõem o próprio rei). **Nenhuma camada altera a posição das peças**: simular um lance para
+  testar legalidade sempre desfaz a simulação. Se você precisar mexer, mantenha essa invariante —
+  ela é coberta por `GetPossibleMove_ForEveryPieceOnTheBoard_NeverChangesThePosition`.
+  `Move` é também a **fonte única** da geometria de cada peça: as classes de peça só guardam cor
+  e tipo. Não recrie listas de direção fora daqui.
+- **`Move.MakeMove`** — aplica a jogada, detecta auto-xeque e faz rollback dos dois quadrados,
+  restaurando a peça capturada. Qualquer campo novo de peça precisa entrar no rollback, ou a
+  jogada rejeitada deixa estado sujo. Leia a cor da peça **antes** de limpar a casa de origem:
+  `oldPosition` é a própria casa do tabuleiro, e limpá-la apaga a peça que você ia consultar —
+  foi exatamente esse o bug que deixava a verificação de auto-xeque inalcançável.
+- **`GameRoom.Serialized`** — todo acesso ao `Board` de uma sala passa por aqui. A avaliação de
+  legalidade simula lances no tabuleiro compartilhado, então duas chamadas concorrentes sem esse
+  lock se corrompem. Método novo do hub que toque no tabuleiro entra dentro dele.
 - **`ChessHub` (estado `static`)** — `ConcurrentDictionary` de salas compartilhado por todo o
   processo e por toda a suíte de testes. Teste novo usa nome de sala único; feature nova não
   assume isolamento entre requests.
-- **`ValidationService`** — engole exceção e retorna `bool` em quase todo método;
-  `GetValidationByUserIdTokenAndRoom` lança `NotImplementedException`;
-  `GetValidationCanMove` tem sobrecarga com `||` no filtro que aceita token de outro usuário.
-  Superfície de segurança frágil: não amplie sem revisar o filtro (DT-05).
+- **`ValidationService`** — já loga as exceções e perdeu os dois membros mortos (o
+  `NotImplementedException` e a sobrecarga cujo filtro `||` aceitava token de outro usuário).
+  O que resta: `GetValidationCanMove` recebe `email` e `day` e ignora os dois (DT-20). Superfície
+  de segurança: não amplie sem decidir o filtro.
 - **`UserController.CreateUser`** — `[AllowAnonymous]` e aceita `Role` do corpo do request:
   qualquer anônimo pode criar `super adm`. Não amplie a superfície sem definir autorização
   (DT-04).
@@ -162,8 +168,8 @@ repositórios são mockados com Moq.
 dotnet restore
 dotnet build                                  # 4 projetos, 0 erros esperado
 dotnet run --project Orchestrator             # Swagger em https://localhost:5001/swagger
-dotnet test                                   # 453 aprovados, 1 ignorado
-dotnet test Hibrygame.Test                    # só a engine (73 pass, 1 skip)
+dotnet test                                   # 539 aprovados, 0 ignorados
+dotnet test Hibrygame.Test                    # só a engine (146 pass)
 dotnet test Orchestrator.Test                 # só a API (380 pass)
 ```
 

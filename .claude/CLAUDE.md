@@ -17,18 +17,18 @@ Multiplayer chess platform. ASP.NET Core 8 + SignalR + MongoDB + JWT.
 > - [docs/FRONTEND_CHANGES.md](../docs/FRONTEND_CHANGES.md) — FE contract + change history
 
 ## Stack
-- **Runtime:** .NET 8 / C# 12
+- **Runtime:** .NET 10 (LTS) / C# 14
 - **Database:** MongoDB (Guid IDs stored as string)
 - **Real-time:** SignalR (`/chesshub`)
 - **Auth:** JWT Bearer (HmacSha256)
-- **Tests:** xUnit + Moq (453 passing, 1 skip)
+- **Tests:** xUnit + Moq (539 passing, 0 skipped)
 
 ## Run
 ```bash
 dotnet restore
 dotnet build
 dotnet run --project Orchestrator   # Swagger at https://localhost:5001/swagger
-dotnet test                          # 453 tests
+dotnet test                          # 539 tests, 0 skipped
 ```
 
 MongoDB on `localhost:27017`. Note: `Program.cs` reads `Mongo:ConnectionString` / `Mongo:Database`
@@ -276,9 +276,12 @@ Full catalogue with severity, affected files and exit path:
 [docs/debito-tecnico.md](../docs/debito-tecnico.md). Check it **before** "fixing" something that
 looks wrong — it may be known debt or an item awaiting a human decision (`[DECISÃO]`).
 Highlights: `POST /users` is anonymous and accepts any role (DT-04); the access token is stored in
-cleartext in the `Validation` collection (DT-07); `ValidationService` swallows exceptions and has a
-permissive `||` filter (DT-05); the engine has known knight edge cases (DT-11) and `Position` has no
-value equality (DT-12).
+cleartext in the `Validation` collection (DT-07); `change-password` and `PUT /users` don't check who
+is asking (DT-16); reconnecting loses the player's seat in the room (DT-21).
+
+The engine bugs that used to be listed here (knight edge cases, `Position` without value equality,
+`ValidationService`) were fixed in the 2026-08-01 refactor — see
+[docs/refactor-2026-08-01.md](../docs/refactor-2026-08-01.md).
 
 
 1. Hub state in-process — no horizontal scale without Redis backplane
@@ -323,7 +326,7 @@ Scripts are PowerShell and require a `NNN-slug` branch — they fail on `main` b
 
 Before merge:
 - [ ] `dotnet build` 0 errors
-- [ ] `dotnet test` all green (453 expected pass, 1 expected skip)
+- [ ] `dotnet test` all green (539 expected pass, 0 skips) and `dotnet build` with 0 warnings
 - [ ] Constitution respected — Principles I (layering) and II (server authority)
 - [ ] If FE contract changed: update `docs/FRONTEND_CHANGES.md` (append a dated history entry)
 - [ ] If debt was created or resolved: update `docs/debito-tecnico.md`

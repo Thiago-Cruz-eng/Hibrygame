@@ -13,6 +13,17 @@ Item marcado `[DECISÃO]` exige definição humana antes de qualquer implementa�
 **Levantamento inicial:** 2026-07-31, sobre `main` + working tree, com `dotnet test` em
 453 aprovados / 1 ignorado.
 
+**Última revisão:** 2026-08-01, no refactor do motor (`refactor/motor-xadrez-modernizacao`),
+com `dotnet test` em 539 aprovados / 0 ignorados. Relatório completo em
+[refactor-2026-08-01.md](./refactor-2026-08-01.md).
+
+Saíram desta lista naquela rodada: **DT-01** (engine sem pacotes ASP.NET Core), **DT-03**
+(infraestrutura morta removida, junto com MediatR e Polly), **DT-05** (`ValidationService`
+com `ILogger`, membros mortos e filtro permissivo removidos — sobrou só a decisão sobre
+`email`/`day`, ver DT-20), **DT-10** (`EnumMember` inerte e errado removido), **DT-11**
+(cavalo reescrito com oito deltas, sem mutar o tabuleiro; `Skip` removido), **DT-12**
+(`Position` com igualdade de valor), **DT-14** (`CreateRoom.AlreadyExisted` via `TryAdd`).
+
 ## Severidade alta — segurança
 
 ### DT-04 — `POST /users` é anônimo e aceita o papel pelo corpo do request
@@ -42,26 +53,6 @@ Contraste: o refresh token é hasheado com PBKDF2 — o access token, não.
 - **Saída**: guardar hash do token (ou o `jti` do JWT, que já existe nos claims) em vez do token
   inteiro; ajustar os quatro métodos de consulta. Renomear `AcessToken` → `AccessToken` no mesmo
   PR (quebra de schema: ver DT-08).
-
-### DT-05 — `ValidationService` engole exceção, tem método não implementado e filtro permissivo
-
-Três problemas na mesma classe:
-
-1. Todo método é `try { ... } catch (Exception e) { return false; }` — falha de rede, filtro
-   errado e "não encontrado" são indistinguíveis, e `e` nunca é logado (não há `ILogger`
-   injetado, contrariando o Princípio III da constituição).
-2. `GetValidationByUserIdTokenAndRoom` lança `NotImplementedException` e está na interface
-   `IValidationService`.
-3. A sobrecarga `GetValidationCanMove(userId, room, accessToken)` filtra com
-   `x.AcessToken == accessToken || (x.UserId == userId && x.Room == room)` — o `||` aceita
-   qualquer registro que casse **só** pelo token, sem amarrar o usuário. A outra sobrecarga
-   (a usada pelo controller) tem `&&` e está correta, e ainda carrega dois filtros comentados
-   (`UserEmail`, `DayOfGame`) cujo parâmetro é recebido e ignorado.
-
-- **Arquivo**: `Orchestrator/UseCases/ValidationService.cs`
-- **Saída**: injetar `ILogger<ValidationService>`, trocar `catch → return false` por log +
-  retorno de falha explícito, remover o método não implementado da interface, trocar `||` por
-  `&&` e decidir se `UserEmail`/`DayOfGame` entram no filtro ou saem da assinatura.
 
 ### DT-16 — `change-password` e `PUT /users` não checam quem é o solicitante
 
@@ -96,17 +87,6 @@ Nenhum índice é criado no startup — `User.Email` e `RefreshToken.UserId` sã
 
 ## Severidade média — arquitetura
 
-### DT-01 — engine referencia pacotes de ASP.NET Core sem usar
-
-`Hibrygame.csproj` referencia `Microsoft.AspNetCore.Mvc.Core` 2.2.5 e
-`Microsoft.AspNetCore.Hosting.Abstractions` 2.2.0. Nenhum arquivo da engine usa qualquer tipo
-desses pacotes, e as versões são da era .NET Core 2.2. Viola o Princípio I (engine sem
-framework) e ainda arrasta dependências antigas para quem consome a biblioteca.
-
-- **Arquivo**: `Hibrygame/Hibrygame.csproj`
-- **Saída**: remover os dois `PackageReference` e rodar `dotnet build` + `dotnet test`.
-  Baixo risco — é o item mais barato desta lista.
-
 ### DT-02 — `Domain` depende de `Infra`
 
 `User`, `RefreshToken` e `Validation` importam `Orchestrator.Infra.Utils` (por
@@ -118,27 +98,6 @@ reclama — a fronteira é só convenção.
 - **Saída**: mover `CollectionNameAttribute` para `Domain/` (é metadado de domínio, não de
   infraestrutura) e remover os `using` de `Infra.Mongo` que não são usados. O arquivo ainda está
   grafado `CollectionNameAtribute.cs` (um "t"): renomear no mesmo PR.
-
-### DT-03 — infraestrutura morta herdada de outro projeto
-
-Existe e não é usado por nada:
-
-- `ServiceCollectionExtensions.AddShared()` — registra MediatR, `IServiceFactory` e
-  `ServiceInstanceResolver<>`; **nunca é chamado** no `Program.cs`.
-- `ServiceFactory` / `IServiceFactory` / `ServiceInstanceResolver<>` — padrão de fábrica por país
-  copiado do `verum-sales-global-backend`; aqui não há multi-país. `ServiceFactory` ainda usa
-  `Console.WriteLine` para erro.
-- `MongoDbContextFactory.CreateAsync(string country)` — parâmetro `country` que ninguém passa,
-  connection string e nome de banco hardcoded, e o `Program.cs` registra o serviço mas nenhum
-  consumidor o resolve.
-- `MediatR` 14 e `Polly` 8 no `.csproj` sem uso.
-
-Custo real: um agente ou pessoa nova lê esse código e conclui que existe pipeline de mediator ou
-resolução por país, e escreve código novo em cima de algo que não roda.
-
-- **Saída**: `[DECISÃO]` — remover tudo (recomendado, é a leitura honesta do projeto de hoje) ou
-  declarar por escrito que é preparação para multi-instância e passar a usar. Meio-caminho não
-  serve.
 
 ### DT-06 — chave de configuração do Mongo divergente
 
@@ -163,48 +122,56 @@ persistência de partida — restart do processo perde tudo.
   backplane (Redis) **e** mover o estado de sala para fora do processo. Decisão adiada
   conscientemente — ver "Why static hub state" em `docs/ARCHITECTURE.md`.
 
+### DT-21 — reconectar perde o assento na sala
+
+`withAutomaticReconnect` no frontend reabre a conexão, mas com um `ConnectionId` novo — e o
+jogador não está mais em `GameRoom.Players`, porque `OnDisconnectedAsync` o removeu. Depois de
+reconectar, o tabuleiro aparece mas `MakeMove` responde `"You are not in this room."`. Recarregar
+a página tem o mesmo efeito. Registrado no refactor de 2026-08-01.
+
+- **Arquivos**: `Orchestrator/Infra/SignalR/ChessHub.cs`,
+  `KrockSide/src/hooks/useHubConnection.tsx`
+- **Saída**: `[DECISÃO]` — exige um "rejoin" que reassocia a conexão nova ao assento anterior, o
+  que é funcionalidade nova. Precisa decidir como identificar o jogador entre conexões: o claim
+  `sub` do JWT é o candidato óbvio, e trocaria `ConnectionId` por `userId` como chave de
+  `Players`. Enquanto isso, uma queda de rede encerra a partida na prática.
+
 ## Severidade baixa — corretude e polimento
 
-### DT-10 — `ColorEnum` com `EnumMember` trocado
+### DT-20 — `GetValidationCanMove` recebe `email` e `day` e ignora os dois
 
-```csharp
-[EnumMember(Value = "black")]  Black,
-[EnumMember(Value = "bhite")]  White,   // typo
-[EnumMember(Value = "white")]  None     // valor de White aplicado a None
-```
+Herdado de DT-05, que foi resolvido no resto. A sobrecarga em uso pelo controller recebe seis
+parâmetros, mas os filtros por `UserEmail` e `DayOfGame` estão comentados no código desde antes
+do refactor. Os dois argumentos atravessam a chamada sem efeito.
 
-`White` serializa como `"bhite"` e `None` como `"white"`. Só afeta quem serializa o enum com
-`Newtonsoft.Json` — o hub converte com `.ToString()`, então o contrato do `/chesshub` está
-correto hoje. É uma armadilha esperando o primeiro consumidor do conversor.
+- **Arquivo**: `Orchestrator/UseCases/ValidationService.cs`
+- **Saída**: `[DECISÃO]` — ou entram no filtro, ou saem da assinatura. Ligar os filtros muda quem
+  passa a validação, então não é mudança de passagem. Há um comentário no código apontando aqui.
 
-- **Arquivo**: `Hibrygame/Logic/Enums/ColorEnum.cs`
-- **Saída**: `White → "white"`, `None → "none"`. Verificar antes se algum teste ou cliente já
-  depende do valor errado.
+### DT-22 — regra `react-hooks/set-state-in-effect` desligada no frontend
 
-### DT-11 — caso de borda do cavalo e teste ignorado
+Regra do `eslint-plugin-react-hooks 7`, voltada ao React Compiler. Acusa três sítios que são o
+padrão "carregar na montagem" — `useChessGame` (`void start()`), `useChessLobby`
+(`void loadRooms()`) e `useAuth` (ressincroniza token quando o `userId` da rota muda) — onde o
+`setState` acontece depois de um `await`. Desligada no refactor de 2026-08-01, com a razão escrita
+no próprio `eslint.config.js`. Os erros de `react-hooks/refs` do mesmo lote **eram** bugs reais e
+foram corrigidos.
 
-`KnightTests.GetMovesKnight_AfterOneMove_Correctly` está `Skip`. A aritmética do teste está
-errada, **e** a engine ainda tem casos de borda no cavalo: `Move.CalculatePossibleMove` trata o
-cavalo por desvio dentro do laço de direções, criando um `Knight` temporário
-(`newPosition.Piece = new Knight(...)`) e mutando o tabuleiro durante o cálculo.
+- **Arquivo**: `KrockSide/eslint.config.js`
+- **Saída**: reescrever os três com `useSyncExternalStore` (ou equivalente) e religar a regra.
+  É refactor da camada de estado do front, não conserto pontual.
 
-- **Arquivos**: `Hibrygame/Logic/Move.cs`, `Hibrygame.Test/Hibrygame/KnightTests.cs`
-- **Saída**: extrair o cavalo para cálculo próprio (oito deltas explícitos), sem mutar o
-  tabuleiro; reescrever o teste com a aritmética correta e remover o `Skip`.
+### DT-23 — o seletor de cor do lobby não é honrado pelo servidor
 
-### DT-12 — `Position` sem igualdade de valor
+O lobby **exige** escolher uma cor antes de entrar, mas `GameRoom.TryAssignColor` atribui por
+ordem de entrada e ignora a escolha. No refactor de 2026-08-01 o frontend passou a persistir a
+cor que o servidor devolveu (não a escolhida), o que corrigiu a divergência de dados — mas a UI
+continua pedindo algo que não é atendido.
 
-`Position` não sobrescreve `Equals`/`GetHashCode`. Quem precisa comparar por coordenada usa
-`Common.PositionComparer` — mas só `Move.MakeMove` usa. `VerifyKingMovementationCheck` e
-`PossiblePiecesHelpersToKingCheck` usam `List.Contains`/`Remove` sem comparador, ou seja,
-igualdade por referência. Funciona por acidente enquanto todas as posições vierem do mesmo array
-`Board.Positions`, e quebra silenciosamente quando alguém cria uma `Position` nova (como
-`Position.TryFromAlgebraic` faz).
-
-- **Arquivos**: `Hibrygame/Logic/Position.cs`, `Hibrygame/Logic/Move.cs`
-- **Saída**: implementar `Equals`/`GetHashCode` por `(Row, Column)` em `Position`, ou passar
-  `PositionComparer` explicitamente em todos os `Contains`/`Remove`. A primeira opção elimina a
-  classe inteira de bug; exige rodar a suíte da engine com atenção.
+- **Arquivos**: `Orchestrator/Infra/SignalR/GameRoom.cs`,
+  `KrockSide/src/components/ChessLobby.tsx`
+- **Saída**: `[DECISÃO]` — ou o servidor honra a preferência quando a sala está vazia, ou o
+  seletor sai da UI. O campo no frontend já se chama `preferredColor` para não mentir.
 
 ### DT-13 — fim de partida nunca acontece
 
@@ -213,23 +180,11 @@ chama `Finish()`. Não há xeque-mate, empate, desistência nem relógio: uma pa
 os dois jogadores desconectarem. Também não há promoção de peão, roque nem en passant.
 
 - **Arquivos**: `Orchestrator/Infra/SignalR/GameRoom.cs`, `Hibrygame/Logic/Move.cs`
-- **Saída**: escopo de feature, não bug. Xeque-mate depende de "nenhum movimento legal para a
-  cor da vez", que depende de DT-11/DT-12 estarem resolvidos para ser confiável.
-
-### DT-14 — `CreateRoom.AlreadyExisted` sempre reporta `false` para sala nova e vazia
-
-```csharp
-var created = Rooms.GetOrAdd(room, name => new GameRoom(name));
-AlreadyExisted = created != Rooms[room] || created.Players.Count > 0
-```
-
-`created != Rooms[room]` é sempre `false` (é o mesmo objeto), então o campo na prática significa
-"a sala tem jogador", não "a sala já existia". Recriar uma sala existente e vazia devolve
-`AlreadyExisted = false`.
-
-- **Arquivo**: `Orchestrator/Infra/SignalR/ChessHub.cs`
-- **Saída**: usar `TryAdd` e derivar `AlreadyExisted` do retorno, ou renomear o campo para
-  `HasPlayers` — mudança de contrato de FE, registrar em `docs/FRONTEND_CHANGES.md`.
+- **Saída**: escopo de feature, não bug. Xeque-mate é "o jogador da vez não tem nenhum lance
+  legal, e está em xeque"; afogamento é a mesma coisa sem o xeque. Depois do refactor de
+  2026-08-01 a base está pronta: `Move.LegalMovesFor` já devolve só lances legais e
+  `Move.IsSquareAttacked` já existe, então são poucas linhas. Era isto que dependia de DT-11 e
+  DT-12, ambos resolvidos.
 
 ### DT-08 — grafias erradas no contrato público
 
