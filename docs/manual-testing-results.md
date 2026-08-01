@@ -248,3 +248,32 @@ Em `docs/debito-tecnico.md`. O que eu mais recomendo olhar, na ordem:
 
 Os usuários `smoke-a-*` e `smoke-b-*` ficaram no banco `Hibrygame`, coleção `User`. Apague
 quando quiser — não têm nenhuma função.
+
+## Adendo — um segundo bloqueador achado ao conferir contratos
+
+Enquanto corrigia as rotas, conferi também os **corpos** de resposta contra os DTOs do
+backend. Havia um segundo bloqueador da mesma família, e igualmente invisível para a suíte:
+
+`GET /users/{id}` devolve `{ id, name, email, role, mustChangePassword, assignments }`. O
+tipo `GetUserResponse` do frontend declarava `{ userName, email }`. Então `user.userName`
+era **sempre** `undefined` — e o lobby tem:
+
+```ts
+const user = await userApi.getUser(userId);
+if (!user.name) return null;   // era: if (!user.userName) return null;
+```
+
+Ou seja: mesmo depois de corrigir a rota, entrar numa sala **abortava em silêncio**, sem
+mensagem nenhuma para o jogador. Os dois bugs empilhados explicavam por que a partida nunca
+começava pela interface.
+
+Corrigido em `src/types/auth.ts`, `useChessLobby` e nos dois dublês (`msw` e o teste de
+`userApi`), que agora descrevem o contrato real.
+
+Fica aberto o resto do **DT-03**: o payload de *cadastro* continua divergente — o front
+envia `dateBirth` e `phoneNumber`, que o backend não conhece, e não envia `Role` nem
+`CreatedBy`, que são obrigatórios. E `CreateUserResponse` do backend não traz `accessToken`,
+embora o `Login.handleRegister` navegue para o lobby como se tivesse sessão. Isso é decisão
+sua e está descrito no débito do KrockSide: alinhar o front ao contrato atual (rápido, mas
+manda `Role` do cliente, que é o furo DT-04) ou pedir ao backend um endpoint de
+auto-registro que derive papel e autor no servidor.
