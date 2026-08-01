@@ -2,7 +2,10 @@
 
 **Data:** 2026-08-01
 **Branch:** `refactor/motor-xadrez-modernizacao` (nos dois repos)
-**Resultado: 63/63 cenários de sistema · 608 testes automatizados · 0 avisos de build**
+**Resultado: 71/71 cenários de sistema · 618 testes automatizados · 0 avisos de build**
+
+> Segunda rodada, depois de implementar o auto-registro no servidor. Encontrou um
+> **terceiro** bloqueador do caminho "entrar em sala" — ver a seção 1c abaixo.
 
 ## Como isto foi executado
 
@@ -59,9 +62,60 @@ tornava **todo login impossível**, e o erro real (`IDX10720`) era engolido num
 `"Login failed"` genérico com 401 — indistinguível de senha errada. Agora a aplicação
 recusa subir com chave curta, dizendo o tamanho encontrado e o exigido.
 
+### 3. O claim `sub` nunca era encontrado, e isso derrubava toda a camada `/validation`
+
+Encontrado na segunda rodada. O `JwtBearerOptions.MapInboundClaims` vem `true` por padrão,
+e renomeia claims na entrada: `sub` passa a ser `ClaimTypes.NameIdentifier`. Então
+
+```csharp
+var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;   // sempre null
+```
+
+`ValidationController.IsCallerAuthorizedFor` compara esse `sub` com o `userId` do corpo e
+devolve `Forbid()` se não casar. Resultado: **os quatro endpoints de `/validation`
+respondiam 403 para todo usuário, sempre.** E o lobby chama `verifyValidation` antes de
+entrar numa sala.
+
+Somando os três, o caminho "entrar em sala" pela interface estava quebrado em série:
+
+| # | Camada | Falha |
+|---|---|---|
+| 1 | rota | `GET get/{id}` → 404 |
+| 2 | contrato | `userName` inexistente → abort silencioso |
+| 3 | autenticação | `sub` nunca encontrado → `/validation` 403 |
+
+Corrigido com `MapInboundClaims = false` no `Program.cs`, o que faz os nomes de claim no
+servidor serem exatamente os que estão no token. O `TokenService` já emitia `sub` e
+`ClaimTypes.Role`, então nada mais precisou mudar. A defesa em profundidade continua
+íntegra: pedir `/validation` com o `userId` de outro usuário ainda dá 403 — agora pelo
+motivo certo.
+
 ## Resultados por área
 
-### 1. REST — cadastro e autenticação (16/16)
+### 1. REST — cadastro e autenticação (19/19)
+
+O cadastro agora é `POST /register`, e não mais `POST /users`:
+
+| Cenário | Resultado |
+|---|---|
+| `POST /register` cria usuário e **já devolve sessão** | ✅ token de 528 chars |
+| Auto-registro sempre cria como `"jogador"` | ✅ |
+| **`POST /register` ignora `role` enviado pelo cliente** | ✅ continua `"jogador"` |
+| `POST /register` recusa e-mail duplicado | ✅ |
+| `POST /register` recusa confirmação divergente | ✅ HTTP 400 |
+| **`POST /users` anônimo é recusado** (era o furo DT-04) | ✅ HTTP 401 |
+
+### 1b. Autorização por papel e `/validation` (5/5)
+
+| Cenário | Resultado |
+|---|---|
+| `POST /users` como jogador é recusado (exige `Role:Admin`) | ✅ HTTP 403 |
+| `POST /validation/verify` aceita o próprio usuário | ✅ HTTP 200 (era 403 sempre) |
+| `POST /validation/get` aceita o próprio usuário | ✅ HTTP 200 (era 403 sempre) |
+| `POST /validation` recusa `userId` de outro usuário | ✅ HTTP 403 |
+| `POST /validation` sem token é recusado | ✅ HTTP 401 |
+
+### 1c. Autenticação — cenários anteriores (mantidos)
 
 | Cenário | Resultado |
 |---|---|
@@ -277,3 +331,22 @@ embora o `Login.handleRegister` navegue para o lobby como se tivesse sessão. Is
 sua e está descrito no débito do KrockSide: alinhar o front ao contrato atual (rápido, mas
 manda `Role` do cliente, que é o furo DT-04) ou pedir ao backend um endpoint de
 auto-registro que derive papel e autor no servidor.
+
+## Como criar o primeiro administrador
+
+`POST /users` agora exige `Role:Admin`, e o auto-registro sempre cria `"jogador"`. Então não
+existe caminho pela API para o **primeiro** admin — isso é intencional, e o bootstrap é
+manual, uma vez só:
+
+```bash
+# 1. cadastre-se normalmente pela interface (ou por POST /register)
+# 2. promova no banco:
+docker exec xadrez mongosh --quiet Hibrygame --eval \
+  'db.User.updateOne({Email:"seu@email"},{$set:{Role:"super adm"}})'
+```
+
+Verificado nesta rodada: depois da promoção, o login já traz o papel novo no token, e
+`POST /users` passa a funcionar — inclusive criando outro `"adm"`, com `CreatedBy` derivado
+do token e não do corpo (mandei `"MENTIRA-DO-CLIENTE"` no corpo e foi ignorado).
+
+Os papéis válidos são `jogador`, `jogador principal`, `lider de time`, `adm`, `super adm`.

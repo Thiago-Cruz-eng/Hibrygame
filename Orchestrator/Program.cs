@@ -54,6 +54,19 @@ builder.Services.AddAuthentication(x =>
 {
     x.RequireHttpsMetadata = true;
     x.SaveToken = true;
+
+    // Sem isto o handler renomeia claims na entrada — `sub` vira
+    // ClaimTypes.NameIdentifier, `email` vira ClaimTypes.Email — e todo
+    // `User.FindFirst(JwtRegisteredClaimNames.Sub)` devolve null.
+    //
+    // Consequencia real: ValidationController.IsCallerAuthorizedFor compara o `sub` com o
+    // userId do corpo, entao os QUATRO endpoints de /validation respondiam 403 para
+    // qualquer usuario, sempre. Como o lobby chama verifyValidation antes de entrar numa
+    // sala, era impossivel entrar em sala pela interface.
+    //
+    // TokenService emite `sub` e ClaimTypes.Role; desligar o mapeamento faz os nomes no
+    // servidor serem exatamente os que estao no token.
+    x.MapInboundClaims = false;
     x.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateLifetime = true,
@@ -138,6 +151,7 @@ builder.Services.AddScoped<UpdateUserUseCase>();
 builder.Services.AddScoped<DeleteUserUseCase>();
 builder.Services.AddScoped<ChangePasswordUseCase>();
 builder.Services.AddScoped<RefreshTokenUseCase>();
+builder.Services.AddScoped<RegisterUserUseCase>();
 builder.Services.AddScoped<ISecureHashingService, SecureHashingService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddSingleton<IAuthorizationHandler, MinimumRoleHandler>();
