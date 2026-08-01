@@ -271,3 +271,4 @@ Layout: `Column=7` is White's back rank (rank 1), `Column=0` is Black's back ran
 - [docs/FRONTEND_CHANGES.md](docs/FRONTEND_CHANGES.md) — frontend migration contract (hub naming, auth, payloads)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — deep architecture dive (request flow, hub state machine, persistence)
 - [docs/fluxo-de-trabalho.md](docs/fluxo-de-trabalho.md) — como abrir, testar e mergear uma demanda: back+front, só back, só front; onde cada teste mora
+- [docs/workflow-cenarios.md](docs/workflow-cenarios.md) — os mesmos fluxos aplicados a cinco demandas realistas, comando a comando, mais a lista completa de quality gates

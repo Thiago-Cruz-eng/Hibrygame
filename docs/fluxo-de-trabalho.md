@@ -12,6 +12,11 @@ como abrir, testar e mergear uma demanda em cada um dos três formatos possívei
 - [Como o CI escolhe o outro lado](#como-o-ci-escolhe-o-outro-lado)
 - [Com vários devs](#com-vários-devs)
 
+> **Procurando o passo a passo de uma demanda concreta?**
+> [`workflow-cenarios.md`](./workflow-cenarios.md) aplica tudo isto a cinco casos reais — feature
+> nas duas pontas, feature só back, feature só front, bug no back, bug no front — comando a
+> comando, e lista todos os quality gates com duração e se bloqueiam.
+
 ---
 
 ## Onde cada teste mora
