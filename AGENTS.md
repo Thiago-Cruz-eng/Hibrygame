@@ -52,11 +52,11 @@ respeitado, mas nada no servidor o liga automaticamente — `Finish()` nunca é 
 | Engine | Biblioteca própria `Hibrygame` (namespace raiz `Hibrygame`) |
 | API | ASP.NET Core 8, controllers clássicos, Swashbuckle 6 (Swagger só em Development) |
 | Real-time | SignalR 1.1 — hub único `/chesshub`, estado `static` em processo |
-| Banco | MongoDB (`MongoDB.Driver` 3.6), `Guid` serializado como `string`, sem ORM e sem migrations |
-| Auth | JWT HS256 (`Microsoft.AspNetCore.Authentication.JwtBearer` 8) + refresh token rotativo |
+| Banco | MongoDB (`MongoDB.Driver` 3.10), `Guid` serializado como `string`, sem ORM e sem migrations |
+| Auth | JWT HS256 (`Microsoft.AspNetCore.Authentication.JwtBearer` 10) + refresh token rotativo |
 | Hash | PBKDF2 (`Rfc2898DeriveBytes`, SHA256, 100.000 iterações, salt 16B, chave 32B) |
-| Serialização | `System.Text.Json` com `ReferenceHandler.Preserve` na API; `Newtonsoft.Json` só nos conversores de enum da engine |
-| Testes | xUnit 2.4 + Moq 4.20 (sem FluentAssertions) |
+| Serialização | `System.Text.Json` com `ReferenceHandler.Preserve` na API. O motor não serializa nada — o contrato de fio é `ToString()` em `ChessHub.MapSquare`, PascalCase. `Newtonsoft.Json` foi removido |
+| Testes | xUnit 2.9 + Moq 4.20 (sem FluentAssertions) |
 | CI | GitHub Actions — `.github/workflows/dotnet-test.yml` (build + test) |
 
 Dependência externa nova entra **atrás de interface**: contrato em `UseCases/Interfaces/` (regra

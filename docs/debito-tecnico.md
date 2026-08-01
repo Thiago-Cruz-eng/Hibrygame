@@ -186,17 +186,6 @@ os dois jogadores desconectarem. Também não há promoção de peão, roque nem
   `Move.IsSquareAttacked` já existe, então são poucas linhas. Era isto que dependia de DT-11 e
   DT-12, ambos resolvidos.
 
-### DT-08 — grafias erradas no contrato público
-
-- `Validation.AcessToken` → `AccessToken` (falta o segundo "c") — está no schema do Mongo e no
-  DTO `ValidationDto`.
-- `Orchestrator/Infra/Utils/CollectionNameAtribute.cs` → `CollectionNameAttribute.cs`.
-- `Board.GetPositionsPlacedInBoard()` é apenas um alias de `GetPositionsPlaced()`.
-
-- **Saída**: agrupar num único PR de renomeação. `AcessToken` está persistido: documentos
-  antigos precisam de `[BsonElement("AcessToken")]` no campo renomeado ou de um passo de
-  correção pontual (não há migration neste projeto — ver Princípio "sem migration").
-
 ### DT-17 — busca por Id via `Id.ToString() == id`
 
 `GetUserUseCase`, `UpdateUserUseCase`, `DeleteUserUseCase` e `ChangePasswordUseCase` filtram com
