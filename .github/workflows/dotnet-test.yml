@@ -3,13 +3,13 @@ name: dotnet-test
 # Gate de qualidade do repositório: build + suíte completa.
 # Baseline esperado: suíte inteira verde, sem testes ignorados.
 # A suíte não precisa de MongoDB nem de Docker — os repositórios são mockados com Moq.
+# O filtro de branch fica só no push: em `pull_request` ele deixava PR empilhado sobre outra
+# branch sem check nenhum.
 on:
   push:
     branches:
       - main
   pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:

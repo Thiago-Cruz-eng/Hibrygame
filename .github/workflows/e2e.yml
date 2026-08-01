@@ -10,13 +10,14 @@ name: e2e
 # Por isso este workflow sobe a API de verdade, com MongoDB de verdade, e roda a suíte
 # Playwright do KrockSide contra ela. É o gate que impede uma mudança no hub ou no DTO de
 # quebrar o front sem ninguém perceber até o deploy.
+# O filtro de branch fica só no push. Em `pull_request` ele ficava em `main` e, com isso, PR
+# empilhado sobre outra branch não disparava check nenhum — justamente onde mais se quer o
+# gate, porque a base ainda não foi revisada.
 on:
   push:
     branches:
       - main
   pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
