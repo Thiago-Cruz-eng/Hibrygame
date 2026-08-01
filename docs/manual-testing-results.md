@@ -36,8 +36,8 @@ dotnet run --project Orchestrator --no-launch-profile --urls "http://localhost:5
 
 ## O que este smoke encontrou
 
-Duas coisas que **nenhum** dos 608 testes automatizados pegava, porque só aparecem quando
-existe servidor e banco de verdade:
+Três coisas que **nenhum** dos 618 testes automatizados pegava, porque só aparecem quando
+existe servidor e banco de verdade. As três estão corrigidas.
 
 ### 1. O frontend chamava três rotas REST que não existem
 
@@ -115,14 +115,10 @@ O cadastro agora é `POST /register`, e não mais `POST /users`:
 | `POST /validation` recusa `userId` de outro usuário | ✅ HTTP 403 |
 | `POST /validation` sem token é recusado | ✅ HTTP 401 |
 
-### 1c. Autenticação — cenários anteriores (mantidos)
+### 1c. Sessão — login, refresh e troca de senha
 
 | Cenário | Resultado |
 |---|---|
-| `POST /users` cria usuário A | ✅ HTTP 200 |
-| `POST /users` cria usuário B | ✅ HTTP 200 |
-| `POST /users` recusa e-mail duplicado | ✅ "User already has a account" |
-| `POST /users` recusa confirmação de senha divergente | ✅ HTTP 400 |
 | `POST /login` autentica A e emite JWT | ✅ token de 528 chars |
 | `POST /login` autentica B e emite JWT | ✅ token de 527 chars |
 | `POST /login` recusa senha errada | ✅ 401 "Invalid credentials" |
@@ -262,9 +258,10 @@ jogador via após uma piscada de wifi ou um F5. Os três seguintes provam a corr
 | Suíte | Antes do refactor | Agora |
 |---|---|---|
 | Motor de xadrez (`Hibrygame.Test`) | 73 + 1 ignorado | **155** |
-| API e hub (`Orchestrator.Test`) | 380 | **399** |
-| Frontend (`vitest`) | 41 | **54** |
-| **Total** | **494 + 1 ignorado** | **608, nenhum ignorado** |
+| API e hub (`Orchestrator.Test`) | 380 | **408** |
+| Frontend (`vitest`) | 41 | **55** |
+| **Total** | **494 + 1 ignorado** | **618, nenhum ignorado** |
+| Cenários de smoke de sistema | não existia | **71** |
 | Avisos de build (backend) | 18 | **0** |
 
 ## O que este smoke NÃO cobre
@@ -287,18 +284,20 @@ Coisas que não existem no sistema, então não há o que testar. Não são regr
 
 Em `docs/debito-tecnico.md`. O que eu mais recomendo olhar, na ordem:
 
-1. **DT-04** — `POST /users` é anônimo e aceita o papel pelo corpo do request. Qualquer
-   pessoa cria um `"super adm"`. Os dois usuários que este smoke criou entraram como
-   `"jogador"` porque eu pedi isso; poderia ter pedido qualquer coisa.
-2. **DT-07** — o access token é gravado em claro na coleção `Validation`.
-3. **DT-16** — `change-password` e `PUT /users` identificam o alvo pelo corpo do request,
+1. **DT-16** — `change-password` e `PUT /users` identificam o alvo pelo corpo do request,
    sem comparar com o claim `sub`. Este smoke trocou a senha do próprio usuário, mas nada
-   impede trocar a de outro.
-4. **DT-18** — `User.Email` sem índice único: a unicidade é garantida só em código, e duas
+   impede trocar a de outro. O padrão correto já existe no repositório
+   (`ValidationController.IsCallerAuthorizedFor`) e agora funciona de verdade, então é só
+   aplicá-lo. **É o que eu faria primeiro.**
+2. **DT-07** — o access token é gravado em claro na coleção `Validation`.
+3. **DT-18** — `User.Email` sem índice único: a unicidade é garantida só em código, e duas
    criações simultâneas passam as duas.
-5. **DT-10 (frontend)** — a camada `Validation` parece redundante. O hub já valida turno,
+4. **DT-10 (frontend)** — a camada `Validation` parece redundante. O hub já valida turno,
    posse de peça e legalidade por conta própria; o lobby ainda faz três chamadas REST de
    validação antes de entrar numa sala.
+
+**DT-04 foi fechado** nesta rodada: `POST /users` exige `Role:Admin`, e o auto-registro
+sempre cria `"jogador"`.
 
 Os usuários `smoke-a-*` e `smoke-b-*` ficaram no banco `Hibrygame`, coleção `User`. Apague
 quando quiser — não têm nenhuma função.

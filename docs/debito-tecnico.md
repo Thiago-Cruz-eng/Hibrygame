@@ -14,7 +14,7 @@ Item marcado `[DECISÃO]` exige definição humana antes de qualquer implementa�
 453 aprovados / 1 ignorado.
 
 **Última revisão:** 2026-08-01, no refactor do motor (`refactor/motor-xadrez-modernizacao`),
-com `dotnet test` em 539 aprovados / 0 ignorados. Relatório completo em
+com `dotnet test` em 563 aprovados / 0 ignorados, e 71/71 no smoke de sistema. Relatório completo em
 [refactor-2026-08-01.md](./refactor-2026-08-01.md).
 
 Saíram desta lista naquela rodada: **DT-01** (engine sem pacotes ASP.NET Core), **DT-03**
@@ -23,24 +23,25 @@ com `ILogger`, membros mortos e filtro permissivo removidos — sobrou só a dec
 `email`/`day`, ver DT-20), **DT-10** (`EnumMember` inerte e errado removido), **DT-11**
 (cavalo reescrito com oito deltas, sem mutar o tabuleiro; `Skip` removido), **DT-12**
 (`Position` com igualdade de valor), **DT-14** (`CreateRoom.AlreadyExisted` via `TryAdd`) e
-**DT-06** (`appsettings.json` renomeado para a seção `Mongo:*` que o código realmente lê).
+**DT-06** (`appsettings.json` renomeado para a seção `Mongo:*` que o código realmente lê),
+**DT-04** (`POST /users` exige `Role:Admin` e deriva `CreatedBy` do token; auto-registro
+via `POST /register`, que fixa o papel em `jogador` no servidor), **DT-13** (xeque-mate e
+afogamento detectados, `GameRoom.Finish()` finalmente chamado), **DT-20** (`email`/`day`
+fora da assinatura de `GetValidationCanMove`), **DT-21** (reentrada na sala após
+reconectar) e **DT-23** (o servidor passou a honrar a cor pedida no lobby, e avisa quando
+não pode).
+
+Achados na mesma rodada, ao rodar o sistema de verdade contra MongoDB — todos corrigidos e
+descritos em [manual-testing-results.md](./manual-testing-results.md):
+
+- `Jwt:Key` tinha 240 bits e HS256 exige 256, então **todo login era impossível**, e a
+  exceção real era engolida num `"Login failed"` genérico.
+- `JwtBearerOptions.MapInboundClaims` vinha `true`, renomeando `sub` para
+  `ClaimTypes.NameIdentifier`. `User.FindFirst(JwtRegisteredClaimNames.Sub)` era sempre
+  `null`, e por isso **os quatro endpoints de `/validation` respondiam 403 para todo
+  usuário, sempre**.
 
 ## Severidade alta — segurança
-
-### DT-04 — `POST /users` é anônimo e aceita o papel pelo corpo do request
-
-`UserController.CreateUser` é `[AllowAnonymous]` e `CreateUserRequest.Role` vai direto para
-`RoleHierarchy.TryGetLevel`. Qualquer pessoa na internet cria um usuário `"super adm"` e passa a
-ter acesso a todos os endpoints, inclusive `DELETE /users/{id}`. `CreatedBy` também vem do corpo,
-então a auditoria de criação é forjável.
-
-- **Arquivos**: `Orchestrator/Presentation/UserController.cs`,
-  `Orchestrator/UseCases/Dto/Request/CreateUserRequest.cs`,
-  `Orchestrator/UseCases/CreateUserUseCase.cs`
-- **Saída**: `[DECISÃO]` — escolher o modelo de cadastro: (a) auto-registro anônimo fixado em
-  `"jogador"`, ignorando `Role` do request; (b) criação só por `Role:Admin`, com `CreatedBy`
-  derivado do claim `sub`; (c) auto-registro anônimo + endpoint separado autenticado para
-  elevar papel. Em qualquer opção, `CreatedBy` deve sair do token, não do corpo.
 
 ### DT-07 — access token gravado em claro na coleção `Validation`
 
@@ -111,31 +112,7 @@ persistência de partida — restart do processo perde tudo.
   backplane (Redis) **e** mover o estado de sala para fora do processo. Decisão adiada
   conscientemente — ver "Why static hub state" em `docs/ARCHITECTURE.md`.
 
-### DT-21 — reconectar perde o assento na sala
-
-`withAutomaticReconnect` no frontend reabre a conexão, mas com um `ConnectionId` novo — e o
-jogador não está mais em `GameRoom.Players`, porque `OnDisconnectedAsync` o removeu. Depois de
-reconectar, o tabuleiro aparece mas `MakeMove` responde `"You are not in this room."`. Recarregar
-a página tem o mesmo efeito. Registrado no refactor de 2026-08-01.
-
-- **Arquivos**: `Orchestrator/Infra/SignalR/ChessHub.cs`,
-  `KrockSide/src/hooks/useHubConnection.tsx`
-- **Saída**: `[DECISÃO]` — exige um "rejoin" que reassocia a conexão nova ao assento anterior, o
-  que é funcionalidade nova. Precisa decidir como identificar o jogador entre conexões: o claim
-  `sub` do JWT é o candidato óbvio, e trocaria `ConnectionId` por `userId` como chave de
-  `Players`. Enquanto isso, uma queda de rede encerra a partida na prática.
-
 ## Severidade baixa — corretude e polimento
-
-### DT-20 — `GetValidationCanMove` recebe `email` e `day` e ignora os dois
-
-Herdado de DT-05, que foi resolvido no resto. A sobrecarga em uso pelo controller recebe seis
-parâmetros, mas os filtros por `UserEmail` e `DayOfGame` estão comentados no código desde antes
-do refactor. Os dois argumentos atravessam a chamada sem efeito.
-
-- **Arquivo**: `Orchestrator/UseCases/ValidationService.cs`
-- **Saída**: `[DECISÃO]` — ou entram no filtro, ou saem da assinatura. Ligar os filtros muda quem
-  passa a validação, então não é mudança de passagem. Há um comentário no código apontando aqui.
 
 ### DT-22 — regra `react-hooks/set-state-in-effect` desligada no frontend
 
@@ -149,31 +126,6 @@ foram corrigidos.
 - **Arquivo**: `KrockSide/eslint.config.js`
 - **Saída**: reescrever os três com `useSyncExternalStore` (ou equivalente) e religar a regra.
   É refactor da camada de estado do front, não conserto pontual.
-
-### DT-23 — o seletor de cor do lobby não é honrado pelo servidor
-
-O lobby **exige** escolher uma cor antes de entrar, mas `GameRoom.TryAssignColor` atribui por
-ordem de entrada e ignora a escolha. No refactor de 2026-08-01 o frontend passou a persistir a
-cor que o servidor devolveu (não a escolhida), o que corrigiu a divergência de dados — mas a UI
-continua pedindo algo que não é atendido.
-
-- **Arquivos**: `Orchestrator/Infra/SignalR/GameRoom.cs`,
-  `KrockSide/src/components/ChessLobby.tsx`
-- **Saída**: `[DECISÃO]` — ou o servidor honra a preferência quando a sala está vazia, ou o
-  seletor sai da UI. O campo no frontend já se chama `preferredColor` para não mentir.
-
-### DT-13 — fim de partida nunca acontece
-
-`GameRoom.Finish()` existe, `Finished` é checado em `MakeMove` e em `GetAvailableRooms`, mas nada
-chama `Finish()`. Não há xeque-mate, empate, desistência nem relógio: uma partida só termina se
-os dois jogadores desconectarem. Também não há promoção de peão, roque nem en passant.
-
-- **Arquivos**: `Orchestrator/Infra/SignalR/GameRoom.cs`, `Hibrygame/Logic/Move.cs`
-- **Saída**: escopo de feature, não bug. Xeque-mate é "o jogador da vez não tem nenhum lance
-  legal, e está em xeque"; afogamento é a mesma coisa sem o xeque. Depois do refactor de
-  2026-08-01 a base está pronta: `Move.LegalMovesFor` já devolve só lances legais e
-  `Move.IsSquareAttacked` já existe, então são poucas linhas. Era isto que dependia de DT-11 e
-  DT-12, ambos resolvidos.
 
 ### DT-17 — busca por Id via `Id.ToString() == id`
 
