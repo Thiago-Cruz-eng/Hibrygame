@@ -59,17 +59,31 @@ Se preferir HTTPS, rode `dotnet dev-certs https --trust` uma vez, use
 
 ## 3. Frontend
 
-```bash
+No PowerShell, **conserte o PATH da sessão e use o `npm` normalmente** — é a forma menos
+irritante:
+
+```powershell
 cd C:\Users\THIAGO.CRUZ\Documents\GitHub\KrockSide
-"C:\Program Files\nodejs\npm.cmd" start
+$env:Path = "C:\Program Files\nodejs;" + $env:Path
+npm start
 ```
 
-<http://localhost:3000>.
+<http://localhost:3000>. O `$env:Path` vale só para aquela janela; repita ao abrir outra.
 
-**Use o caminho completo do npm.** Nesta máquina o `npm` do PATH está quebrado: `NVM_HOME`
-e `NVM_SYMLINK` apontam para `C:\Users\dgs-admin\AppData\Local\nvm` — perfil de outro
-usuário — e `C:\nvm4w\nodejs` vem antes de `C:\Program Files\nodejs` no PATH. `npm` puro
-morre com `EPERM`. Vale arrumar o PATH ou reinstalar o nvm no seu perfil.
+**Por quê:** nesta máquina o `npm` do PATH está quebrado. `NVM_HOME` e `NVM_SYMLINK`
+apontam para `C:\Users\dgs-admin\AppData\Local\nvm` — perfil de outro usuário — e
+`C:\nvm4w\nodejs` vem antes de `C:\Program Files\nodejs`. O `npm` puro morre com `EPERM`.
+A correção definitiva é arrumar o PATH do sistema ou reinstalar o nvm no seu perfil.
+
+Alternativa, chamando o executável direto. Em PowerShell o caminho entre aspas **exige** o
+operador de chamada `&`; sem ele o PowerShell lê a string como expressão e dá
+`Unexpected token 'start'`:
+
+```powershell
+& "C:\Program Files\nodejs\npm.cmd" start
+```
+
+No `cmd.exe` ou no Git Bash não precisa do `&`.
 
 Criei um `.env` (ignorado pelo git) apontando para a API em HTTP:
 
@@ -123,7 +137,8 @@ encerrada nenhum clique ou arrasto é aceito.
 | Login dá erro de rede | API não está de pé, ou está noutra porta que não a 5001 |
 | Login dá 401 com a senha certa | senha é `Xadrez@2026`, com `X` maiúsculo e `@` |
 | Erro de CORS no console | o Vite não está na 3000 |
-| `npm` morre com `EPERM` | use `"C:\Program Files\nodejs\npm.cmd"` |
+| `npm` morre com `EPERM` | PATH da máquina; corrija com `$env:Path = "C:\Program Files\nodejs;" + $env:Path` |
+| `Unexpected token 'start'` | PowerShell precisa do `&` antes de caminho entre aspas |
 | Tabuleiro carrega mas nenhum clique funciona | não é mais o bug antigo — verifique se você passou pelo lobby nesta aba |
 | API não sobe, erro sobre `Jwt:Key` | a chave precisa de 32+ bytes; a validação na subida diz o tamanho encontrado |
 
