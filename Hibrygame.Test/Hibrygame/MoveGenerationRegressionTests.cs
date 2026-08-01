@@ -649,7 +649,7 @@ public class MoveGenerationRegressionTests
     }
 
     [Fact]
-    public void PromotionRankIsReached_ButThePawnStaysAPawn()
+    public async Task PromotionRankIsReached_ButThePawnStaysAPawn()
     {
         // Documenta a ausencia de promocao, que ficou fora do escopo acordado: o peao
         // chega a oitava fileira e continua peao, sem lance nenhum a partir dali.
@@ -661,7 +661,7 @@ public class MoveGenerationRegressionTests
 
         var source = board.At("e7");
         var (moves, _) = source.Piece!.GetPossibleMove(board, source);
-        Move.MakeMove(board, moves, board.At("e8"), source).GetAwaiter().GetResult();
+        await Move.MakeMove(board, moves, board.At("e8"), source);
 
         Assert.Equal(PieceEnum.Pawn, board.PieceAt("e8")!.Type);
         Assert.Empty(board.MovesFrom("e8"));

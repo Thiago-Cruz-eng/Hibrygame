@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Moq;
 using Orchestrator.Domain;
 using Orchestrator.Infra.Interfaces;
@@ -9,12 +10,14 @@ namespace Orchestrator.Test.UseCases;
 public class ValidationServiceTests
 {
     private readonly Mock<IValidationRepositoryNoSql> _validationRepositoryMock;
+    private readonly Mock<ILogger<ValidationService>> _loggerMock;
     private readonly ValidationService _sut;
 
     public ValidationServiceTests()
     {
         _validationRepositoryMock = new Mock<IValidationRepositoryNoSql>();
-        _sut = new ValidationService(_validationRepositoryMock.Object);
+        _loggerMock = new Mock<ILogger<ValidationService>>();
+        _sut = new ValidationService(_validationRepositoryMock.Object, _loggerMock.Object);
     }
 
     // ---------------------------------------------------------------

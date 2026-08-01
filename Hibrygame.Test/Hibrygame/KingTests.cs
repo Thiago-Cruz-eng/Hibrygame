@@ -173,7 +173,7 @@ public class KingTests
         // Assert
         Assert.False(move);
         Assert.IsType<Rook>(board.Positions[3, 4].Piece);
-        Assert.Equal(ColorEnum.White, board.Positions[3, 4].Piece.Color);
+        Assert.Equal(ColorEnum.White, board.Positions[3, 4].Piece!.Color);
     }
     
     [Fact]
@@ -200,6 +200,6 @@ public class KingTests
         // Assert
         Assert.True(move);
         Assert.IsType<Rook>(board.Positions[6, 4].Piece);
-        Assert.Equal(ColorEnum.White, board.Positions[6, 4].Piece.Color);
+        Assert.Equal(ColorEnum.White, board.Positions[6, 4].Piece!.Color);
     }
 }

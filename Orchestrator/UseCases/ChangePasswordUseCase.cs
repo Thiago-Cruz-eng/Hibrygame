@@ -35,12 +35,22 @@ public class ChangePasswordUseCase
             
             var (hash, salt) = _hashingService.HashValue(req.NewPassword);
             user.ChangePassword(hash, salt, req.ModifiedBy.Trim());
-            await _genericRepository.Update<User>(us => us.Id == user.Id, 
-                CancellationToken.None, 
+
+            // ChangePassword preenche ModificationInformations. Materializar aqui em vez
+            // de gravar o campo possivelmente nulo direto: se algum dia deixar de
+            // preencher, falha com mensagem clara em vez de escrever null na auditoria.
+            var modification = user.ModificationInformations
+                ?? throw new InvalidOperationException(
+                    "ChangePassword deveria ter preenchido ModificationInformations.");
+
+            await _genericRepository.Update<User>(us => us.Id == user.Id,
+                CancellationToken.None,
                 (x => x.PasswordHash, user.PasswordHash),
                 (x => x.Salt, user.Salt),
                 (x => x.MustChangePassword, user.MustChangePassword),
-                (x => x.ModificationInformations, user.ModificationInformations)
+                // `!` no seletor: a propriedade e anulavel no dominio, mas aqui ela e
+                // apenas o nome do campo a atualizar, nunca um valor lido.
+                (x => x.ModificationInformations!, modification)
                 );
 
             return new ChangePasswordResponse { Message = "Password updated", Success = true };

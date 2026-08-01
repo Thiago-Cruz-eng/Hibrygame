@@ -1,7 +1,7 @@
 name: dotnet-test
 
 # Gate de qualidade do repositório: build + suíte completa.
-# Baseline esperado: 453 aprovados, 1 ignorado (KnightTests.GetMovesKnight_AfterOneMove_Correctly).
+# Baseline esperado: suíte inteira verde, sem testes ignorados.
 # A suíte não precisa de MongoDB nem de Docker — os repositórios são mockados com Moq.
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Restore
         run: dotnet restore Hibrygame.sln

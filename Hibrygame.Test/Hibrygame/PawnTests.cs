@@ -38,7 +38,7 @@ public class PawnTests
 
         // Assert
         Assert.NotNull(result.possibleMoves);
-        Assert.Equal(1, result.possibleMoves.Count);
+        Assert.Single(result.possibleMoves);
     }
 
     [Fact]

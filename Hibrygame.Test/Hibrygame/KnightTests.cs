@@ -87,7 +87,7 @@ public class KnightTests
 
         // Assert
         Assert.NotNull(result.possibleMoves);
-        Assert.Equal(0, result.possibleMoves.Count);
+        Assert.Empty(result.possibleMoves);
     }
     
     [Fact]

@@ -81,6 +81,6 @@ public class RookTests
 
         // Assert
         Assert.NotNull(result.possibleMoves);
-        Assert.Equal(0, result.possibleMoves.Count);
+        Assert.Empty(result.possibleMoves);
     }
 }
