@@ -45,19 +45,9 @@ public class GameRoom
         }
     }
 
-    /// <inheritdoc cref="Serialized{T}(Func{T})"/>
-    public async Task<T> Serialized<T>(Func<Task<T>> action)
-    {
-        await _gate.WaitAsync().ConfigureAwait(false);
-        try
-        {
-            return await action().ConfigureAwait(false);
-        }
-        finally
-        {
-            _gate.Release();
-        }
-    }
+    // A sobrecarga que recebia Func<Task<T>> existia apenas porque Move.MakeMove e
+    // Move.IsKingInCheck devolviam Task sem nunca ter trabalho assincrono. Agora que
+    // sao sincronos, o corpo protegido tambem e — e a sobrecarga saiu.
 
     public bool IsFull => Players.Count >= 2;
 

@@ -117,7 +117,7 @@ public class KnightTests
     }
     
     [Fact]
-    public async Task GetMovesKnight_AfterOneMove_Correctly()
+    public void GetMovesKnight_AfterOneMove_Correctly()
     {
         // Este teste estava ignorado por esperar 8 lances a partir de e1. Um cavalo em e1
         // encosta em duas bordas: só existem 4 saltos geometricamente possíveis (c2, d3,
@@ -132,7 +132,7 @@ public class KnightTests
         // Act — f3 -> e1, e depois pergunta os lances a partir de e1.
         var knight = board.Positions[5, 5].Piece!;
         var fromF3 = knight.GetPossibleMove(board, board.Positions[5, 5]);
-        var moved = await Move.MakeMove(board, fromF3.possibleMoves, board.Positions[4, 7], board.Positions[5, 5]);
+        var moved = Move.MakeMove(board, fromF3.possibleMoves, board.Positions[4, 7], board.Positions[5, 5]);
         var fromE1 = knight.GetPossibleMove(board, board.Positions[4, 7]);
 
         // Assert

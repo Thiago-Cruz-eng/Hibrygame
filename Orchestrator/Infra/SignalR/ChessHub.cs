@@ -157,7 +157,7 @@ public class ChessHub : Hub
         // indivisivel. Estando separados por um await, dois lances submetidos ao mesmo
         // tempo passavam ambos pela verificacao de turno e o mesmo jogador jogava duas
         // vezes na mesma vez.
-        var outcome = await gameRoom.Serialized(async () =>
+        var outcome = await gameRoom.Serialized(() =>
         {
             if (player.Color != gameRoom.CurrentTurn)
                 return MakeMoveResponse.Failure("Not your turn.");
@@ -174,7 +174,7 @@ public class ChessHub : Hub
             if (possibleMoves is null || !possibleMoves.Any(p => p.Row == target.Row && p.Column == target.Column))
                 return MakeMoveResponse.Failure("Illegal move.");
 
-            if (!await Move.MakeMove(gameRoom.Board, possibleMoves, target, source))
+            if (!Move.MakeMove(gameRoom.Board, possibleMoves, target, source))
                 return MakeMoveResponse.Failure("Move would leave king in check.");
 
             gameRoom.SwitchTurn();

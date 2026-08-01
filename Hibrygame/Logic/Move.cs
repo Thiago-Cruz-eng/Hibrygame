@@ -3,20 +3,21 @@ using Hibrygame.Enums;
 namespace Hibrygame;
 
 /// <summary>
-/// Geracao e aplicacao de movimento.
+/// Geracao e aplicacao de movimento. Fonte unica de verdade sobre como cada tipo de peca
+/// se move — as classes de peca guardam apenas cor e tipo.
 ///
 /// Organizado em tres camadas, de baixo para cima:
 ///
-/// 1. <see cref="AttackedSquares"/> — geometria pura. Onde a peca alcanca, ignorando
-///    se o lance e legal. E a unica camada que a deteccao de xeque consulta, o que
-///    evita a recursao infinita entre "que lances tenho" e "estou em xeque".
-/// 2. <see cref="CandidateMoves"/> — geometria mais as regras de ocupacao da casa de
-///    destino (peao nao captura para frente, ninguem captura peca da propria cor).
-/// 3. <see cref="LegalMoves"/> — candidatos menos os que deixariam o proprio rei em
-///    xeque. E o que <see cref="CalculatePossibleMove"/> devolve.
+/// 1. <see cref="AttackedSquares"/> — geometria pura. Que casas a peca ataca, ignorando
+///    se o lance e legal. E a unica camada que a deteccao de xeque consulta, o que evita
+///    a recursao entre "que lances tenho" e "estou em xeque".
+/// 2. <see cref="CandidateMoves"/> — geometria mais as regras de ocupacao do destino
+///    (peao nao captura para frente, ninguem captura peca da propria cor, cavalo salta).
+/// 3. <see cref="LegalMovesFor"/> — candidatos menos os que deixariam o proprio rei em
+///    xeque. E o que <see cref="Piece.GetPossibleMove"/> devolve.
 ///
-/// Nenhuma dessas camadas altera a posicao das pecas: simular um lance para testar
-/// legalidade sempre desfaz a simulacao.
+/// Nenhuma camada altera a posicao das pecas: simular um lance para testar legalidade
+/// sempre desfaz a simulacao. Gerar lances e uma leitura.
 /// </summary>
 public static class Move
 {
@@ -35,18 +36,13 @@ public static class Move
     // API publica
     // -----------------------------------------------------------------
 
-    /// <summary>
-    /// Lances legais da peca em <paramref name="pos"/>. <paramref name="dir"/> e
-    /// <paramref name="squares"/> descrevem o alcance da peca (ver as classes de peca);
-    /// peao e cavalo tem geometria propria e ignoram <paramref name="dir"/>.
-    /// </summary>
-    public static (List<Position> possibleMoves, Piece? actualPieceTrigger) CalculatePossibleMove(
-        Board board, Position pos, List<Direction> dir, int squares)
+    /// <summary>Lances legais da peca que estiver na casa <paramref name="pos"/>.</summary>
+    public static (List<Position> possibleMoves, Piece? actualPieceTrigger) LegalMovesFor(Board board, Position pos)
     {
         var origin = Resolve(board, pos);
         if (origin?.Piece is null) return (new List<Position>(), null);
 
-        var legal = LegalMoves(board, origin, dir, squares);
+        var legal = LegalMoves(board, origin);
         legal.ForEach(square => square.HighlightedPosition = true);
         return (legal, origin.Piece);
     }
@@ -56,18 +52,17 @@ public static class Move
     /// dos <paramref name="possibleMoves"/>. Devolve false e deixa o tabuleiro intacto
     /// quando o lance nao e permitido.
     /// </summary>
-    public static Task<bool> MakeMove(Board board, List<Position> possibleMoves, Position newPosition, Position oldPosition)
+    public static bool MakeMove(Board board, List<Position> possibleMoves, Position newPosition, Position oldPosition)
     {
-        if (possibleMoves is null || !possibleMoves.Contains(newPosition, new Common.PositionComparer()))
-            return Task.FromResult(false);
+        if (possibleMoves is null || !possibleMoves.Contains(newPosition)) return false;
 
         var source = Resolve(board, oldPosition);
         var target = Resolve(board, newPosition);
-        if (source?.Piece is null || target is null) return Task.FromResult(false);
+        if (source?.Piece is null || target is null) return false;
 
-        // A cor tem de ser lida antes de mexer no tabuleiro: `source` e a propria casa
-        // do tabuleiro, e limpa-la apaga a peca que estamos a consultar. Ler depois era
-        // o motivo pelo qual a verificacao de auto-xeque nunca corria.
+        // A cor tem de ser lida antes de mexer no tabuleiro: `source` e a propria casa do
+        // tabuleiro, e limpa-la apaga a peca que estamos a consultar. Ler depois era o
+        // motivo pelo qual a verificacao de auto-xeque nunca corria.
         var moving = source.Piece;
         var movingColor = moving.Color;
 
@@ -79,7 +74,7 @@ public static class Move
         {
             source.Piece = moving;
             target.Piece = captured;
-            return Task.FromResult(false);
+            return false;
         }
 
         moving.HasAlreadyOneMove = true;
@@ -87,24 +82,24 @@ public static class Move
         board.GetAllSquares().ForEach(square => square.HighlightedPosition = false);
         RefreshCheckFlags(board);
 
-        return Task.FromResult(true);
+        return true;
     }
 
     /// <summary>
     /// O rei de <paramref name="color"/> esta em xeque? Tambem sincroniza
-    /// <see cref="Piece.IsInCheckState"/> desse rei, que o snapshot enviado ao
-    /// frontend expoe.
+    /// <see cref="Piece.IsInCheckState"/> desse rei, que o snapshot enviado ao frontend
+    /// expoe.
     /// </summary>
-    public static Task<bool> IsKingInCheck(Board board, ColorEnum? color)
+    public static bool IsKingInCheck(Board board, ColorEnum? color)
     {
-        if (color is null || color == ColorEnum.None) return Task.FromResult(false);
+        if (color is null || color == ColorEnum.None) return false;
 
         var inCheck = IsInCheck(board, color.Value);
 
         var king = FindKing(board, color.Value);
         if (king?.Piece is not null) king.Piece.IsInCheckState = inCheck;
 
-        return Task.FromResult(inCheck);
+        return inCheck;
     }
 
     /// <summary>A casa e atacada por alguma peca de <paramref name="byColor"/>?</summary>
@@ -126,12 +121,12 @@ public static class Move
     // Camada 3 — legalidade
     // -----------------------------------------------------------------
 
-    private static List<Position> LegalMoves(Board board, Position origin, List<Direction>? dir, int squares)
+    private static List<Position> LegalMoves(Board board, Position origin)
     {
         var piece = origin.Piece!;
         var legal = new List<Position>();
 
-        foreach (var target in CandidateMoves(board, origin, dir, squares))
+        foreach (var target in CandidateMoves(board, origin))
         {
             var captured = target.Piece;
             target.Piece = piece;
@@ -170,28 +165,25 @@ public static class Move
     // Camada 2 — candidatos (geometria + ocupacao do destino)
     // -----------------------------------------------------------------
 
-    private static List<Position> CandidateMoves(Board board, Position origin, List<Direction>? dir, int squares)
-    {
-        var piece = origin.Piece!;
-
-        return piece.Type switch
+    private static List<Position> CandidateMoves(Board board, Position origin) =>
+        origin.Piece!.Type switch
         {
-            PieceEnum.Pawn => PawnCandidates(board, origin, squares),
+            PieceEnum.Pawn => PawnCandidates(board, origin),
             PieceEnum.Knight => KnightCandidates(board, origin),
-            _ => SlidingCandidates(board, origin, dir ?? AllDirections.ToList(), squares)
+            _ => SlidingCandidates(board, origin)
         };
-    }
 
-    private static List<Position> SlidingCandidates(Board board, Position origin, List<Direction> dir, int squares)
+    private static List<Position> SlidingCandidates(Board board, Position origin)
     {
         var moves = new List<Position>();
         var color = origin.Piece!.Color;
+        var (directions, range) = SlidingRange(origin.Piece.Type);
 
-        foreach (var direction in dir)
+        foreach (var direction in directions)
         {
             var (dRow, dColumn) = Delta(direction);
 
-            for (var step = 1; step <= squares; step++)
+            for (var step = 1; step <= range; step++)
             {
                 var row = origin.Row + dRow * step;
                 var column = origin.Column + dColumn * step;
@@ -235,14 +227,15 @@ public static class Move
         return moves;
     }
 
-    private static List<Position> PawnCandidates(Board board, Position origin, int squares)
+    private static List<Position> PawnCandidates(Board board, Position origin)
     {
         var moves = new List<Position>();
         var pawn = origin.Piece!;
         var (dRow, dColumn) = Delta(pawn.Color == ColorEnum.Black ? Direction.South : Direction.North);
+        var range = pawn.HasAlreadyOneMove ? 1 : 2;
 
         // Avanco: nunca captura, e nunca salta sobre uma peca.
-        for (var step = 1; step <= Math.Max(1, squares); step++)
+        for (var step = 1; step <= range; step++)
         {
             var row = origin.Row + dRow * step;
             var column = origin.Column + dColumn * step;
@@ -269,10 +262,10 @@ public static class Move
     // -----------------------------------------------------------------
 
     /// <summary>
-    /// Casas que a peca em <paramref name="origin"/> ataca. Difere dos candidatos em
-    /// dois pontos: o peao ataca as diagonais mesmo que estejam vazias e nao ataca a
-    /// casa a frente, e uma casa ocupada por peca amiga continua defendida (por isso o
-    /// rei inimigo nao pode captura-la).
+    /// Casas que a peca em <paramref name="origin"/> ataca. Difere dos candidatos em dois
+    /// pontos: o peao ataca as diagonais mesmo vazias e nao ataca a casa a frente, e uma
+    /// casa ocupada por peca amiga continua defendida — por isso o rei inimigo nao pode
+    /// captura-la.
     /// </summary>
     private static IEnumerable<(int Row, int Column)> AttackedSquares(Board board, Position origin)
     {
@@ -329,6 +322,7 @@ public static class Move
         }
     }
 
+    /// <summary>Direcoes e alcance de cada peca deslizante. Fonte unica de verdade.</summary>
     private static (Direction[] Directions, int Range) SlidingRange(PieceEnum type) => type switch
     {
         PieceEnum.Rook => (new[] { Direction.North, Direction.South, Direction.East, Direction.West }, 8),
@@ -365,7 +359,7 @@ public static class Move
     /// </summary>
     private static Position? Resolve(Board board, Position? pos)
     {
-        if (pos is null || !IsInsideBoard(pos.Row, pos.Column)) return null;
+        if (pos is null || !pos.IsInsideBoard()) return null;
         return board.Positions[pos.Row, pos.Column];
     }
 

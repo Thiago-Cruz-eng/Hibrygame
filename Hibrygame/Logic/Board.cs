@@ -83,7 +83,17 @@ public class Board
         return pos;
     }
 
-    public List<Position> GetPositionsPlacedInBoard() => GetPositionsPlaced();
+    /// <summary>Casas ocupadas pelo adversario de <paramref name="color"/>.</summary>
+    public List<Position> GetOpponentPositions(ColorEnum color)
+    {
+        var opponent = color == ColorEnum.Black ? ColorEnum.White : ColorEnum.Black;
+        var pos = new List<Position>();
+        foreach (var position in Positions)
+        {
+            if (position?.Piece?.Color == opponent) pos.Add(position);
+        }
+        return pos;
+    }
 
     public Position GetPositionInBoard(int row, int column)
     {
@@ -96,8 +106,9 @@ public class Board
         return Positions[row, column];
     }
 
-    public async Task MakeMove(Board board, List<Position> possibleMoves, Position newPosition, Position oldPosition)
-    {
-        await Move.MakeMove(board, possibleMoves, newPosition, oldPosition);
-    }
+    // Removidos por nao terem chamador:
+    //   GetPositionsPlacedInBoard()  era so um alias de GetPositionsPlaced()
+    //   MakeMove(board, ...)         metodo de instancia que recebia o tabuleiro por
+    //                                parametro e ignorava `this`. Todos os chamadores
+    //                                sempre usaram Move.MakeMove direto.
 }

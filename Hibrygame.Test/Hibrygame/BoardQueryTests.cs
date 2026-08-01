@@ -3,7 +3,7 @@ using Xunit;
 
 namespace Hibrygame.Test.Hibrygame;
 
-public class CommonTests
+public class BoardQueryTests
 {
     [Fact]
     public void GetOpponentBlackPositions_Correctly()
@@ -17,7 +17,7 @@ public class CommonTests
         board.Positions[2, 5].Piece = piece;
         
         // Act
-        var result = Common.GetOpponentPositions(board, ColorEnum.White);
+        var result = board.GetOpponentPositions(ColorEnum.White);
 
         //Assert
         Assert.Equal(3, result.Count);
@@ -35,7 +35,7 @@ public class CommonTests
         board.Positions[2, 5].Piece = piece;
         
         // Act
-        var result = Common.GetOpponentPositions(board, ColorEnum.Black);
+        var result = board.GetOpponentPositions(ColorEnum.Black);
 
         //Assert
         Assert.Equal(3, result.Count);

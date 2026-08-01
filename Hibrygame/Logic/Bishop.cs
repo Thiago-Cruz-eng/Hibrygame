@@ -9,17 +9,4 @@ public class Bishop : Piece
         Color = color;
         Type = PieceEnum.Bishop;
     }
-
-    public override (List<Position> possibleMoves, Piece? actualPieceTrigger) GetPossibleMove(Board board, Position pos)
-    {
-        var direction = new List<Direction>
-        {
-            Direction.SouthEast,
-            Direction.SouthWest,
-            Direction.NorthEast,
-            Direction.NorthWest,
-        };
-        
-        return Move.CalculatePossibleMove(board, pos, direction, 8);
-    }
 }

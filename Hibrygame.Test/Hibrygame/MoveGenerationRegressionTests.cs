@@ -392,74 +392,74 @@ public class MoveGenerationRegressionTests
     // ---------------------------------------------------------------------
 
     [Fact]
-    public async Task IsKingInCheck_TrueWhenARookAttacksAlongTheFile()
+    public void IsKingInCheck_TrueWhenARookAttacksAlongTheFile()
     {
         var board = TestBoards.With(
             ("e1", new King(ColorEnum.White)),
             ("e8", new Rook(ColorEnum.Black)));
 
-        Assert.True(await Move.IsKingInCheck(board, ColorEnum.White));
+        Assert.True(Move.IsKingInCheck(board, ColorEnum.White));
     }
 
     [Fact]
-    public async Task IsKingInCheck_FalseWhenThatAttackIsBlocked()
+    public void IsKingInCheck_FalseWhenThatAttackIsBlocked()
     {
         var board = TestBoards.With(
             ("e1", new King(ColorEnum.White)),
             ("e4", new Pawn(ColorEnum.White)),
             ("e8", new Rook(ColorEnum.Black)));
 
-        Assert.False(await Move.IsKingInCheck(board, ColorEnum.White));
+        Assert.False(Move.IsKingInCheck(board, ColorEnum.White));
     }
 
     [Fact]
-    public async Task IsKingInCheck_TrueWhenABishopAttacksAlongTheDiagonal()
+    public void IsKingInCheck_TrueWhenABishopAttacksAlongTheDiagonal()
     {
         var board = TestBoards.With(
             ("e1", new King(ColorEnum.White)),
             ("a5", new Bishop(ColorEnum.Black)));
 
-        Assert.True(await Move.IsKingInCheck(board, ColorEnum.White));
+        Assert.True(Move.IsKingInCheck(board, ColorEnum.White));
     }
 
     [Fact]
-    public async Task IsKingInCheck_TrueWhenAPawnAttacksDiagonally()
+    public void IsKingInCheck_TrueWhenAPawnAttacksDiagonally()
     {
         var board = TestBoards.With(
             ("e1", new King(ColorEnum.White)),
             ("d2", new Pawn(ColorEnum.Black)));
 
-        Assert.True(await Move.IsKingInCheck(board, ColorEnum.White));
+        Assert.True(Move.IsKingInCheck(board, ColorEnum.White));
     }
 
     [Fact]
-    public async Task IsKingInCheck_TrueWhenAKnightAttacks()
+    public void IsKingInCheck_TrueWhenAKnightAttacks()
     {
         // Cavalo preto em f3 da xeque ao rei branco em e1.
         var board = TestBoards.With(
             ("e1", new King(ColorEnum.White)),
             ("f3", new Knight(ColorEnum.Black)));
 
-        Assert.True(await Move.IsKingInCheck(board, ColorEnum.White));
+        Assert.True(Move.IsKingInCheck(board, ColorEnum.White));
     }
 
     [Fact]
-    public async Task IsKingInCheck_FalseWhenNothingAttacksTheKing()
+    public void IsKingInCheck_FalseWhenNothingAttacksTheKing()
     {
         var board = TestBoards.With(
             ("e1", new King(ColorEnum.White)),
             ("a8", new Rook(ColorEnum.Black)));
 
-        Assert.False(await Move.IsKingInCheck(board, ColorEnum.White));
+        Assert.False(Move.IsKingInCheck(board, ColorEnum.White));
     }
 
     [Fact]
-    public async Task IsKingInCheck_FalseOnTheInitialPosition()
+    public void IsKingInCheck_FalseOnTheInitialPosition()
     {
         var board = TestBoards.NewGame();
 
-        Assert.False(await Move.IsKingInCheck(board, ColorEnum.White));
-        Assert.False(await Move.IsKingInCheck(board, ColorEnum.Black));
+        Assert.False(Move.IsKingInCheck(board, ColorEnum.White));
+        Assert.False(Move.IsKingInCheck(board, ColorEnum.Black));
     }
 
     [Fact]
@@ -485,7 +485,7 @@ public class MoveGenerationRegressionTests
     // ---------------------------------------------------------------------
 
     [Fact]
-    public async Task MakeMove_RejectsAMoveThatWouldExposeItsOwnKing()
+    public void MakeMove_RejectsAMoveThatWouldExposeItsOwnKing()
     {
         // Torre branca em e2 esta cravada: e o unico bloqueio entre o rei em e1
         // e a torre preta em e8. Sair da coluna e e ilegal.
@@ -497,13 +497,13 @@ public class MoveGenerationRegressionTests
         var source = board.At("e2");
         var (moves, _) = source.Piece!.GetPossibleMove(board, source);
 
-        var applied = await Move.MakeMove(board, moves, board.At("a2"), source);
+        var applied = Move.MakeMove(board, moves, board.At("a2"), source);
 
         Assert.False(applied);
     }
 
     [Fact]
-    public async Task MakeMove_WhenItRejectsAMove_LeavesTheBoardExactlyAsItWas()
+    public void MakeMove_WhenItRejectsAMove_LeavesTheBoardExactlyAsItWas()
     {
         var board = TestBoards.With(
             ("e1", new King(ColorEnum.White)),
@@ -514,7 +514,7 @@ public class MoveGenerationRegressionTests
         var (moves, _) = source.Piece!.GetPossibleMove(board, source);
         var before = board.Fingerprint();
 
-        await Move.MakeMove(board, moves, board.At("a2"), source);
+        Move.MakeMove(board, moves, board.At("a2"), source);
 
         Assert.Equal(before, board.Fingerprint());
     }
@@ -534,7 +534,7 @@ public class MoveGenerationRegressionTests
     }
 
     [Fact]
-    public async Task MakeMove_AllowsThePinnedPieceToMoveAlongThePinLine()
+    public void MakeMove_AllowsThePinnedPieceToMoveAlongThePinLine()
     {
         var board = TestBoards.With(
             ("e1", new King(ColorEnum.White)),
@@ -544,7 +544,7 @@ public class MoveGenerationRegressionTests
         var source = board.At("e2");
         var (moves, _) = source.Piece!.GetPossibleMove(board, source);
 
-        var applied = await Move.MakeMove(board, moves, board.At("e4"), source);
+        var applied = Move.MakeMove(board, moves, board.At("e4"), source);
 
         Assert.True(applied);
         Assert.Equal(PieceEnum.Rook, board.PieceAt("e4")!.Type);
@@ -552,20 +552,20 @@ public class MoveGenerationRegressionTests
     }
 
     [Fact]
-    public async Task MakeMove_MovesThePieceAndClearsTheOriginSquare()
+    public void MakeMove_MovesThePieceAndClearsTheOriginSquare()
     {
         var board = TestBoards.With(("d4", new Rook(ColorEnum.White)));
 
         var source = board.At("d4");
         var (moves, _) = source.Piece!.GetPossibleMove(board, source);
 
-        Assert.True(await Move.MakeMove(board, moves, board.At("d8"), source));
+        Assert.True(Move.MakeMove(board, moves, board.At("d8"), source));
         Assert.Null(board.PieceAt("d4"));
         Assert.Equal(PieceEnum.Rook, board.PieceAt("d8")!.Type);
     }
 
     [Fact]
-    public async Task MakeMove_CapturingReplacesTheEnemyPiece()
+    public void MakeMove_CapturingReplacesTheEnemyPiece()
     {
         var board = TestBoards.With(
             ("d4", new Rook(ColorEnum.White)),
@@ -574,7 +574,7 @@ public class MoveGenerationRegressionTests
         var source = board.At("d4");
         var (moves, _) = source.Piece!.GetPossibleMove(board, source);
 
-        Assert.True(await Move.MakeMove(board, moves, board.At("d8"), source));
+        Assert.True(Move.MakeMove(board, moves, board.At("d8"), source));
         Assert.Equal(ColorEnum.White, board.PieceAt("d8")!.Color);
         Assert.Equal(PieceEnum.Rook, board.PieceAt("d8")!.Type);
     }
@@ -649,7 +649,7 @@ public class MoveGenerationRegressionTests
     }
 
     [Fact]
-    public async Task PromotionRankIsReached_ButThePawnStaysAPawn()
+    public void PromotionRankIsReached_ButThePawnStaysAPawn()
     {
         // Documenta a ausencia de promocao, que ficou fora do escopo acordado: o peao
         // chega a oitava fileira e continua peao, sem lance nenhum a partir dali.
@@ -661,14 +661,14 @@ public class MoveGenerationRegressionTests
 
         var source = board.At("e7");
         var (moves, _) = source.Piece!.GetPossibleMove(board, source);
-        await Move.MakeMove(board, moves, board.At("e8"), source);
+        Move.MakeMove(board, moves, board.At("e8"), source);
 
         Assert.Equal(PieceEnum.Pawn, board.PieceAt("e8")!.Type);
         Assert.Empty(board.MovesFrom("e8"));
     }
 
     [Fact]
-    public async Task MakeMove_RejectsATargetThatIsNotAPossibleMove()
+    public void MakeMove_RejectsATargetThatIsNotAPossibleMove()
     {
         var board = TestBoards.With(("d4", new Rook(ColorEnum.White)));
 
@@ -676,7 +676,7 @@ public class MoveGenerationRegressionTests
         var (moves, _) = source.Piece!.GetPossibleMove(board, source);
 
         // e5 e diagonal: nunca e movimento de torre.
-        Assert.False(await Move.MakeMove(board, moves, board.At("e5"), source));
+        Assert.False(Move.MakeMove(board, moves, board.At("e5"), source));
         Assert.Equal(PieceEnum.Rook, board.PieceAt("d4")!.Type);
     }
 }

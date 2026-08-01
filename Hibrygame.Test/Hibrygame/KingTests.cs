@@ -152,7 +152,7 @@ public class KingTests
     }
 
     [Fact]
-    public async Task GetMovesKing_WhenIsInTreatByOwnMove_Correctly()
+    public void GetMovesKing_WhenIsInTreatByOwnMove_Correctly()
     {
         // Arrange
         var board = new Board();
@@ -165,7 +165,7 @@ public class KingTests
         // Act
         var piece = new Rook(ColorEnum.White);
         var positions = piece.GetPossibleMove(board, new Position(3,4));
-        var move = await Move.MakeMove(board, positions.possibleMoves, new Position(0, 4), new Position(3, 4) {
+        var move = Move.MakeMove(board, positions.possibleMoves, new Position(0, 4), new Position(3, 4) {
             SquareColor = ColorEnum.White,
             Piece = piece
         });
@@ -177,7 +177,7 @@ public class KingTests
     }
     
     [Fact]
-    public async Task GetMovesKing_WhenIsInSaveByOwnMove_Correctly()
+    public void GetMovesKing_WhenIsInSaveByOwnMove_Correctly()
     {
         // Arrange
         var board = new Board();
@@ -191,7 +191,7 @@ public class KingTests
         //outra forma de "colocar a peça no tabuleiro"
         var piece = new Rook(ColorEnum.White);
         var positions = piece.GetPossibleMove(board, new Position(3,4));
-        var move = await Move.MakeMove(board, positions.possibleMoves, new Position(6, 4), new Position(3, 4)
+        var move = Move.MakeMove(board, positions.possibleMoves, new Position(6, 4), new Position(3, 4)
         {
             SquareColor = ColorEnum.White,
             Piece = piece
