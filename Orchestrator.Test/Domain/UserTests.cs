@@ -481,7 +481,15 @@ public class UserTests
         // Arrange
         var user = BuildUser();
 
+        // O argumento e declarado como `object` de proposito. O que esta sob teste e o guard
+        // `obj is User` de User.Equals, entao passar algo que NAO e User e o ponto do teste.
+        // Passando a string direto, o tipo estatico da chamada vira (User, string) e o CodeQL
+        // aponta `cs/equality-on-incomparable-types` — corretamente, pela regra dele: comparar
+        // tipos incomparaveis normalmente E bug. Declarar como object diz ao leitor e ao
+        // analisador que a incomparabilidade e deliberada, sem suprimir o alerta.
+        object naoEhUsuario = "not-a-user";
+
         // Assert
-        Assert.False(user.Equals("not-a-user"));
+        Assert.False(user.Equals(naoEhUsuario));
     }
 }
