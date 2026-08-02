@@ -272,3 +272,4 @@ Layout: `Column=7` is White's back rank (rank 1), `Column=0` is Black's back ran
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — deep architecture dive (request flow, hub state machine, persistence)
 - [docs/fluxo-de-trabalho.md](docs/fluxo-de-trabalho.md) — como abrir, testar e mergear uma demanda: back+front, só back, só front; onde cada teste mora
 - [docs/workflow-cenarios.md](docs/workflow-cenarios.md) — os mesmos fluxos aplicados a cinco demandas realistas, comando a comando, mais a lista completa de quality gates
+- [docs/fluxo-req-res.md](docs/fluxo-req-res.md) — partida de dois jogadores do login ao xeque-mate: cada endpoint, cada invocação de hub e cada evento, com payloads capturados de execução real

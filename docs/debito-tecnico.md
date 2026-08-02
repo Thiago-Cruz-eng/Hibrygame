@@ -127,6 +127,28 @@ foram corrigidos.
 - **Saída**: reescrever os três com `useSyncExternalStore` (ou equivalente) e religar a regra.
   É refactor da camada de estado do front, não conserto pontual.
 
+### DT-24 — `MakeMove` em sala inexistente responde `Game not started.`
+
+A mensagem manda o cliente investigar o estado da partida quando o problema é o nome da sala. Quem
+depura pela mensagem procura no lugar errado. Descoberto ao capturar os payloads reais para
+[`fluxo-req-res.md`](./fluxo-req-res.md).
+
+- **Arquivo**: `Orchestrator/Infra/SignalR/ChessHub.cs` (`MakeMove`, `GetPossibleMoves`)
+- **Saída**: distinguir "sala não encontrada" de "partida não iniciada", como `StartGame` já faz
+  (`Room '{room}' not found.`). Mudança de mensagem é mudança de contrato: a suíte E2E afirma
+  algumas dessas strings, então é o [cenário A](./workflow-cenarios.md) — as duas pontas juntas.
+
+### DT-25 — `GetPlayersInRoom` devolve contagem, não jogadores
+
+O nome promete uma lista e o método devolve um `int`. Pior: para uma sala inexistente devolve `0`,
+indistinguível de sala vazia — o cliente não consegue diferenciar "não existe" de "está vazia".
+`JoinRoom` e `PlayerJoined` já carregam a lista de jogadores, então hoje ninguém depende disto.
+
+- **Arquivo**: `Orchestrator/Infra/SignalR/ChessHub.cs`
+- **Saída**: ou renomear para `GetPlayerCount` e devolver `int?` (`null` para sala inexistente), ou
+  passar a devolver a lista e ajustar o nome ao contrato. A primeira é menor e resolve a
+  ambiguidade real.
+
 ### DT-17 — busca por Id via `Id.ToString() == id`
 
 `GetUserUseCase`, `UpdateUserUseCase`, `DeleteUserUseCase` e `ChangePasswordUseCase` filtram com
