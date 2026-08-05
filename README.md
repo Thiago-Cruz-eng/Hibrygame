@@ -260,7 +260,7 @@ Layout: `Column=7` is White's back rank (rank 1), `Column=0` is Black's back ran
 ## Known limitations
 
 1. **Hub state is in-process.** `ChessHub` uses static `ConcurrentDictionary` — does not scale horizontally without a Redis backplane. OK for single-instance dev.
-2. **Knight L-pattern bug.** `Move.cs` knight handling can return fewer moves than expected in edge-adjacent positions. Test `GetMovesKnight_AfterOneMove_Correctly` skipped (expectation in test was geometrically wrong, but engine still has edge cases).
+2. ~~**Knight L-pattern bug.**~~ **Resolvido.** `GetMovesKnight_AfterOneMove_Correctly` não está mais ignorado — a suíte roda com **0 ignorados**. A expectativa do teste estava geometricamente errada e foi corrigida; a geometria do cavalo passou a sair de `Move.KnightOffsets`, fonte única. Ver [docs/refactor-2026-08-01.md](docs/refactor-2026-08-01.md).
 3. **No promotion / castling / en-passant.** Pawn promotion and castling logic not implemented. Pawn `HasAlreadyOneMove` flag set, but no two-square en-passant capture.
 4. **`ReferenceHandler.Preserve`** on JSON serialization adds `$id` / `$ref` — FE must handle.
 5. **JWT key in `appsettings.json`** — OK for dev. Production must use Azure Key Vault / env vars.
@@ -268,6 +268,7 @@ Layout: `Column=7` is White's back rank (rank 1), `Column=0` is Black's back ran
 ## Documentation index
 
 - [README.md](README.md) — this file
+- [docs/guia-do-desenvolvedor.md](docs/guia-do-desenvolvedor.md) — **comece por aqui se você é novo no repositório**: receitas passo a passo (endpoint novo, campo em entidade, regra de xadrez, método de hub, repositório), as armadilhas conhecidas e onde não mexer sem conversar
 - [docs/FRONTEND_CHANGES.md](docs/FRONTEND_CHANGES.md) — frontend migration contract (hub naming, auth, payloads)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — deep architecture dive (request flow, hub state machine, persistence)
 - [docs/fluxo-de-trabalho.md](docs/fluxo-de-trabalho.md) — como abrir, testar e mergear uma demanda: back+front, só back, só front; onde cada teste mora

@@ -11,6 +11,7 @@ Multiplayer chess platform. ASP.NET Core 8 + SignalR + MongoDB + JWT.
 > - [.specify/memory/constitution.md](../.specify/memory/constitution.md) — 7 principles (I and II are non-negotiable)
 > - [.agents/skills/](../.agents/skills/) — domain truth, loaded on demand; **precedes patterns inferred from code**
 > - [.agents/maps/functional-map.md](../.agents/maps/functional-map.md) — the 4 business contexts
+> - [docs/guia-do-desenvolvedor.md](../docs/guia-do-desenvolvedor.md) — task-oriented recipes for newcomers, repo pitfalls, where not to touch
 > - [docs/debito-tecnico.md](../docs/debito-tecnico.md) — known debt; check before "fixing" what looks wrong
 > - [README.md](../README.md) — full overview
 > - [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) — request flows, hub state machine, design log
@@ -21,14 +22,14 @@ Multiplayer chess platform. ASP.NET Core 8 + SignalR + MongoDB + JWT.
 - **Database:** MongoDB (Guid IDs stored as string)
 - **Real-time:** SignalR (`/chesshub`)
 - **Auth:** JWT Bearer (HmacSha256)
-- **Tests:** xUnit + Moq (539 passing, 0 skipped)
+- **Tests:** xUnit + Moq (566 passing, 0 skipped)
 
 ## Run
 ```bash
 dotnet restore
 dotnet build
 dotnet run --project Orchestrator   # Swagger at https://localhost:5001/swagger
-dotnet test                          # 539 tests, 0 skipped
+dotnet test                          # 566 tests, 0 skipped
 ```
 
 MongoDB on `localhost:27017`. Note: `Program.cs` reads `Mongo:ConnectionString` / `Mongo:Database`
@@ -53,11 +54,12 @@ Orchestrator/     # ASP.NET Core Web API
     SignalR/         # ChessHub + GameRoom
     Settings/        # JwtSettings
     Utils/           # CollectionNameAttribute, ServiceFactory, EnumStringConverter
+  Composition/    # DI registration, one file per concern (Jwt, Authorization, Web, Persistence, UseCase)
   Presentation/   # Controllers — UserController, ValidationController
   UseCases/       # Application services (one class per action)
     Dto/{Request,Response}/
     Security/     # TokenService, SecureHashingService, MinimumRoleHandler, RoleHierarchy
-  Program.cs
+  Program.cs      # Composition index (calls Composition/) + request pipeline
 Orchestrator.Test/
 docs/
 ```
@@ -285,10 +287,9 @@ The engine bugs that used to be listed here (knight edge cases, `Position` witho
 
 
 1. Hub state in-process — no horizontal scale without Redis backplane
-2. Knight edge-case bug — `GetMovesKnight_AfterOneMove_Correctly` skipped (test math wrong, engine still has edge cases)
-3. No promotion / castling / en-passant
-4. JSON uses `ReferenceHandler.Preserve` → `$id`/`$ref` markers in payload (FE must handle)
-5. JWT key in `appsettings.json` is dev-only
+2. No promotion / castling / en-passant
+3. JSON uses `ReferenceHandler.Preserve` → `$id`/`$ref` markers in payload (FE must handle)
+4. JWT key in `appsettings.json` is dev-only
 
 ## Test patterns
 

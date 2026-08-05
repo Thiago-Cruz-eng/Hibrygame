@@ -69,20 +69,30 @@ terceiro instanciado dentro de caso de uso ou controller.
 
 Não existe mediator nem política de resiliência no pipeline de request. `MediatR`, `Polly` e todo
 o cluster `ServiceFactory`/`AddShared()` foram removidos no refactor de 2026-08-01 por não terem
-um único chamador. `Program.cs` registra tudo à mão, de propósito.
+um único chamador.
+
+**O registro de DI é manual, um serviço por vez, de propósito** — sem Scrutor e sem varredura de
+assembly. Desde 2026-08-03 ele está distribuído em `Orchestrator/Composition/`, um arquivo por
+assunto (`JwtComposition`, `AuthorizationComposition`, `WebComposition`,
+`PersistenceComposition`, `UseCaseComposition`), e o `Program.cs` é o índice que os encadeia mais o
+pipeline de requisição. Continua sendo registro explícito: o que mudou é que achar onde uma policy
+ou um repositório é declarado não exige mais ler 170 linhas corridas. **Caso de uso ou repositório
+novo tem de ser acrescentado ao arquivo de composição correspondente** — esquecer compila e falha
+só quando a requisição chega.
 
 ## Estrutura do repositório
 
 ```
 Hibrygame/Logic/            Engine — Board, Position, Piece + 6 peças, Move, Common, Enums/
-Hibrygame.Test/Hibrygame/   Testes da engine (146 pass)
+Hibrygame.Test/Hibrygame/   Testes da engine (155 pass)
 Orchestrator/
   Domain/                   User, UserAssignment, RefreshToken, Validation, BaseEntity, AuditInformation
   UseCases/                 Um caso de uso por ação + Dto/{Request,Response}/ + Interfaces/ + Security/
   Infra/                    BaseRepository/ Interfaces/ Mongo/ Repositories/ SignalR/ Settings/ Utils/
+  Composition/              Registro de DI por assunto — Jwt, Authorization, Web, Persistence, UseCase
   Presentation/             UserController, ValidationController
-  Program.cs                Toda a composição de DI, auth, policies, CORS, SignalR
-Orchestrator.Test/          Domain/ UseCases/ Security/ Presentation/ + ChessHubTests + GameRoomTests (380 pass)
+  Program.cs                Índice da composição (chama Composition/) + pipeline de requisição
+Orchestrator.Test/          Domain/ UseCases/ Security/ Presentation/ + ChessHubTests + GameRoomTests (411 pass)
 .specify/                   Constituição + templates + scripts + extensão git do Spec Kit
 specs/                      Especificações de feature do Spec Kit (spec.md, plan.md, tasks.md, contracts/)
 .agents/                    Skills, mapa funcional e memória de descoberta
@@ -170,15 +180,23 @@ repositórios são mockados com Moq.
 
 ```bash
 dotnet restore
-dotnet build                                  # 4 projetos, 0 erros esperado
+dotnet build                                  # 4 projetos, 0 erros e 0 warnings esperado
 dotnet run --project Orchestrator             # Swagger em https://localhost:5001/swagger
-dotnet test                                   # 539 aprovados, 0 ignorados
-dotnet test Hibrygame.Test                    # só a engine (146 pass)
-dotnet test Orchestrator.Test                 # só a API (380 pass)
+dotnet test                                   # 566 aprovados, 0 ignorados
+dotnet test Hibrygame.Test                    # só a engine (155 pass)
+dotnet test Orchestrator.Test                 # só a API (411 pass)
 ```
 
-Não há linter nem formatter configurado (sem `.editorconfig`, sem `dotnet format` no CI). O
-quality gate é `dotnet build` + `dotnet test` verdes.
+O quality gate é `dotnet build` + `dotnet test` verdes. `Directory.Build.props` liga
+`TreatWarningsAsErrors`, então warning de compilador **quebra o build** — a exceção são os avisos de
+vulnerabilidade em pacote (NU1901-NU1904), tratados pelo Dependabot.
+
+Existe [`.editorconfig`](.editorconfig) na raiz, lido pelo Rider, Visual Studio, VS Code e
+`dotnet format`: formatação, organização de `using`, preferências de expressão e nomenclatura. As
+regras de **estilo** são deliberadamente `suggestion` e não `warning` — com
+`TreatWarningsAsErrors` ligado, elevá-las travaria o build por divergência de formatação, que não é
+defeito. O arquivo documenta o critério de severidade e o motivo de cada regra desligada; leia o
+cabeçalho antes de mudar qualquer severidade. Não há `dotnet format` no CI.
 
 ## Convenções transversais
 
@@ -270,4 +288,6 @@ marcadores `<!-- SPECKIT START -->` e `<!-- SPECKIT END -->` no `CLAUDE.md` da r
 | [`README.md`](README.md) | Visão geral, como rodar, contratos HTTP e SignalR, notação do tabuleiro |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Fluxos de request, máquina de estado do hub, internals da engine, log de decisões |
 | [`docs/FRONTEND_CHANGES.md`](docs/FRONTEND_CHANGES.md) | Contrato consumido pelo front-end e histórico de mudanças |
+| [`docs/guia-do-desenvolvedor.md`](docs/guia-do-desenvolvedor.md) | Guia de tarefa para quem está chegando: receitas passo a passo (endpoint novo, campo em entidade, regra de xadrez, método de hub, repositório), armadilhas do repositório e onde não mexer |
 | [`docs/debito-tecnico.md`](docs/debito-tecnico.md) | Débito conhecido, severidade e itens que exigem decisão humana |
+| [`.editorconfig`](.editorconfig) | Convenções de formatação e nomenclatura, com o critério de severidade explicado no cabeçalho |
