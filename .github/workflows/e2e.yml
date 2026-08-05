@@ -78,6 +78,24 @@ jobs:
             # ela desvia todo PR — inclusive os de outras pessoas, que não fazem ideia. Tem
             # de ser visível na aba de checks de quem for afetado, não enterrada no log.
             echo "::warning title=E2E desviado por variável::Este PR foi testado contra KrockSide@${override}, e não contra a branch homônima ou main. A variável KROCKSIDE_REF é global e afeta TODOS os PRs deste repositório enquanto existir. Se ela não é sua, avise quem a criou; se é, apague-a assim que o par entrar (gh variable delete KROCKSIDE_REF)."
+          elif [ "$branch" = "main" ]; then
+            # Push em main: main pareia com main, e nunca cai na checagem de nome abaixo.
+            #
+            # Sem este ramo, o `git ls-remote` seguinte ENCONTRA a `main` do outro repo, o
+            # fluxo entra no caminho de "branch homônima" e a guarda de identificador de
+            # tarefa reprova o job — porque "main" nao contem identificador. O resultado era
+            # todo push em main falhar no e2e, sem nunca alcancar o fallback logo abaixo, que
+            # e exatamente o que ele deveria ter feito.
+            #
+            # Ficou latente porque, enquanto a variavel de override existia, ela
+            # curto-circuitava a guarda; apagar a variavel depois de um par coordenado entrar
+            # expunha a falha.
+            #
+            # A guarda em si esta correta e continua valendo: ela existe para branch de
+            # feature, onde homonimia pode ser coincidencia. Entre as duas `main` nao ha
+            # coincidencia possivel — sao as duas metades do mesmo estado publicado.
+            echo "ref=main" >> "$GITHUB_OUTPUT"
+            echo "Push em main: pareando main com main."
           elif git ls-remote --exit-code --heads "$repo" "$branch" >/dev/null 2>&1; then
             # Pareamento por nome exige nome que identifique uma tarefa. Sem isso, a
             # homonímia pode ser coincidência entre trabalhos de pessoas diferentes.
