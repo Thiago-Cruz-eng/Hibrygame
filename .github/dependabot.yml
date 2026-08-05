@@ -1,44 +1,70 @@
 version: 2
 
-# Atualização automática de dependências.
+# POLÍTICA: upgrade de dependência é decisão humana. Nenhum bot abre PR de bump neste
+# repositório.
 #
-# A maior parte da superfície de ataque deste projeto é código que ninguém aqui escreveu e cujos
-# diffs ninguém lê. Sem isto, um CVE numa transitiva é invisível até alguém procurar.
+# `open-pull-requests-limit: 0` é a forma documentada de desligar os *version updates* de um
+# ecossistema. O arquivo continua existindo, e não foi apagado, exatamente para que a decisão
+# fique escrita: um repositório sem `dependabot.yml` convida a próxima pessoa a reativar o
+# Dependabot sem saber que já se decidiu o contrário.
 #
-# Há uma sinergia com o gate de E2E que vale registrar: PR de bump só é útil se existir uma suíte
-# em que se confie para aprová-lo. Sem ela, bumps viram uma fila que ninguém quer revisar e a
-# automação piora as coisas. Com o E2E rodando a API real contra o front real, a maioria dos
-# bumps se auto-verifica.
+# ---------------------------------------------------------------------------------------------
+# POR QUE
+#
+# O Dependabot foi ligado em 2026-08-01 com a justificativa de dar visibilidade a CVE em
+# transitiva. A configuração ficou na branch de refactor e só alcançou a `main` no merge de
+# 2026-08-05 — momento em que ele fez a primeira varredura e abriu **13 PRs de uma vez**, dos
+# quais **12 eram major**: React 18→19, react-router-dom 6→7, Vite 7→8, Vitest 3→4 e quatro
+# majors de GitHub Actions.
+#
+# Dois deles já chegaram vermelhos. Os outros chegaram verdes — e verde aqui significa 72 testes
+# e um único e2e de caminho felizes, que não é evidência suficiente para um major de framework.
+# O risco real não é o bump quebrar o build: é ele passar no build e mudar comportamento onde a
+# suíte não olha.
+#
+# Há ainda um efeito de segunda ordem: PR de bump em fila que ninguém revisa treina o time a
+# carimbar diff que não leu. Isso corrói a revisão de código em geral, não só a de dependência.
+#
+# ---------------------------------------------------------------------------------------------
+# O QUE SUBSTITUI
+#
+# Desligar o bot sem colocar nada no lugar é trocar ruído por cegueira, que é pior. Então:
+#
+#   1. `Directory.Build.props` liga `NuGetAudit` com `NuGetAuditMode=all` — advisory de pacote
+#      aparece em TODO build, local e no CI, sem depender de bot nenhum.
+#
+#   2. `.github/workflows/dependencias.yml` é acionado **à mão** (`workflow_dispatch`) e lista o
+#      que está vulnerável e o que está desatualizado, sem abrir PR. É o "trigado manualmente".
+#
+#   3. Dependabot **alerts** podem ficar ligados: eles apenas informam que existe advisory, não
+#      abrem PR nem commitam. Informação não viola esta política; PR de bot viola.
+#      Dependabot **security updates** ficam desligados, porque abrem PR.
+#
+# Ao subir uma dependência, faça no PR da mudança: leia a nota de migração, rode a suíte,
+# atualize a stack declarada no `AGENTS.md` e no `README.md` no mesmo diff. Foi a divergência
+# entre stack declarada e stack real que custou mais caro neste projeto até aqui.
+#
+# ---------------------------------------------------------------------------------------------
+# PARA REATIVAR
+#
+# Não basta subir o limite. Se um dia os version updates voltarem, voltem com:
+#   - `ignore` de `version-update:semver-major`, para major nunca vir sozinho de um bot;
+#   - `interval: monthly`;
+#   - os grupos por família, que estão no histórico deste arquivo (commit c8d3374).
 updates:
   - package-ecosystem: nuget
     directory: /
     schedule:
       interval: weekly
       day: monday
-    open-pull-requests-limit: 5
-    labels:
-      - dependencies
-    groups:
-      # Agrupados de propósito: o ecossistema .NET versiona famílias inteiras juntas, e cinco PRs
-      # separados para o mesmo salto de versão só geram cinco execuções de CI e cinco revisões.
-      microsoft:
-        patterns:
-          - 'Microsoft.*'
-          - 'System.*'
-      testing:
-        patterns:
-          - 'xunit*'
-          - 'Moq'
-          - 'coverlet*'
-      mongodb:
-        patterns:
-          - 'MongoDB.*'
+    # Zero: nenhum PR de version update. Ver a política no topo.
+    open-pull-requests-limit: 0
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
       day: monday
-    labels:
-      - dependencies
-      - ci
+    # Major de action é tão disruptivo quanto major de biblioteca: quebra o CI inteiro de uma
+    # vez, e `actions/checkout@v7` não é revisável sem ler o changelog.
+    open-pull-requests-limit: 0
