@@ -46,7 +46,7 @@ jobs:
 
     steps:
       # O backend é o repo em teste: sempre o commit deste PR, nunca main.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: backend
 
@@ -92,7 +92,7 @@ jobs:
             echo "Sem branch '$branch' no frontend; testando contra main."
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: ${{ github.repository_owner }}/KrockSide
           ref: ${{ steps.frontend-ref.outputs.ref }}
