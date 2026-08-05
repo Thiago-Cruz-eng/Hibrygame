@@ -29,9 +29,17 @@
       advisory — de madrugada, sem ninguém ter mudado uma linha — e travaria o trabalho de todos
       até que exista versão corrigida, que pode não existir ainda.
 
-      Então: visível como warning em toda máquina, e o gate de verdade é o Dependabot, que abre
-      PR de correção e é rastreável. Escalar para erro é uma decisão consciente a tomar caso a
-      caso, não o padrão.
+      Então: visível como warning em toda máquina. Escalar para erro é uma decisão consciente a
+      tomar caso a caso, não o padrão.
+
+      NOTA (2026-08-05): este comentário afirmava que "o gate de verdade é o Dependabot, que abre
+      PR de correção e é rastreável". Isso era falso em duas frentes. Os *security updates* do
+      Dependabot estavam DESLIGADOS no repositório, então nunca houve PR de correção automática; e
+      a política passou a ser que upgrade de dependência é decisão humana, sem PR de bot — ver
+      `.github/dependabot.yml`.
+
+      O que de fato dá visibilidade hoje é o `NuGetAudit` abaixo, que roda em todo build, mais o
+      workflow `dependencias` (acionado à mão), que lista vulnerável, desatualizado e deprecado.
     -->
     <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
 

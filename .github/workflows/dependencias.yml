@@ -1,0 +1,70 @@
+name: dependencias
+
+# Relatório de dependência, acionado À MÃO.
+#
+# Existe porque a política deste repositório é que upgrade de biblioteca é decisão humana
+# (ver .github/dependabot.yml): nenhum bot abre PR de bump. Mas desligar o bot sem colocar nada
+# no lugar troca ruído por cegueira, que é pior — então isto é o canal de informação.
+#
+# Ele NÃO abre PR, NÃO commita e NÃO reprova nada. Só olha e conta, no resumo do job.
+#
+# `workflow_dispatch` puro, sem `schedule`: agendar transformaria isto em outro bot avisando
+# sozinho, e a ideia é justamente que a consulta parta de uma pessoa quando ela for mexer nisso.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  relatorio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restaurar
+        run: dotnet restore
+
+      # Advisory conhecida, incluindo transitiva. É a mesma informação que o NuGetAudit do
+      # Directory.Build.props mostra em todo build; aqui ela vem isolada e legível.
+      - name: Pacotes com vulnerabilidade
+        run: |
+          {
+            echo "## Pacotes com vulnerabilidade conhecida"
+            echo
+            echo '```'
+            dotnet list package --vulnerable --include-transitive 2>&1
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Informativo. NÃO é uma lista de coisas a fazer: a política é subir dependência quando há
+      # motivo, no PR da mudança, com a nota de migração lida — e não porque saiu versão nova.
+      - name: Pacotes desatualizados
+        run: |
+          {
+            echo "## Pacotes desatualizados"
+            echo
+            echo "Lista informativa. Subir versão é decisão humana, feita no PR da mudança, com a"
+            echo "nota de migração lida e a stack declarada em AGENTS.md/README.md atualizada no"
+            echo "mesmo diff. Estar desatualizado não é, por si, motivo para subir."
+            echo
+            echo '```'
+            dotnet list package --outdated --include-transitive 2>&1
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Deprecados
+        run: |
+          {
+            echo "## Pacotes deprecados"
+            echo
+            echo '```'
+            dotnet list package --deprecated --include-transitive 2>&1
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

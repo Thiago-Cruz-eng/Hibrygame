@@ -233,6 +233,20 @@ cabeçalho antes de mudar qualquer severidade. Não há `dotnet format` no CI.
 - **Não adotar sem pedido explícito** — MediatR como pipeline, AutoMapper, FluentAssertions,
   FluentValidation, Redis backplane, Docker/compose, coleção Postman/Insomnia. Nada disso existe
   hoje; introduzir qualquer um é decisão de arquitetura e exige emenda à constituição.
+- **Upgrade de dependência é decisão humana, nunca de bot.** Os *version updates* do Dependabot
+  estão desligados (`open-pull-requests-limit: 0` em [`.github/dependabot.yml`](.github/dependabot.yml)),
+  e não por descuido: em 2026-08-05 ele abriu 13 PRs de uma vez, 12 deles major, dois já
+  vermelhos. Verde de CI não é evidência suficiente para major de framework — ele prova que a
+  suíte fixa passa, não que ninguém leu a nota de migração.
+
+  Ao subir uma versão, faça **no PR da mudança que precisa dela**: leia a nota de migração, rode a
+  suíte e atualize a stack declarada neste arquivo, no `README.md` e no `.claude/CLAUDE.md` **no
+  mesmo diff**. Estar desatualizado não é, por si, motivo para subir.
+
+  O que substitui o bot: `NuGetAudit` (em todo build, ver `Directory.Build.props`) e o workflow
+  [`dependencias`](.github/workflows/dependencias.yml), acionado à mão, que lista vulnerável,
+  desatualizado e deprecado sem abrir PR. Dependabot **alerts** podem ficar ligados — só informam;
+  **security updates** ficam desligados, porque abrem PR.
 
 ## Estrutura `.agents/`
 
