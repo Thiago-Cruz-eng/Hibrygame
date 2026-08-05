@@ -1,0 +1,59 @@
+name: codeql
+
+# Análise estática de segurança (SAST).
+#
+# O que este gate protege aqui é específico: o endurecimento recente de autorização — a trava de
+# escalonamento de papel no POST /users, a verificação do claim `sub` contra o corpo, o PBKDF2
+# escrito à mão. Numa base deste tamanho o CodeQL não vai *descobrir* muita coisa; o valor é
+# impedir que essas correções regridam sem ninguém notar.
+#
+# Seja cético com o resultado: SAST tem taxa de falso positivo alta. É fonte de revisão, não
+# veredito. Achado que não se sustenta deve ser fechado como falso positivo COM justificativa,
+# não silenciado.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    # Semanal, porque a base de regras do CodeQL evolui: código que passou limpo em março pode
+    # ter um padrão reconhecido como vulnerável em junho, sem uma linha ter mudado.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          # security-and-quality inclui as regras de qualidade além das de segurança. Mais
+          # ruidoso que o padrão; se virar ruído, baixe para `security-extended`.
+          queries: security-and-quality
+
+      # Build explícito em vez de autobuild: a solução tem alvo único e conhecido, e o autobuild
+      # falha silenciosamente com mais frequência do que se imagina — deixando a análise passar
+      # sem ter analisado nada, que é a pior forma de gate verde.
+      - name: Build
+        run: dotnet build Hibrygame.sln -c Release
+
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:csharp

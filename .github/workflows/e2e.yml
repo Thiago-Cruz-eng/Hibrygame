@@ -1,0 +1,152 @@
+name: e2e
+
+# Contrato com o frontend, verificado deste lado.
+#
+# `dotnet-test.yml` cobre a engine e os casos de uso com repositórios mockados — rápido, e
+# suficiente para lógica de regra. Não cobre a JUNÇÃO: rota REST, forma do payload, nome do
+# claim, momento em que o SignalR negocia. Todos os quatro bloqueadores que impediram jogar
+# pela interface viviam exatamente aí, e nenhum teste em processo os pegou.
+#
+# Por isso este workflow sobe a API de verdade, com MongoDB de verdade, e roda a suíte
+# Playwright do KrockSide contra ela. É o gate que impede uma mudança no hub ou no DTO de
+# quebrar o front sem ninguém perceber até o deploy.
+# O filtro de branch fica só no push. Em `pull_request` ele ficava em `main` e, com isso, PR
+# empilhado sobre outra branch não disparava check nenhum — justamente onde mais se quer o
+# gate, porque a base ainda não foi revisada.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    services:
+      mongo:
+        image: mongo:8
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ping:1}).ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      # O backend é o repo em teste: sempre o commit deste PR, nunca main.
+      - uses: actions/checkout@v4
+        with:
+          path: backend
+
+      # Qual frontend testar.
+      #
+      # O E2E exercita o CONTRATO entre back e front, e as duas pontas evoluem em PRs
+      # separados. Fixar `main` reprovaria toda mudança coordenada; e uma variável de
+      # repositório, sendo global, desviaria também os PRs que nada têm a ver com ela.
+      #
+      # Então: se existe no frontend uma branch com o MESMO nome desta, é ela — é o sinal
+      # mais barato de "estes dois PRs são as duas metades da mesma mudança", e não exige
+      # lembrar de configurar nada. Senão, main.
+      #
+      # O pareamento por nome só é seguro se o nome identificar UMA mudança. Com vários devs
+      # isso deixa de ser automático: dois `fix/turno` em repos diferentes, de pessoas
+      # diferentes, seriam pareados com toda a confiança — verde enganoso, que é pior que
+      # vermelho. Daí a exigência de identificador de tarefa no nome (ver
+      # docs/fluxo-de-trabalho.md); nomes genéricos são recusados abaixo.
+      - name: Resolver ref do frontend
+        id: frontend-ref
+        run: |
+          repo="https://github.com/${{ github.repository_owner }}/KrockSide.git"
+          override="${{ vars.KROCKSIDE_REF }}"
+          branch="${{ github.head_ref || github.ref_name }}"
+
+          if [ -n "$override" ]; then
+            echo "ref=$override" >> "$GITHUB_OUTPUT"
+            # Anotação, não log: a variável é GLOBAL ao repositório, então enquanto existir
+            # ela desvia todo PR — inclusive os de outras pessoas, que não fazem ideia. Tem
+            # de ser visível na aba de checks de quem for afetado, não enterrada no log.
+            echo "::warning title=E2E desviado por variável::Este PR foi testado contra KrockSide@${override}, e não contra a branch homônima ou main. A variável KROCKSIDE_REF é global e afeta TODOS os PRs deste repositório enquanto existir. Se ela não é sua, avise quem a criou; se é, apague-a assim que o par entrar (gh variable delete KROCKSIDE_REF)."
+          elif git ls-remote --exit-code --heads "$repo" "$branch" >/dev/null 2>&1; then
+            # Pareamento por nome exige nome que identifique uma tarefa. Sem isso, a
+            # homonímia pode ser coincidência entre trabalhos de pessoas diferentes.
+            if ! echo "$branch" | grep -qiE '[a-z]+-[0-9]+|[0-9]{3,}'; then
+              echo "::error title=Nome de branch ambíguo para pareamento::Existe uma branch '${branch}' no KrockSide, mas o nome não contém identificador de tarefa, então não dá para afirmar que é a outra metade DESTA mudança — pode ser trabalho de outra pessoa. Renomeie as duas para incluir o identificador (ex.: feat/HIB-123-${branch##*/}). Ver docs/fluxo-de-trabalho.md."
+              exit 1
+            fi
+            echo "ref=$branch" >> "$GITHUB_OUTPUT"
+            echo "Branch homônima encontrada no frontend: $branch"
+          else
+            echo "ref=main" >> "$GITHUB_OUTPUT"
+            echo "Sem branch '$branch' no frontend; testando contra main."
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/KrockSide
+          ref: ${{ steps.frontend-ref.outputs.ref }}
+          path: frontend
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install (frontend)
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      # Debug de propósito, não Release: o `dotnet run` do webServer usa a configuração
+      # padrão, então compilar em Release aqui não aproveitaria nada e a API recompilaria
+      # inteira dentro do timeout de 180s. Assim este passo falha rápido se não compilar E
+      # deixa os binários prontos para o `dotnet run` subir na hora.
+      - name: Build API
+        working-directory: backend
+        run: dotnet build Hibrygame.sln
+
+      - name: Run E2E
+        working-directory: frontend
+        run: npx playwright test
+        env:
+          CI: true
+          # A suíte sobe a API e o Vite sozinha (webServer no playwright.config.ts) e semeia
+          # os usuários no globalSetup, via POST /register. Nada a preparar à mão.
+          HIBRYGAME_PATH: ${{ github.workspace }}/backend
+          E2E_API_URL: http://localhost:5001
+          E2E_BASE_URL: http://localhost:3000
+          # Chave só de CI, descartável. Precisa de 32+ bytes: Program.cs recusa subir com
+          # chave curta, e um segredo real não pertence a um workflow.
+          Jwt__Key: ci-only-key-not-a-secret-32-bytes-min
+          Mongo__ConnectionString: mongodb://localhost:27017
+          Mongo__Database: hibrygame_e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+          retention-days: 14
+          if-no-files-found: ignore

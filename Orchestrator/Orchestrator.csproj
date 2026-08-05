@@ -1,37 +1,42 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
+  <!--
+    Removidos nesta limpeza, com o motivo:
+
+      MediatR 14.0.0                 sem uso. So AddShared() o registrava, e AddShared
+                                     nunca era chamado; Program.cs registra tudo a mao
+      Polly 8.6.5                    sem uso: um `using Polly;` orfao em AddShared
+      Newtonsoft.Json 13.0.3         sem uso apos os enums deixarem de trazer
+                                     [JsonConverter]; a API usa System.Text.Json
+      Microsoft.AspNetCore.SignalR
+        1.1.0                        pacote legado do ASP.NET Core 2.x. O SignalR vem
+                                     no framework compartilhado desde o 3.0; a
+                                     referencia nao fazia nada alem de confundir
+      Microsoft.AspNetCore.Hosting
+        .Abstractions 2.2.0          idem, ja vem no framework compartilhado
+      Microsoft.Extensions
+        .DependencyInjection(.Abstractions)  idem; alem disso estavam em 10.0.2 sobre
+                                     um projeto net8.0, um major a frente do alvo
+      Microsoft.OpenApi 1.6.12       transitivo do Swashbuckle, nao precisa ser direto
+  -->
   <ItemGroup>
-    <PackageReference Include="MediatR" Version="14.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
-    <PackageReference Include="Microsoft.OpenApi" Version="1.6.12" />
-    <PackageReference Include="MongoDB.Bson" Version="3.6.0" />
-    <PackageReference Include="MongoDB.Driver" Version="3.6.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Polly" Version="8.6.5" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.5.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.5.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
+    <PackageReference Include="MongoDB.Bson" Version="3.10.0" />
+    <PackageReference Include="MongoDB.Driver" Version="3.10.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="10.2.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.2.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.3" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Hibrygame\Hibrygame.csproj" />
   </ItemGroup>
-
-
-
-
-
-
 
 </Project>

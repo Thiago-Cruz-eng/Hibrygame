@@ -1,24 +1,17 @@
-﻿using System.Runtime.Serialization;
-using Hibrygame.Logic.Enums.EnumConverter;
-using Newtonsoft.Json;
-
 namespace Hibrygame.Enums;
 
-[JsonConverter(typeof(EnumStringConverter<PieceEnum>))]
+/// <summary>
+/// Tipo de peca. Serializado para o frontend como o nome do membro em PascalCase
+/// ("Pawn", "Knight", ...) via ToString() em ChessHub.MapSquare; ver o tipo
+/// PieceType em src/types/chess.ts.
+/// </summary>
 public enum PieceEnum
 {
-    [EnumMember(Value = "pawn")]
     Pawn,
-    [EnumMember(Value = "bishop")]
     Bishop,
-    [EnumMember(Value = "knight")]
     Knight,
-    [EnumMember(Value = "rook")]
     Rook,
-    [EnumMember(Value = "queen")]
     Queen,
-    [EnumMember(Value = "king")]
     King,
-    [EnumMember(Value = "none")]
     None
 }

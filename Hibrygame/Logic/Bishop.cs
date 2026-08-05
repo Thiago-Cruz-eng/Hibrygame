@@ -2,24 +2,18 @@ using Hibrygame.Enums;
 
 namespace Hibrygame;
 
+/// <summary>
+/// Bispo. Peça deslizante: percorre as quatro diagonais até bater em algo.
+///
+/// <para>
+/// A geometria vive em <see cref="Move"/>, não aqui. Ver <see cref="Piece"/> para o porquê.
+/// </para>
+/// </summary>
 public class Bishop : Piece
 {
     public Bishop(ColorEnum color)
     {
         Color = color;
         Type = PieceEnum.Bishop;
-    }
-
-    public override (List<Position> possibleMoves, Piece? actualPieceTrigger) GetPossibleMove(Board board, Position pos)
-    {
-        var direction = new List<Direction>
-        {
-            Direction.SouthEast,
-            Direction.SouthWest,
-            Direction.NorthEast,
-            Direction.NorthWest,
-        };
-        
-        return Move.CalculatePossibleMove(board, pos, direction, 8);
     }
 }

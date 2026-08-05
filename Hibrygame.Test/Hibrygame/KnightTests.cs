@@ -87,7 +87,7 @@ public class KnightTests
 
         // Assert
         Assert.NotNull(result.possibleMoves);
-        Assert.Equal(0, result.possibleMoves.Count);
+        Assert.Empty(result.possibleMoves);
     }
     
     [Fact]
@@ -119,30 +119,30 @@ public class KnightTests
     [Fact]
     public void GetMovesKnight_AfterOneMove_Correctly()
     {
-        // Arrange
+        // Este teste estava ignorado por esperar 8 lances a partir de e1. Um cavalo em e1
+        // encosta em duas bordas: só existem 4 saltos geometricamente possíveis (c2, d3,
+        // f3, g2). A expectativa antiga era impossível; o cenário em si é válido e é o que
+        // se verifica agora — o cavalo continua a gerar lances corretos depois de andar.
+
+        // Arrange — cavalo branco em f3.
         var board = new Board();
         board.StartBoard();
-        board.Positions[5,5].Piece = new Knight(ColorEnum.White);
+        board.Positions[5, 5].Piece = new Knight(ColorEnum.White);
 
-
-        // Act
-        var piece = new Knight(ColorEnum.White);
-        var result = piece.GetPossibleMove(board, board.Positions[5,5]);
-        var pieces = board.GetPositionsPlacedInBoard();
-        var move = board.MakeMove(board, result.possibleMoves, board.Positions[4,7], board.Positions[5,5] );
-        var piecess = board.GetPositionsPlacedInBoard();
-        var result2 = piece.GetPossibleMove(board, board.Positions[4,7]);
-        var piecesss = board.GetPositionsPlacedInBoard();
-        var move2 = board.MakeMove(board, result2.possibleMoves, board.Positions[2,6], board.Positions[4,7] );
-        var piecessss = board.GetPositionsPlacedInBoard();
-        var result3 = piece.GetPossibleMove(board, board.Positions[2,6]);
-        var piecesssss = board.GetPositionsPlacedInBoard();
-        var move3 = board.MakeMove(board, result3.possibleMoves, board.Positions[0,5], board.Positions[2,6] );
-        var piecessssss = board.GetPositionsPlacedInBoard();
-
+        // Act — f3 -> e1, e depois pergunta os lances a partir de e1.
+        var knight = board.Positions[5, 5].Piece!;
+        var fromF3 = knight.GetPossibleMove(board, board.Positions[5, 5]);
+        var moved = Move.MakeMove(board, fromF3.possibleMoves, board.Positions[4, 7], board.Positions[5, 5]);
+        var fromE1 = knight.GetPossibleMove(board, board.Positions[4, 7]);
 
         // Assert
-        Assert.NotNull(result2.possibleMoves);
-        Assert.Equal(8, result2.possibleMoves.Count);
+        Assert.True(moved);
+        Assert.Null(board.Positions[5, 5].Piece);
+        Assert.Equal(PieceEnum.Knight, board.Positions[4, 7].Piece!.Type);
+
+        Assert.NotNull(fromE1.possibleMoves);
+        Assert.Equal(
+            new[] { "c2", "d3", "f3", "g2" },
+            fromE1.possibleMoves.Select(p => p.Algebraic).OrderBy(s => s, StringComparer.Ordinal).ToArray());
     }
 }

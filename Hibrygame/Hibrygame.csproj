@@ -1,21 +1,20 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <!--
+      O motor de xadrez e dominio puro: nao referencia pacote nenhum, de proposito.
 
+      Antes trazia Microsoft.AspNetCore.Hosting.Abstractions 2.2.0 e
+      Microsoft.AspNetCore.Mvc.Core 2.2.5 — dois pacotes da era ASP.NET Core 2.x sem um
+      unico using no codigo, que amarravam a biblioteca de regras ao stack web e
+      arrastavam Newtonsoft.Json transitivamente.
 
-    <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" />
-      <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
-    </ItemGroup>
-
-
-
-
-
+      Qualquer PackageReference adicionado aqui merece justificacao explicita.
+    -->
 
 </Project>
