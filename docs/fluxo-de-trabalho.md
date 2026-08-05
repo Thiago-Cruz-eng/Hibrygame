@@ -196,8 +196,22 @@ Quando a quebra é inevitável — renomear um evento do hub, mudar o formato de
 Cada job `e2e` resolve a ref do repositório oposto nesta ordem:
 
 1. **Variável de repositório** (`KROCKSIDE_REF` aqui, `HIBRYGAME_REF` lá), se existir.
-2. **Branch de mesmo nome** no outro repo, se existir.
-3. **`main`.**
+2. **`main` pareia com `main`.** Push na default branch resolve direto para a `main` do outro
+   repo, sem passar pela regra 3.
+3. **Branch de mesmo nome** no outro repo, se existir — e o nome precisa conter identificador de
+   tarefa, senão o job é recusado (ver abaixo).
+4. **`main`.**
+
+A regra 2 parece redundante com a 4, e não é: sem ela, `branch` valia `main` num push, o
+`git ls-remote` **encontrava** a `main` do outro repo, o fluxo entrava no caminho de branch
+homônima e a exigência de identificador de tarefa reprovava o job — porque `main` não tem
+identificador. Todo push em `main` falhava no e2e sem nunca alcançar o fallback. Ficou latente
+enquanto uma variável de override existia, porque ela curto-circuitava a checagem; apagar a
+variável depois de um par coordenado entrar expunha a falha.
+
+A exigência de identificador continua valendo onde ela faz sentido — entre branches de feature,
+onde homonímia pode ser coincidência entre pessoas diferentes. Entre as duas `main` não há
+coincidência possível.
 
 A regra 2 é a que faz o dia a dia funcionar sem configurar nada, e é por isso que a convenção de
 nome importa.
