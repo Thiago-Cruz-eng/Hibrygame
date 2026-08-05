@@ -1,177 +1,83 @@
-using System.Text;
-using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.IdentityModel.Tokens;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.Serializers;
-using MongoDB.Driver;
-using Orchestrator.Infra.BaseRepository;
-using Orchestrator.Infra.Interfaces;
-using Orchestrator.Infra.Mongo;
-using Orchestrator.Infra.Repositories;
-using Orchestrator.Infra.Settings;
+using Orchestrator.Composition;
 using Orchestrator.Infra.SignalR;
-using Orchestrator.UseCases;
-using Orchestrator.UseCases.Interfaces;
-using Orchestrator.UseCases.Security.Authorization;
-using Orchestrator.UseCases.Security;
 
+// -----------------------------------------------------------------------------------------------
+// Composição da aplicação.
+//
+// Este arquivo é o índice: cada linha diz O QUE é registrado, e o COMO fica nas classes de
+// Composition/, uma por assunto. Antes eram 170 linhas corridas aqui, e achar onde uma política de
+// autorização era declarada exigia ler o arquivo inteiro.
+//
+// O registro continua sendo MANUAL, um serviço por vez — sem Scrutor e sem varredura de assembly.
+// É decisão de arquitetura, não descuido: a composição inteira do sistema tem de ser legível.
+//
+// Ordem importa em dois pontos, e só neles:
+//   1. os serializadores do Mongo, antes de qualquer operação com o banco;
+//   2. a leitura das configurações de JWT, antes de configurar a autenticação que as usa.
+// -----------------------------------------------------------------------------------------------
 
 var builder = WebApplication.CreateBuilder(args);
 
-BsonSerializer.RegisterSerializer(new GuidSerializer(MongoDB.Bson.BsonType.String));
-BsonSerializer.RegisterSerializer(new DateTimeSerializer(MongoDB.Bson.BsonType.String));
-BsonSerializer.RegisterSerializer(new DateTimeOffsetSerializer(MongoDB.Bson.BsonType.String));
+// Como Guid e DateTime são gravados no MongoDB. Global e irreversível — ver a nota do método.
+PersistenceComposition.RegisterBsonSerializers();
 
-builder.Services.Configure<JwtSettings>(
-    builder.Configuration.GetSection("Jwt"));
+// Lê a seção "Jwt" e derruba a subida se a chave for curta demais para HS256. Devolve as
+// configurações porque a autenticação precisa delas antes de a injeção de dependências existir.
+var jwtSettings = builder.Services.AddJwtSettings(builder.Configuration);
 
-var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
-    ?? throw new InvalidOperationException("Jwt settings are missing.");
-
-// HS256 exige chave de no minimo 256 bits. A chave que vinha no appsettings.json tinha
-// 240, e o efeito era desagradavel de diagnosticar: a aplicacao subia normalmente e
-// TODO login falhava, porque CreateAccessToken estourava IDX10720 la dentro e o
-// use case devolvia um "Login failed" generico com 401 — indistinguivel de senha errada.
-// Melhor falhar aqui, na subida, dizendo o motivo.
-const int minimumKeyBytes = 32;
-var signingKey = jwtSettings.Key ?? string.Empty;
-var keyBytes = Encoding.UTF8.GetByteCount(signingKey);
-if (keyBytes < minimumKeyBytes)
-{
-    throw new InvalidOperationException(
-        $"Jwt:Key tem {keyBytes} bytes; HS256 exige pelo menos {minimumKeyBytes} " +
-        "(256 bits). Com uma chave menor nenhum token pode ser assinado e todo login " +
-        "falha. Ajuste Jwt:Key na configuracao.");
-}
-
-builder.Services.AddAuthentication(x =>
-{
-    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(x =>
-{
-    x.RequireHttpsMetadata = true;
-    x.SaveToken = true;
-
-    // Sem isto o handler renomeia claims na entrada — `sub` vira
-    // ClaimTypes.NameIdentifier, `email` vira ClaimTypes.Email — e todo
-    // `User.FindFirst(JwtRegisteredClaimNames.Sub)` devolve null.
-    //
-    // Consequencia real: ValidationController.IsCallerAuthorizedFor compara o `sub` com o
-    // userId do corpo, entao os QUATRO endpoints de /validation respondiam 403 para
-    // qualquer usuario, sempre. Como o lobby chama verifyValidation antes de entrar numa
-    // sala, era impossivel entrar em sala pela interface.
-    //
-    // TokenService emite `sub` e ClaimTypes.Role; desligar o mapeamento faz os nomes no
-    // servidor serem exatamente os que estao no token.
-    x.MapInboundClaims = false;
-    x.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateLifetime = true,
-        ValidateAudience = true,
-        ValidateIssuer = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings.Issuer,
-        ValidAudience = jwtSettings.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
-        ClockSkew = TimeSpan.Zero
-    };
-    x.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = ctx =>
-        {
-            var accessToken = ctx.Request.Query["access_token"];
-            var path = ctx.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chesshub"))
-            {
-                ctx.Token = accessToken;
-            }
-            return Task.CompletedTask;
-        }
-    };
-});
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("Role:Player", policy =>
-        policy.Requirements.Add(new MinimumRoleRequirement(RoleLevel.Player)));
-    options.AddPolicy("Role:MainPlayer", policy =>
-        policy.Requirements.Add(new MinimumRoleRequirement(RoleLevel.MainPlayer)));
-    options.AddPolicy("Role:TeamLeader", policy =>
-        policy.Requirements.Add(new MinimumRoleRequirement(RoleLevel.TeamLeader)));
-    options.AddPolicy("Role:Admin", policy =>
-        policy.Requirements.Add(new MinimumRoleRequirement(RoleLevel.Admin)));
-    options.AddPolicy("Role:SuperAdmin", policy =>
-        policy.Requirements.Add(new MinimumRoleRequirement(RoleLevel.SuperAdmin)));
-});
-
-builder.Services.AddControllers().AddJsonOptions(x =>
-    x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowReactDevelopment",
-        builder =>
-        {
-            builder.WithOrigins("http://localhost:3000")
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        });
-});
-
-builder.Services.AddSignalR();
-
-builder.Services.AddSingleton<IMongoDbContextFactory, MongoDbContextFactory>();
-builder.Services.AddSingleton<IMongoClient>(sp =>
-{
-    var connection = builder.Configuration.GetSection("Mongo:ConnectionString").Value
-                     ?? "mongodb://localhost:27017";
-    return new MongoClient(connection);
-});
-builder.Services.AddSingleton<IMongoDbContext>(sp =>
-{
-    var client = sp.GetRequiredService<IMongoClient>();
-    var databaseName = builder.Configuration.GetSection("Mongo:Database").Value ?? "Hibrygame";
-    return new MongoDbContext(client.GetDatabase(databaseName));
-});
-builder.Services.AddScoped<IGenericRepository, GenericRepository>();
-builder.Services.AddScoped<IUserRepositoryNoSql, UserRepositoryNoSql>();
-builder.Services.AddScoped<IRefreshTokenRepositoryNoSql, RefreshTokenRepositoryNoSql>();
-builder.Services.AddScoped<IValidationRepositoryNoSql, ValidationRepositoryNoSql>();
-
-builder.Services.AddScoped<CreateUserUseCase>();
-builder.Services.AddScoped<GetUserUseCase>();
-builder.Services.AddScoped<LoginAsyncUseCase>();
-builder.Services.AddScoped<UpdateUserUseCase>();
-builder.Services.AddScoped<DeleteUserUseCase>();
-builder.Services.AddScoped<ChangePasswordUseCase>();
-builder.Services.AddScoped<RefreshTokenUseCase>();
-builder.Services.AddScoped<RegisterUserUseCase>();
-builder.Services.AddScoped<ISecureHashingService, SecureHashingService>();
-builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddSingleton<IAuthorizationHandler, MinimumRoleHandler>();
-builder.Services.AddScoped<IValidationService, ValidationService>();
+builder.Services.AddJwtAuthentication(jwtSettings);
+builder.Services.AddRolePolicies();
+builder.Services.AddWebLayer();
+builder.Services.AddMongoPersistence(builder.Configuration);
+builder.Services.AddUseCases();
 
 var app = builder.Build();
 
+// -----------------------------------------------------------------------------------------------
+// Pipeline de requisição.
+//
+// Aqui a ordem importa em TUDO: cada middleware envolve os seguintes, e trocar dois de lugar muda
+// o comportamento. Em particular, UseAuthentication tem de vir antes de UseAuthorization —
+// autorizar exige saber quem é o chamador, e é a autenticação que descobre isso.
+// -----------------------------------------------------------------------------------------------
+
+// Swagger só em desenvolvimento: em produção ele publicaria o mapa completo da API.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-app.UseCors("AllowReactDevelopment");
+// Redirecionamento para HTTPS só fora de desenvolvimento.
+//
+// Em producao e obrigatorio. Em desenvolvimento local ele so cria atrito: com o perfil
+// "https" do launchSettings, as duas portas ficam configuradas, o middleware descobre o
+// destino https e passa a responder 307 a todo http. O frontend segue o redirecionamento e
+// morre no certificado de desenvolvimento — que em maquina corporativa gerenciada nem sempre
+// pode ser marcado como confiavel, porque `dotnet dev-certs https --trust` exige permissao
+// que o usuario nao tem.
+//
+// O sintoma e cruel: o login falha sem erro claro, e nada na tela aponta para certificado.
+// Com o perfil "http" o middleware fica inerte (nao ha porta https para onde mandar) e tudo
+// funciona — o que torna o comportamento dependente de qual perfil alguem escolheu no
+// Rider, e isso nao e um bom contrato de ambiente local.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
+// CORS antes da autenticação: a requisição de verificação que o navegador manda antes da real
+// (preflight, um OPTIONS) não carrega credencial nenhuma. Se a autenticação a examinasse primeiro,
+// ela seria recusada e a requisição real nunca aconteceria.
+app.UseCors(WebComposition.CorsPolicyName);
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// O caminho "/chesshub" é contrato com o frontend, e aparece também no filtro que autoriza token
+// por query string (ver JwtComposition). Mudar aqui exige mudar lá.
 app.MapHub<ChessHub>("/chesshub");
 
 app.Run();

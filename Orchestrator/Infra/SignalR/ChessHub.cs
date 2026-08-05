@@ -161,70 +161,171 @@ public class ChessHub : Hub
         });
     }
 
+    /// <summary>
+    /// Aplica um lance, se ele for legal, e avisa a sala.
+    ///
+    /// <para>
+    /// <b>Autoridade do servidor (principio II da constituicao).</b> O cliente diz apenas "de
+    /// onde" e "para onde"; tudo o mais e reconferido aqui. A lista de lances que o frontend
+    /// tenha calculado e ignorada — o servidor recalcula com
+    /// <c>GetPossibleMove</c>. Metodo de hub novo que altere o tabuleiro repete as seis
+    /// checagens: partida em andamento, identidade, notacao, turno, posse e legalidade.
+    /// </para>
+    ///
+    /// <para>
+    /// A leitura fica em tres partes, nesta ordem: as guardas baratas que nao tocam no
+    /// tabuleiro (aqui), a aplicacao sob o lock (<see cref="ApplyMove"/>) e a difusao
+    /// (<see cref="BroadcastMoveAsync"/>). A separacao existe porque so a parte do meio precisa
+    /// de exclusividade — ver a nota de <c>GameRoom.Serialized</c>.
+    /// </para>
+    /// </summary>
+    /// <param name="from">Casa de origem em notacao algebrica, como <c>"e2"</c>.</param>
+    /// <param name="to">Casa de destino, como <c>"e4"</c>.</param>
     public async Task<MakeMoveResponse> MakeMove(string room, string from, string to)
     {
+        // Guardas que nao dependem do tabuleiro, portanto fora do lock.
         if (!Rooms.TryGetValue(room, out var gameRoom) || !gameRoom.Started)
             return MakeMoveResponse.Failure("Game not started.");
 
         if (gameRoom.Finished)
             return MakeMoveResponse.Failure("Game already finished.");
 
+        // Identidade: a conexao tem de ter assento nesta sala. Nao basta estar autenticado.
         if (!gameRoom.Players.TryGetValue(Context.ConnectionId, out var player))
             return MakeMoveResponse.Failure("You are not in this room.");
 
-        if (!Position.TryFromAlgebraic(from, out var fromPos) || fromPos is null ||
-            !Position.TryFromAlgebraic(to, out var toPos) || toPos is null)
+        if (!TryParseSquares(from, to, out var fromPos, out var toPos))
             return MakeMoveResponse.Failure("Invalid square notation.");
 
         // Verificar o turno, validar, aplicar e trocar o turno tem de ser um bloco
         // indivisivel. Estando separados por um await, dois lances submetidos ao mesmo
         // tempo passavam ambos pela verificacao de turno e o mesmo jogador jogava duas
         // vezes na mesma vez.
-        var outcome = await gameRoom.Serialized(() =>
-        {
-            if (player.Color != gameRoom.CurrentTurn)
-                return MakeMoveResponse.Failure("Not your turn.");
+        var outcome = await gameRoom.Serialized(() => ApplyMove(gameRoom, player, fromPos, toPos, from));
 
-            var source = gameRoom.Board.GetPositionInBoard(fromPos.Row, fromPos.Column);
-            if (source.Piece is null)
-                return MakeMoveResponse.Failure($"No piece on '{from}'.");
-
-            if (source.Piece.Color != player.Color)
-                return MakeMoveResponse.Failure("That piece is not yours.");
-
-            var target = gameRoom.Board.GetPositionInBoard(toPos.Row, toPos.Column);
-            var (possibleMoves, _) = source.Piece.GetPossibleMove(gameRoom.Board, source);
-            if (possibleMoves is null || !possibleMoves.Any(p => p.Row == target.Row && p.Column == target.Column))
-                return MakeMoveResponse.Failure("Illegal move.");
-
-            if (!Move.MakeMove(gameRoom.Board, possibleMoves, target, source))
-                return MakeMoveResponse.Failure("Move would leave king in check.");
-
-            gameRoom.SwitchTurn();
-
-            // Fim de partida e sempre avaliado do ponto de vista de quem TEM a vez agora:
-            // sem lance legal e em xeque e mate, sem xeque e afogamento.
-            //
-            // Apurado aqui, uma vez por lance e dentro do lock, e guardado na sala. Antes
-            // BuildSnapshot recalculava a cada leitura — e como EvaluateOutcome simula
-            // lances no tabuleiro, isso fazia de "montar snapshot" uma escrita.
-            var evaluated = Move.EvaluateOutcome(gameRoom.Board, gameRoom.CurrentTurn);
-            gameRoom.SetOutcome(evaluated);
-
-            return new MakeMoveResponse
-            {
-                Success = true,
-                From = source.Algebraic,
-                To = target.Algebraic,
-                NextTurn = gameRoom.CurrentTurn.ToString(),
-                Outcome = evaluated.ToString(),
-                Winner = evaluated == GameOutcome.Checkmate ? player.Color.ToString() : null,
-                Snapshot = BuildSnapshot(gameRoom)
-            };
-        });
-
+        // Lance recusado nao vira evento: quem errou recebe o motivo no retorno da propria
+        // chamada, e o resto da sala nao precisa saber.
         if (!outcome.Success) return outcome;
 
+        await BroadcastMoveAsync(room, player, outcome);
+
+        return outcome;
+    }
+
+    /// <summary>
+    /// Converte as duas casas de notacao algebrica para indices do tabuleiro.
+    ///
+    /// <para>
+    /// Usa a variante <c>Try</c> porque a entrada vem do cliente: notacao invalida e resposta de
+    /// erro, nao excecao. Exige as duas de uma vez — nao ha lance com metade das coordenadas.
+    /// </para>
+    /// </summary>
+    private static bool TryParseSquares(
+        string from,
+        string to,
+        out Position fromPos,
+        out Position toPos)
+    {
+        fromPos = null!;
+        toPos = null!;
+
+        if (!Position.TryFromAlgebraic(from, out var parsedFrom) || parsedFrom is null)
+            return false;
+
+        if (!Position.TryFromAlgebraic(to, out var parsedTo) || parsedTo is null)
+            return false;
+
+        fromPos = parsedFrom;
+        toPos = parsedTo;
+        return true;
+    }
+
+    /// <summary>
+    /// Valida e aplica o lance no tabuleiro da sala.
+    ///
+    /// <para>
+    /// <b>Corre sempre dentro de <c>GameRoom.Serialized</c></b> — nunca chame direto. Tudo aqui
+    /// toca o tabuleiro compartilhado, e a avaliacao de legalidade simula lances nele.
+    /// </para>
+    ///
+    /// <para>
+    /// A ordem das checagens e deliberada: turno antes de posse, posse antes de legalidade. Cada
+    /// uma e mais caro que a anterior, e recusar cedo evita calcular lances possiveis para um
+    /// pedido que ja estava recusado.
+    /// </para>
+    /// </summary>
+    /// <param name="fromLabel">
+    /// A notacao original da origem, so para compor a mensagem de erro com o texto que o cliente
+    /// enviou.
+    /// </param>
+    private static MakeMoveResponse ApplyMove(
+        GameRoom gameRoom,
+        GameRoom.PlayerSlot player,
+        Position fromPos,
+        Position toPos,
+        string fromLabel)
+    {
+        if (player.Color != gameRoom.CurrentTurn)
+            return MakeMoveResponse.Failure("Not your turn.");
+
+        var source = gameRoom.Board.GetPositionInBoard(fromPos.Row, fromPos.Column);
+        if (source.Piece is null)
+            return MakeMoveResponse.Failure($"No piece on '{fromLabel}'.");
+
+        // Posse: cada jogador move so as proprias pecas.
+        if (source.Piece.Color != player.Color)
+            return MakeMoveResponse.Failure("That piece is not yours.");
+
+        var target = gameRoom.Board.GetPositionInBoard(toPos.Row, toPos.Column);
+
+        // Legalidade recalculada no servidor. O que o cliente ache que e legal nao entra na
+        // decisao.
+        var (possibleMoves, _) = source.Piece.GetPossibleMove(gameRoom.Board, source);
+        if (possibleMoves is null || !possibleMoves.Any(p => p.Row == target.Row && p.Column == target.Column))
+            return MakeMoveResponse.Failure("Illegal move.");
+
+        // Move.MakeMove aplica e, se o lance expuser o proprio rei, desfaz — deixando o
+        // tabuleiro exatamente como estava. Por isso um false aqui e seguro.
+        if (!Move.MakeMove(gameRoom.Board, possibleMoves, target, source))
+            return MakeMoveResponse.Failure("Move would leave king in check.");
+
+        gameRoom.SwitchTurn();
+
+        // Fim de partida e sempre avaliado do ponto de vista de quem TEM a vez agora:
+        // sem lance legal e em xeque e mate, sem xeque e afogamento.
+        //
+        // Apurado aqui, uma vez por lance e dentro do lock, e guardado na sala. Antes
+        // BuildSnapshot recalculava a cada leitura — e como EvaluateOutcome simula
+        // lances no tabuleiro, isso fazia de "montar snapshot" uma escrita.
+        var evaluated = Move.EvaluateOutcome(gameRoom.Board, gameRoom.CurrentTurn);
+        gameRoom.SetOutcome(evaluated);
+
+        return new MakeMoveResponse
+        {
+            Success = true,
+            From = source.Algebraic,
+            To = target.Algebraic,
+            NextTurn = gameRoom.CurrentTurn.ToString(),
+            Outcome = evaluated.ToString(),
+
+            // Quem venceu e quem acabou de jogar: SwitchTurn ja passou a vez, e o mate e
+            // avaliado sobre quem RECEBEU a vez e nao tem lance.
+            Winner = evaluated == GameOutcome.Checkmate ? player.Color.ToString() : null,
+
+            Snapshot = BuildSnapshot(gameRoom)
+        };
+    }
+
+    /// <summary>
+    /// Avisa a sala do lance aplicado — e, se a partida acabou, avisa disso tambem.
+    ///
+    /// <para>
+    /// Fora do lock de propriedade: difundir e E/S de rede e nao toca o tabuleiro. Manter isto
+    /// dentro do lock seguraria os outros jogadores da sala pelo tempo de uma ida a rede.
+    /// </para>
+    /// </summary>
+    private async Task BroadcastMoveAsync(string room, GameRoom.PlayerSlot player, MakeMoveResponse outcome)
+    {
         await Clients.Group(room).SendAsync("BoardChanged", new
         {
             From = outcome.From,
@@ -248,8 +349,6 @@ public class ChessHub : Hub
                 Snapshot = outcome.Snapshot
             });
         }
-
-        return outcome;
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)

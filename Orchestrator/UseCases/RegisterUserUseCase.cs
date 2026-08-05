@@ -81,7 +81,10 @@ public class RegisterUserUseCase
                     Success = true,
                     UserId = created.UserId,
                     Name = req.Name.Trim(),
-                    Email = req.Email.Trim().ToLowerInvariant(),
+                    // Mesma normalização que CreateUserUseCase aplicou ao gravar — antes esta
+                    // linha repetia a regra à mão, e uma cópia solta é uma cópia que fica para
+                    // trás. Ver EmailNormalization.
+                    Email = EmailNormalization.Normalize(req.Email),
                     Role = RoleHierarchy.NormalizeRole(SelfRegisteredRole),
                     Message = "Account created. Please log in."
                 };

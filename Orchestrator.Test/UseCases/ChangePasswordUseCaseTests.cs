@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Moq;
 using Orchestrator.Domain;
-using Orchestrator.Infra.Mongo;
+using Orchestrator.Infra.BaseRepository;
 using Orchestrator.UseCases;
 using Orchestrator.UseCases.Dto.Request;
 using Orchestrator.UseCases.Interfaces;
