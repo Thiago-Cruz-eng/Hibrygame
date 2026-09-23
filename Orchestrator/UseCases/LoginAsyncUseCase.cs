@@ -17,6 +17,15 @@ namespace Orchestrator.UseCases;
 /// </para>
 ///
 /// <para>
+/// <b>E o tempo de resposta também não distingue os dois casos.</b> Conferir uma senha custa
+/// PBKDF2 de 100.000 iterações — dezenas de milissegundos. Se o ramo "e-mail não existe" voltasse
+/// direto, ele responderia em uma fração desse tempo, e medir a diferença diria quais e-mails
+/// estão cadastrados <b>mesmo com a mensagem idêntica</b>. Por isso, quando o usuário não existe,
+/// a verificação é feita assim mesmo, contra um hash fixo que nenhuma senha satisfaz. Ver
+/// <see cref="DummyPasswordHash"/>.
+/// </para>
+///
+/// <para>
 /// Este é o caso de uso com mais dependências do projeto (seis), porque login é onde muita coisa
 /// se encontra: achar o usuário, conferir a senha, emitir os dois tokens, persistir o refresh e
 /// registrar a validação de sessão.
@@ -24,6 +33,26 @@ namespace Orchestrator.UseCases;
 /// </summary>
 public class LoginAsyncUseCase
 {
+    /// <summary>
+    /// Hash de 32 bytes contra o qual se confere a senha quando o e-mail não existe.
+    ///
+    /// <para>
+    /// Não é o hash de senha nenhuma — é um valor constante, e nenhuma entrada o satisfaz. O que
+    /// importa é que <c>Verify</c> execute as mesmas 100.000 iterações do ramo legítimo, para que
+    /// os dois caminhos gastem o mesmo tempo. O resultado é descartado.
+    /// </para>
+    ///
+    /// <para>
+    /// Precisa ser Base64 válido de 32 bytes porque é isso que <c>SecureHashingService.Verify</c>
+    /// decodifica antes de comparar; um texto qualquer estouraria <c>FormatException</c> e
+    /// transformaria a defesa num erro 500.
+    /// </para>
+    /// </summary>
+    private const string DummyPasswordHash = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+
+    /// <summary>Salt de 16 bytes, pelo mesmo motivo de <see cref="DummyPasswordHash"/>.</summary>
+    private const string DummyPasswordSalt = "AAAAAAAAAAAAAAAAAAAAAA==";
+
     private readonly IValidationService _validationService;
     private readonly ILogger<LoginAsyncUseCase> _logger;
     private readonly IUserRepositoryNoSql _userRepository;
@@ -67,10 +96,24 @@ public class LoginAsyncUseCase
 
             // Mesma mensagem nos dois ramos abaixo, de propósito — ver a nota da classe.
             if (user is null)
+            {
+                // Gasta o mesmo tempo do ramo legítimo. O retorno é descartado de propósito: o que
+                // interessa é o custo, não o resultado. Ver DummyPasswordHash.
+                _hashingService.Verify(req.Password, DummyPasswordHash, DummyPasswordSalt);
+
+                // Sem e-mail no log: registrar a tentativa é útil; registrar qual conta alguém
+                // está tentando adivinhar transforma o log num diretório de e-mails.
+                _logger.LogWarning("Failed login attempt for unknown account");
                 return new LoginResponse { Message = "Invalid credentials", Success = false };
+            }
 
             if (!_hashingService.Verify(req.Password, user.PasswordHash, user.Salt))
+            {
+                // Aqui a conta existe, então o id pode entrar: é o que permite ver força bruta
+                // concentrada num usuário. Senha nunca entra em log, em ramo nenhum.
+                _logger.LogWarning("Failed login attempt for user {UserId}", user.Id);
                 return new LoginResponse { Message = "Invalid credentials", Success = false };
+            }
 
             var accessTokenResult = _tokenService.CreateAccessToken(user);
             var refreshTokenResult = _tokenService.CreateRefreshToken(user);
@@ -79,9 +122,10 @@ public class LoginAsyncUseCase
             // de quem chama, e é aqui.
             await _refreshTokenRepository.Save(refreshTokenResult.Token);
 
-            // Registro de validação de sessão. Guarda o access token EM CLARO (DT-07) e serve à
-            // autorização paralela do subdomínio Validation. Sala e cor entram como null: só
-            // serão conhecidas quando o jogador entrar numa sala pelo lobby.
+            // Registro de validação de sessão. O token é gravado como resumo SHA-256 pelo
+            // ValidationService — a coleção não guarda mais sessões prontas para uso (era a
+            // DT-07). Sala e cor entram como null: só serão conhecidas quando o jogador entrar
+            // numa sala pelo lobby.
             await _validationService.CreateValidation(new ValidationDto
             {
                 AcessToken = accessTokenResult.Token,

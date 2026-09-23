@@ -10,9 +10,24 @@ namespace Orchestrator.UseCases;
 /// <c>PUT /users/{id}</c>.
 ///
 /// <para>
-/// <b>Superfície de segurança (DT-16):</b> não confere quem está pedindo. Um usuário autenticado
-/// pode alterar outro, inclusive promovê-lo, se alcançar o endpoint. Ver
-/// <c>docs/debito-tecnico.md</c> antes de ampliar o que este caso de uso permite.
+/// <b>Duas travas de alçada, e as duas são necessárias</b> (era a DT-16):
+/// </para>
+/// <list type="number">
+///   <item><description>
+///   <b>quem se altera</b> — o papel <b>atual</b> do alvo não pode estar acima do nível do
+///   chamador. Sem isto, um <c>lider de time</c> (nível 3) edita um <c>adm</c> (nível 4) e pode
+///   rebaixá-lo, trocar o e-mail dele e assumir a conta.
+///   </description></item>
+///   <item><description>
+///   <b>o que se concede</b> — o papel <b>pedido</b> também não pode estar acima do nível do
+///   chamador. Sem isto, qualquer um que alcance o endpoint se promove a <c>super adm</c>.
+///   </description></item>
+/// </list>
+///
+/// <para>
+/// A checagem mora aqui, e não no controller, porque a primeira delas depende de <b>ler o
+/// usuário</b> — o controller não consulta banco. O que vem do controller é só o nível do
+/// chamador, que ele extrai do token.
 /// </para>
 ///
 /// <para>
@@ -39,11 +54,22 @@ public class UpdateUserUseCase
     /// Id do usuário, como texto — vem da rota. Id que não corresponde a ninguém devolve
     /// "User not found", não exceção.
     /// </param>
+    /// <param name="req">
+    /// Os campos novos. <c>ModifiedBy</c> é <b>ignorado</b>: a auditoria usa
+    /// <paramref name="callerId"/>.
+    /// </param>
+    /// <param name="callerLevel">Nível hierárquico de quem pediu a alteração, lido do token.</param>
+    /// <param name="callerId">Id de quem pediu. Vai para a auditoria e para o log.</param>
     /// <returns>
-    /// <c>Success = false</c> quando o usuário não existe, quando o e-mail novo já pertence a
-    /// outro, ou quando o papel é inválido.
+    /// <c>Success = false</c> quando o usuário não existe, quando o alvo ou o papel pedido estão
+    /// acima da alçada do chamador, quando o e-mail novo já pertence a outro, ou quando o papel é
+    /// inválido.
     /// </returns>
-    public async Task<UpdateUserResponse> UpdateAsync(string id, UpdateUserRequest req)
+    public async Task<UpdateUserResponse> UpdateAsync(
+        string id,
+        UpdateUserRequest req,
+        RoleLevel callerLevel,
+        string callerId)
     {
         try
         {
@@ -51,6 +77,21 @@ public class UpdateUserUseCase
             var user = users.FirstOrDefault();
             if (user is null)
                 return new UpdateUserResponse { Message = "User not found", Success = false };
+
+            // Papel gravado que RoleHierarchy não reconhece não conta como nível nenhum — é a
+            // mesma leitura que MinimumRoleHandler faz, onde papel escrito errado é negação
+            // silenciosa. Tratá-lo como "acima de todos" travaria a correção do próprio registro.
+            if (RoleHierarchy.TryGetLevel(user.Role, out var targetLevel) && targetLevel > callerLevel)
+            {
+                _logger.LogWarning(
+                    "User {CallerId} tried to modify user {TargetId}, who outranks them", callerId, user.Id);
+
+                return new UpdateUserResponse
+                {
+                    Message = "Cannot modify a user with a role above your own.",
+                    Success = false
+                };
+            }
 
             var normalizedEmail = EmailNormalization.Normalize(req.Email);
 
@@ -65,18 +106,36 @@ public class UpdateUserUseCase
             if (!RoleHierarchy.TryGetLevel(req.Role, out var roleLevel))
                 return new UpdateUserResponse { Message = "Invalid role", Success = false };
 
+            // Depois de validar o papel, e não antes: trocar a ordem faria papel inexistente ser
+            // reportado como "acima do seu nível", mandando quem depura para o lugar errado.
+            if (roleLevel > callerLevel)
+            {
+                _logger.LogWarning(
+                    "User {CallerId} tried to assign role {Role}, above their own level", callerId, roleLevel);
+
+                return new UpdateUserResponse
+                {
+                    Message = "Cannot assign a role above your own.",
+                    Success = false
+                };
+            }
+
             var normalizedRole = RoleHierarchy.NormalizeRole(roleLevel);
+
+            // Autor da alteração vem do token. O ModifiedBy do corpo era forjável e foi descartado.
+            var modifiedBy = callerId.Trim();
+
             var assignments = req.Assignments
-                .Select(assignment => assignment.ToDomain(req.ModifiedBy))
+                .Select(assignment => assignment.ToDomain(modifiedBy))
                 .ToList();
 
             // Mutadores encadeados — cada um devolve `this`. Cada chamada reescreve
             // ModificationInformations, então o que fica gravado é o autor da última; sendo o mesmo
-            // `ModifiedBy` nas quatro, dá no mesmo.
-            user.ChangeName(req.Name.Trim(), req.ModifiedBy.Trim())
-                .ChangeEmail(normalizedEmail, req.ModifiedBy.Trim())
-                .ChangeRole(normalizedRole, req.ModifiedBy.Trim())
-                .ChangeAssignments(assignments, req.ModifiedBy.Trim());
+            // `modifiedBy` nas quatro, dá no mesmo.
+            user.ChangeName(req.Name.Trim(), modifiedBy)
+                .ChangeEmail(normalizedEmail, modifiedBy)
+                .ChangeRole(normalizedRole, modifiedBy)
+                .ChangeAssignments(assignments, modifiedBy);
 
             // Update aqui substitui o documento inteiro. É o que se quer neste caso de uso, já que
             // ele aplica todos os campos de uma vez.

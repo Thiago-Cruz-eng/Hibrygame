@@ -19,15 +19,22 @@ namespace Orchestrator.UseCases.Dto.Request;
 /// </summary>
 public class CreateUserRequest
 {
-    /// <summary>Nome de exibição. Espaços nas pontas são removidos pelo caso de uso.</summary>
-    [Required]
+    /// <summary>
+    /// Nome de exibição. Espaços nas pontas são removidos pelo caso de uso.
+    ///
+    /// <para>
+    /// O teto de 100 caracteres não é estética: sem limite, qualquer campo de texto livre é um
+    /// vetor barato de consumo de banco e de poluição de log. Ver <c>docs/seguranca.md</c>.
+    /// </para>
+    /// </summary>
+    [Required, StringLength(100, MinimumLength = 1)]
     public string Name { get; set; } = null!;
 
     /// <summary>
     /// E-mail, que serve de login. <c>[EmailAddress]</c> confere apenas o formato — que o endereço
     /// exista, ou que ainda esteja livre, é outra história (a segunda é verificada no caso de uso).
     /// </summary>
-    [Required, EmailAddress]
+    [Required, EmailAddress, StringLength(254)]
     public string Email { get; set; } = null!;
 
     /// <summary>
@@ -38,8 +45,15 @@ public class CreateUserRequest
     /// <c>[DataType(DataType.Password)]</c> não valida nada; serve para que o Swagger apresente o
     /// campo mascarado.
     /// </para>
+    ///
+    /// <para>
+    /// <b>Mínimo de 8 caracteres.</b> É o piso do ASVS para senha escolhida por humano, e o único
+    /// controle que o servidor pode impor sem transformar o cadastro num quebra-cabeça: com
+    /// PBKDF2 de 100.000 iterações, uma senha de 8 caracteres já é cara de atacar; uma de 4 não é
+    /// cara de jeito nenhum. O teto de 128 existe para que o custo do hash continue previsível.
+    /// </para>
     /// </summary>
-    [Required, DataType(DataType.Password)]
+    [Required, DataType(DataType.Password), StringLength(128, MinimumLength = 8)]
     public string Password { get; set; } = null!;
 
     /// <summary>
@@ -52,7 +66,7 @@ public class CreateUserRequest
     /// policy no controller, não este DTO (DT-04).
     /// </para>
     /// </summary>
-    [Required]
+    [Required, StringLength(32)]
     public string Role { get; set; } = null!;
 
     /// <summary>
@@ -74,12 +88,13 @@ public class CreateUserRequest
     /// Quem está criando, para a auditoria.
     ///
     /// <para>
-    /// <b>Vem do cliente</b>, e não do token de quem chamou — o servidor acredita no que for
-    /// enviado. Isso significa que o campo de auditoria pode ser preenchido com qualquer valor.
-    /// Ver DT-16 em <c>docs/debito-tecnico.md</c>: a saída é derivar isto do claim <c>sub</c>, como
-    /// <c>ValidationController</c> já faz para a identidade.
+    /// <b>O que o cliente mandar aqui é descartado.</b> <c>UserController.CreateUser</c>
+    /// sobrescreve este campo com o claim <c>sub</c> do token antes de chamar o caso de uso, e
+    /// por isso ele deixou de ser <c>[Required]</c>: exigir um valor que será jogado fora só
+    /// produz 400 em requisição correta. O campo continua no DTO para não quebrar clientes que
+    /// já o enviam.
     /// </para>
     /// </summary>
-    [Required]
+    [StringLength(100)]
     public string CreatedBy { get; set; } = null!;
 }

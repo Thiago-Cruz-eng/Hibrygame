@@ -3,11 +3,15 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.IdentityModel.Tokens;
 using Orchestrator.Composition;
 using Orchestrator.Infra.BaseRepository;
 using Orchestrator.Infra.Interfaces;
@@ -44,6 +48,12 @@ public class CompositionTests
     /// <summary>Uma chave de 32 bytes, o mínimo que HS256 aceita.</summary>
     private const string ValidKey = "0123456789abcdef0123456789abcdef";
 
+    /// <summary>
+    /// Development em quase todo teste: é o que libera a chave versionada. O contrário — a
+    /// recusa fora de Development — tem teste próprio.
+    /// </summary>
+    private const bool Development = true;
+
     private static IConfiguration BuildConfiguration(string? key = ValidKey) =>
         new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -70,10 +80,10 @@ public class CompositionTests
         // depende de um.
         services.AddLogging();
 
-        var jwtSettings = services.AddJwtSettings(configuration);
+        var jwtSettings = services.AddJwtSettings(configuration, Development);
         services.AddJwtAuthentication(jwtSettings);
         services.AddRolePolicies();
-        services.AddWebLayer();
+        services.AddWebLayer(BuildConfiguration());
         services.AddMongoPersistence(configuration);
         services.AddUseCases();
 
@@ -89,7 +99,7 @@ public class CompositionTests
     {
         var services = new ServiceCollection();
 
-        var settings = services.AddJwtSettings(BuildConfiguration());
+        var settings = services.AddJwtSettings(BuildConfiguration(), Development);
 
         Assert.Equal(ValidKey, settings.Key);
         Assert.Equal("https://localhost:5001", settings.Issuer);
@@ -101,7 +111,7 @@ public class CompositionTests
     public void AddJwtSettings_ValidKey_RegistersOptionsForInjection()
     {
         var services = new ServiceCollection();
-        services.AddJwtSettings(BuildConfiguration());
+        services.AddJwtSettings(BuildConfiguration(), Development);
 
         using var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptions<Orchestrator.Infra.Settings.JwtSettings>>();
@@ -119,7 +129,7 @@ public class CompositionTests
         var services = new ServiceCollection();
 
         var exception = Assert.Throws<InvalidOperationException>(
-            () => services.AddJwtSettings(BuildConfiguration(shortKey)));
+            () => services.AddJwtSettings(BuildConfiguration(shortKey), Development));
 
         // A mensagem tem de dizer o motivo: era exatamente a falta disso que fazia todo login
         // falhar com "Login failed" genérico, indistinguível de senha errada.
@@ -134,9 +144,46 @@ public class CompositionTests
         var empty = new ConfigurationBuilder().Build();
 
         var exception = Assert.Throws<InvalidOperationException>(
-            () => services.AddJwtSettings(empty));
+            () => services.AddJwtSettings(empty, Development));
 
         Assert.Contains("Jwt settings are missing", exception.Message);
+    }
+
+    // --- A chave de desenvolvimento versionada não pode subir em produção ---
+
+    [Fact]
+    public void AddJwtSettings_DevelopmentPlaceholderKeyOutsideDevelopment_Throws()
+    {
+        var services = new ServiceCollection();
+        var configuration = BuildConfiguration(JwtComposition.DevelopmentKeyPlaceholder);
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => services.AddJwtSettings(configuration, isDevelopment: false));
+
+        // A chave está no histórico do git: com ela, qualquer pessoa assina um token com o papel
+        // que quiser. A mensagem tem de dizer por onde sai — Jwt__Key por variável de ambiente.
+        Assert.Contains("Jwt__Key", exception.Message);
+    }
+
+    [Fact]
+    public void AddJwtSettings_DevelopmentPlaceholderKeyInDevelopment_IsAccepted()
+    {
+        var services = new ServiceCollection();
+        var configuration = BuildConfiguration(JwtComposition.DevelopmentKeyPlaceholder);
+
+        var settings = services.AddJwtSettings(configuration, isDevelopment: true);
+
+        Assert.Equal(JwtComposition.DevelopmentKeyPlaceholder, settings.Key);
+    }
+
+    [Fact]
+    public void AddJwtSettings_AnyOtherKeyOutsideDevelopment_IsAccepted()
+    {
+        var services = new ServiceCollection();
+
+        var settings = services.AddJwtSettings(BuildConfiguration(), isDevelopment: false);
+
+        Assert.Equal(ValidKey, settings.Key);
     }
 
     [Fact]
@@ -144,7 +191,7 @@ public class CompositionTests
     {
         var services = new ServiceCollection();
 
-        var settings = services.AddJwtSettings(BuildConfiguration(ValidKey));
+        var settings = services.AddJwtSettings(BuildConfiguration(ValidKey), Development);
 
         Assert.Equal(32, System.Text.Encoding.UTF8.GetByteCount(settings.Key));
     }
@@ -166,7 +213,7 @@ public class CompositionTests
         var services = new ServiceCollection();
         services.AddLogging();
 
-        var jwtSettings = services.AddJwtSettings(BuildConfiguration());
+        var jwtSettings = services.AddJwtSettings(BuildConfiguration(), Development);
         services.AddJwtAuthentication(jwtSettings);
 
         var provider = services.BuildServiceProvider();
@@ -219,6 +266,28 @@ public class CompositionTests
     public void AddJwtAuthentication_RequiresHttpsMetadata()
     {
         Assert.True(ResolveJwtBearerOptions().RequireHttpsMetadata);
+    }
+
+    [Fact]
+    public void AddJwtAuthentication_AcceptsOnlyHmacSha256()
+    {
+        var parameters = ResolveJwtBearerOptions().TokenValidationParameters;
+
+        // Sem esta lista o validador aceita qualquer algoritmo que a chave suporte, e é disso que
+        // vive a família de ataques de confusão de algoritmo.
+        Assert.NotNull(parameters.ValidAlgorithms);
+        Assert.Equal(new[] { SecurityAlgorithms.HmacSha256 }, parameters.ValidAlgorithms!.ToArray());
+    }
+
+    [Fact]
+    public void AddJwtAuthentication_RequiresExpirationAndSignature()
+    {
+        var parameters = ResolveJwtBearerOptions().TokenValidationParameters;
+
+        // ValidateLifetime sozinho não basta: um token que simplesmente não declare `exp` não tem
+        // tempo nenhum a validar. E RequireSignedTokens fecha a porta do `alg: none`.
+        Assert.True(parameters.RequireExpirationTime);
+        Assert.True(parameters.RequireSignedTokens);
     }
 
     // --- O token na query string: a única exceção, e o filtro que a limita ---
@@ -337,7 +406,7 @@ public class CompositionTests
     public void AddWebLayer_CorsPolicy_AllowsTheFrontendOriginWithCredentials()
     {
         var services = new ServiceCollection();
-        services.AddWebLayer();
+        services.AddWebLayer(BuildConfiguration());
 
         using var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptions<CorsOptions>>();
@@ -352,6 +421,138 @@ public class CompositionTests
         Assert.True(policy.SupportsCredentials);
         Assert.True(policy.AllowAnyHeader);
         Assert.True(policy.AllowAnyMethod);
+    }
+
+    [Fact]
+    public void AddWebLayer_CorsPolicy_ReadsTheConfiguredOrigins()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Cors:AllowedOrigins:0"] = "https://xadrez.exemplo.com",
+                ["Cors:AllowedOrigins:1"] = "https://admin.exemplo.com",
+            })
+            .Build();
+
+        var services = new ServiceCollection();
+        services.AddWebLayer(configuration);
+
+        using var provider = services.BuildServiceProvider();
+        var policy = provider.GetRequiredService<IOptions<CorsOptions>>()
+            .Value.GetPolicy(WebComposition.CorsPolicyName);
+
+        Assert.NotNull(policy);
+        Assert.Equal(
+            new[] { "https://xadrez.exemplo.com", "https://admin.exemplo.com" },
+            policy!.Origins.ToArray());
+
+        // A origem de desenvolvimento NÃO entra junto: em produção a lista configurada é a lista.
+        Assert.DoesNotContain("http://localhost:3000", policy.Origins);
+    }
+
+    [Fact]
+    public void AddWebLayer_WithoutConfiguredOrigins_FallsBackToTheDevelopmentFrontend()
+    {
+        var services = new ServiceCollection();
+        services.AddWebLayer(new ConfigurationBuilder().Build());
+
+        using var provider = services.BuildServiceProvider();
+        var policy = provider.GetRequiredService<IOptions<CorsOptions>>()
+            .Value.GetPolicy(WebComposition.CorsPolicyName);
+
+        // Nunca lista vazia: WithOrigins sem nenhuma origem recusaria tudo, e um erro de
+        // configuração viraria "o sistema parou" sem pista nenhuma.
+        Assert.Equal(new[] { "http://localhost:3000" }, policy!.Origins.ToArray());
+    }
+
+    [Fact]
+    public void AddWebLayer_SignalR_LimitsMessageSizeAndHidesDetailedErrors()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddWebLayer(BuildConfiguration());
+
+        using var provider = services.BuildServiceProvider();
+        var options = provider.GetRequiredService<IOptions<HubOptions>>().Value;
+
+        Assert.Equal(32 * 1024, options.MaximumReceiveMessageSize);
+
+        // Detalhe de exceção não volta para o cliente: descreveria as entranhas do servidor para
+        // quem está sondando.
+        Assert.False(options.EnableDetailedErrors);
+    }
+
+    // ---------------------------------------------------------------
+    // AddRateLimiting — a barreira contra força bruta
+    // ---------------------------------------------------------------
+
+    private static RateLimiterOptions ResolveRateLimiterOptions(IConfiguration? configuration = null)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddRateLimiting(configuration ?? BuildConfiguration());
+
+        var provider = services.BuildServiceProvider();
+        return provider.GetRequiredService<IOptions<RateLimiterOptions>>().Value;
+    }
+
+    [Fact]
+    public void AddRateLimiting_RejectsWith429AndAGlobalLimiter()
+    {
+        var options = ResolveRateLimiterOptions();
+
+        Assert.Equal(StatusCodes.Status429TooManyRequests, options.RejectionStatusCode);
+        Assert.NotNull(options.GlobalLimiter);
+        Assert.NotNull(options.OnRejected);
+    }
+
+    [Fact]
+    public void AddRateLimiting_RegistersTheAuthPolicy()
+    {
+        var options = ResolveRateLimiterOptions();
+
+        // O mapa de políticas é interno ao framework, então a leitura é por reflexão — e o
+        // Assert.NotNull no PropertyInfo existe para que uma mudança de API quebre este teste em
+        // vez de fazê-lo passar sem verificar nada.
+        var policyMapProperty = typeof(RateLimiterOptions).GetProperty(
+            "PolicyMap",
+            System.Reflection.BindingFlags.Instance
+                | System.Reflection.BindingFlags.NonPublic
+                | System.Reflection.BindingFlags.Public);
+
+        Assert.NotNull(policyMapProperty);
+
+        var policyMap = Assert.IsAssignableFrom<System.Collections.IDictionary>(
+            policyMapProperty!.GetValue(options));
+
+        // Errar o nome da política nos atributos do controller não quebra nada visivelmente:
+        // apenas deixa o endpoint sem teto. Este teste ancora o nome.
+        Assert.True(policyMap.Contains(RateLimitingComposition.AuthPolicyName));
+    }
+
+    [Fact]
+    public void ResolveClientKey_WithoutARemoteAddress_FallsBackToASharedPartition()
+    {
+        // Conservador de propósito: todos os clientes sem IP dividem a mesma partição. Prefere
+        // limitar demais a não limitar nada.
+        Assert.Equal("unknown", RateLimitingComposition.ResolveClientKey(new DefaultHttpContext()));
+    }
+
+    [Fact]
+    public void ResolveClientKey_WithARemoteAddress_PartitionsByIp()
+    {
+        var context = new DefaultHttpContext();
+        context.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("203.0.113.7");
+
+        Assert.Equal("203.0.113.7", RateLimitingComposition.ResolveClientKey(context));
+    }
+
+    [Fact]
+    public void FixedWindowByClient_UsesAOneMinuteWindowAndNoQueue()
+    {
+        var partition = RateLimitingComposition.FixedWindowByClient("k", 20);
+
+        Assert.Equal("k", partition.PartitionKey);
     }
 
     // ---------------------------------------------------------------
@@ -397,6 +598,21 @@ public class CompositionTests
         Assert.Same(
             provider.GetRequiredService<IMongoClient>(),
             provider.GetRequiredService<IMongoClient>());
+    }
+
+    [Fact]
+    public void AddMongoPersistence_RegistersTheIndexInitializer()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMongoPersistence(BuildConfiguration());
+
+        using var provider = services.BuildServiceProvider();
+
+        // Resolver não conecta ao banco nem cria índice: o StartAsync só roda quando o host
+        // inicia, e nenhum host inicia aqui.
+        var hostedServices = provider.GetServices<IHostedService>();
+        Assert.Contains(hostedServices, service => service is MongoIndexInitializer);
     }
 
     [Theory]

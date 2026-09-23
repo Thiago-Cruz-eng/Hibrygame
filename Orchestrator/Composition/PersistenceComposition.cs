@@ -93,6 +93,14 @@ public static class PersistenceComposition
         services.AddScoped<IRefreshTokenRepositoryNoSql, RefreshTokenRepositoryNoSql>();
         services.AddScoped<IValidationRepositoryNoSql, ValidationRepositoryNoSql>();
 
+        // Índices criados uma vez, na subida. IHostedService e não código solto no Program.cs
+        // porque ele precisa do IMongoDbContext já resolvido e de um ILogger — e porque falhar
+        // aqui não pode derrubar a aplicação (ver MongoIndexInitializer).
+        //
+        // Registrar não conecta: o StartAsync só roda quando o host inicia, o que não acontece
+        // em teste de composição.
+        services.AddHostedService<MongoIndexInitializer>();
+
         return services;
     }
 }

@@ -11,13 +11,18 @@ namespace Orchestrator.UseCases.Dto.Request;
 /// </summary>
 public class RegisterRequest
 {
-    [Required]
+    [Required, StringLength(100, MinimumLength = 1)]
     public string Name { get; set; } = null!;
 
-    [Required, EmailAddress]
+    [Required, EmailAddress, StringLength(254)]
     public string Email { get; set; } = null!;
 
-    [Required, DataType(DataType.Password)]
+    /// <summary>
+    /// Senha em claro. Mínimo de 8 caracteres, teto de 128 — mesma política de
+    /// <see cref="CreateUserRequest.Password"/>, e os dois têm de andar juntos: se só o cadastro
+    /// administrativo exigisse tamanho, o auto-registro seria a porta de entrada para senha fraca.
+    /// </summary>
+    [Required, DataType(DataType.Password), StringLength(128, MinimumLength = 8)]
     public string Password { get; set; } = null!;
 
     [Required, Compare("Password")]

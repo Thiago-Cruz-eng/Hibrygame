@@ -5,6 +5,7 @@ using Orchestrator.Infra.Interfaces;
 using Orchestrator.UseCases;
 using Orchestrator.UseCases.Dto;
 using Orchestrator.UseCases.Dto.Request;
+using Orchestrator.UseCases.Security.Authorization;
 using Xunit;
 
 namespace Orchestrator.Test.UseCases;
@@ -25,6 +26,15 @@ public class UpdateUserUseCaseTests
     // ---------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------
+
+    /// <summary>
+    /// Alçada do chamador nos testes que não estão exercitando a alçada. <c>super adm</c> é o
+    /// nível que passa por qualquer comparação, deixando cada teste isolar o que ele mede.
+    /// </summary>
+    private const RoleLevel CallerLevel = RoleLevel.SuperAdmin;
+
+    /// <summary>Id do chamador — é ele que vai para a auditoria, e não o ModifiedBy do corpo.</summary>
+    private const string CallerId = "caller-do-token";
 
     private static User BuildUser(string name = "Test User", string email = "test@example.com", string role = "jogador")
         => User.Create(name, email, role, "hash", "salt", new List<UserAssignment>(), "admin");
@@ -81,7 +91,7 @@ public class UpdateUserUseCaseTests
             .ReturnsAsync(true);
 
         // Act
-        var result = await _sut.UpdateAsync(user.Id.ToString(), BuildRequest());
+        var result = await _sut.UpdateAsync(user.Id.ToString(), BuildRequest(), CallerLevel, CallerId);
 
         // Assert
         Assert.True(result.Success);
@@ -98,7 +108,7 @@ public class UpdateUserUseCaseTests
             .ReturnsAsync(true);
 
         // Act
-        var result = await _sut.UpdateAsync(user.Id.ToString(), BuildRequest());
+        var result = await _sut.UpdateAsync(user.Id.ToString(), BuildRequest(), CallerLevel, CallerId);
 
         // Assert
         Assert.Equal("User updated", result.Message);
@@ -115,7 +125,7 @@ public class UpdateUserUseCaseTests
             .ReturnsAsync(true);
 
         // Act
-        await _sut.UpdateAsync(user.Id.ToString(), BuildRequest());
+        await _sut.UpdateAsync(user.Id.ToString(), BuildRequest(), CallerLevel, CallerId);
 
         // Assert
         _userRepositoryMock.Verify(r => r.Update(user.Id.ToString(), It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -132,7 +142,7 @@ public class UpdateUserUseCaseTests
         SetupUserNotFound();
 
         // Act
-        var result = await _sut.UpdateAsync(Guid.NewGuid().ToString(), BuildRequest());
+        var result = await _sut.UpdateAsync(Guid.NewGuid().ToString(), BuildRequest(), CallerLevel, CallerId);
 
         // Assert
         Assert.False(result.Success);
@@ -145,7 +155,7 @@ public class UpdateUserUseCaseTests
         SetupUserNotFound();
 
         // Act
-        var result = await _sut.UpdateAsync(Guid.NewGuid().ToString(), BuildRequest());
+        var result = await _sut.UpdateAsync(Guid.NewGuid().ToString(), BuildRequest(), CallerLevel, CallerId);
 
         // Assert
         Assert.Equal("User not found", result.Message);
@@ -176,7 +186,7 @@ public class UpdateUserUseCaseTests
             });
 
         // Act
-        var result = await _sut.UpdateAsync(user.Id.ToString(), BuildRequest(email: "other@example.com"));
+        var result = await _sut.UpdateAsync(user.Id.ToString(), BuildRequest(email: "other@example.com"), CallerLevel, CallerId);
 
         // Assert
         Assert.False(result.Success);
@@ -201,7 +211,7 @@ public class UpdateUserUseCaseTests
             });
 
         // Act
-        var result = await _sut.UpdateAsync(user.Id.ToString(), BuildRequest(email: "other@example.com"));
+        var result = await _sut.UpdateAsync(user.Id.ToString(), BuildRequest(email: "other@example.com"), CallerLevel, CallerId);
 
         // Assert
         Assert.Equal("Email already in use", result.Message);
@@ -222,7 +232,7 @@ public class UpdateUserUseCaseTests
         SetupUserFoundNoCollision(user);
 
         // Act
-        var result = await _sut.UpdateAsync(user.Id.ToString(), BuildRequest(role: invalidRole));
+        var result = await _sut.UpdateAsync(user.Id.ToString(), BuildRequest(role: invalidRole), CallerLevel, CallerId);
 
         // Assert
         Assert.False(result.Success);
@@ -236,10 +246,94 @@ public class UpdateUserUseCaseTests
         SetupUserFoundNoCollision(user);
 
         // Act
-        var result = await _sut.UpdateAsync(user.Id.ToString(), BuildRequest(role: "bad-role"));
+        var result = await _sut.UpdateAsync(user.Id.ToString(), BuildRequest(role: "bad-role"), CallerLevel, CallerId);
 
         // Assert
         Assert.Equal("Invalid role", result.Message);
+    }
+
+    // ---------------------------------------------------------------
+    // Alcada: quem se altera e o que se concede
+    // ---------------------------------------------------------------
+
+    [Fact]
+    public async Task UpdateAsync_TargetOutranksTheCaller_IsRejected()
+    {
+        // Um "lider de time" (nivel 3) nao edita um "adm" (nivel 4): podia rebaixa-lo, trocar o
+        // e-mail dele e assumir a conta. Era a DT-16.
+        var user = BuildUser(role: "adm");
+        SetupUserFoundNoCollision(user);
+
+        var result = await _sut.UpdateAsync(
+            user.Id.ToString(), BuildRequest(), RoleLevel.TeamLeader, CallerId);
+
+        Assert.False(result.Success);
+        Assert.Equal("Cannot modify a user with a role above your own.", result.Message);
+        _userRepositoryMock.Verify(
+            r => r.Update(It.IsAny<string>(), It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_TargetAtTheSameLevel_IsAllowed()
+    {
+        var user = BuildUser(role: "lider de time");
+        SetupUserFoundNoCollision(user);
+        _userRepositoryMock
+            .Setup(r => r.Update(It.IsAny<string>(), It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await _sut.UpdateAsync(
+            user.Id.ToString(), BuildRequest(role: "lider de time"), RoleLevel.TeamLeader, CallerId);
+
+        Assert.True(result.Success);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_RequestedRoleAboveTheCallers_IsRejected()
+    {
+        // Era por aqui que um "lider de time" se promovia a "super adm".
+        var user = BuildUser();
+        SetupUserFoundNoCollision(user);
+
+        var result = await _sut.UpdateAsync(
+            user.Id.ToString(), BuildRequest(role: "super adm"), RoleLevel.TeamLeader, CallerId);
+
+        Assert.False(result.Success);
+        Assert.Equal("Cannot assign a role above your own.", result.Message);
+        _userRepositoryMock.Verify(
+            r => r.Update(It.IsAny<string>(), It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_UnknownRoleIsReportedAsInvalid_NotAsAboveYourLevel()
+    {
+        // A ordem das duas checagens importa: validar o papel ANTES de comparar niveis. Trocada,
+        // um papel inexistente viraria "acima do seu nivel" e mandaria quem depura para o lugar
+        // errado.
+        var user = BuildUser();
+        SetupUserFoundNoCollision(user);
+
+        var result = await _sut.UpdateAsync(
+            user.Id.ToString(), BuildRequest(role: "imperador"), RoleLevel.Player, CallerId);
+
+        Assert.Equal("Invalid role", result.Message);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_AuditsTheCallerFromTheToken_NotTheBody()
+    {
+        var user = BuildUser();
+        SetupUserFoundNoCollision(user);
+        _userRepositoryMock
+            .Setup(r => r.Update(It.IsAny<string>(), It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        await _sut.UpdateAsync(
+            user.Id.ToString(), BuildRequest(modifiedBy: "forjado-pelo-cliente"), CallerLevel, CallerId);
+
+        Assert.NotNull(user.ModificationInformations);
+        Assert.Equal(CallerId, user.ModificationInformations!.ModifiedBy);
+        Assert.NotEqual("forjado-pelo-cliente", user.ModificationInformations.ModifiedBy);
     }
 
     // ---------------------------------------------------------------
@@ -255,7 +349,7 @@ public class UpdateUserUseCaseTests
             .ThrowsAsync(new Exception("DB error"));
 
         // Act
-        var result = await _sut.UpdateAsync(Guid.NewGuid().ToString(), BuildRequest());
+        var result = await _sut.UpdateAsync(Guid.NewGuid().ToString(), BuildRequest(), CallerLevel, CallerId);
 
         // Assert
         Assert.False(result.Success);
@@ -271,7 +365,7 @@ public class UpdateUserUseCaseTests
 
         // Act
         var exception = await Record.ExceptionAsync(() =>
-            _sut.UpdateAsync(Guid.NewGuid().ToString(), BuildRequest()));
+            _sut.UpdateAsync(Guid.NewGuid().ToString(), BuildRequest(), CallerLevel, CallerId));
 
         // Assert
         Assert.Null(exception);

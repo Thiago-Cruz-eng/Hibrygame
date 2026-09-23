@@ -13,7 +13,31 @@ Item marcado `[DECISÃO]` exige definição humana antes de qualquer implementa�
 **Levantamento inicial:** 2026-07-31, sobre `main` + working tree, com `dotnet test` em
 453 aprovados / 1 ignorado.
 
-**Última revisão:** 2026-08-01, no refactor do motor (`refactor/motor-xadrez-modernizacao`),
+**Última revisão:** 2026-09-23, no **endurecimento de segurança pré-produção** — auditoria OWASP
+Top 10 2021 / API Security Top 10 2023 / ASVS aplicada ao `Orchestrator`, com `dotnet test` em
+689 aprovados / 0 ignorados. O relatório de controles, o checklist de produção e as limitações
+que **permanecem** estão em [seguranca.md](./seguranca.md).
+
+Saíram desta lista nesta rodada:
+
+- **DT-07** — o access token deixou de ser gravado em claro na coleção `Validation`: o campo
+  `AcessToken` passa a guardar o resumo SHA-256 (`UseCases/Security/TokenDigest.cs`), calculado e
+  comparado dentro de `ValidationService`. O nome do campo foi mantido de propósito, para não
+  exigir migração; registros antigos deixam de casar, o que custa uma reautenticação a quem
+  estiver logado no momento do deploy.
+- **DT-16** — `change-password` passou a derivar o usuário do claim `sub` e a ignorar `userId` e
+  `modifiedBy` do corpo; `PUT /users/{id}` e `DELETE /users/{id}` passaram a receber o nível do
+  chamador e a recusar tanto agir sobre quem está acima dele quanto conceder papel acima dele.
+  `GET /users/{id}` ficou restrito à própria conta ou a nível ≥ `adm`, respondendo 404 na recusa.
+- **DT-18** — `Infra/Mongo/MongoIndexInitializer.cs`, registrado como `IHostedService`, cria na
+  subida o índice **único** de `User.Email` e os índices de `RefreshToken.UserId` e
+  `Validation.UserId`, de forma idempotente. Falha na criação é `LogError` e não derruba a
+  aplicação: o caso previsto é a coleção já ter e-mail duplicado, e ficar fora do ar por causa de
+  um dado antigo seria pior que o problema.
+- **DT-19** — `ChangePasswordUseCase` deixou de injetar `IGenericRepository`: o `$set` direcionado
+  virou `IUserRepositoryNoSql.UpdatePassword`, implementado em `UserRepositoryNoSql`.
+
+**Revisão anterior:** 2026-08-01, no refactor do motor (`refactor/motor-xadrez-modernizacao`),
 com `dotnet test` em 563 aprovados / 0 ignorados, e 71/71 no smoke de sistema. Relatório completo em
 [refactor-2026-08-01.md](./refactor-2026-08-01.md).
 
@@ -43,49 +67,47 @@ descritos em [manual-testing-results.md](./manual-testing-results.md):
 
 ## Severidade alta — segurança
 
-### DT-07 — access token gravado em claro na coleção `Validation`
+Os quatro itens que moravam aqui saíram na revisão de 2026-09-23 — ver o cabeçalho. Os dois
+abaixo **nasceram** nessa revisão: são o que a auditoria encontrou e a implementação deixou de
+fora conscientemente, com o motivo registrado.
 
-`LoginAsyncUseCase` chama `ValidationService.CreateValidation` gravando o JWT completo em
-`Validation.AcessToken` (sic) e as consultas comparam o token em claro
-(`x.AcessToken == accessToken`). Vazamento da coleção entrega sessões ativas prontas para uso.
-Contraste: o refresh token é hasheado com PBKDF2 — o access token, não.
+### DT-26 — access token não é revogável
 
-- **Arquivos**: `Orchestrator/UseCases/LoginAsyncUseCase.cs`,
-  `Orchestrator/UseCases/ValidationService.cs`, `Orchestrator/Domain/Validation.cs`
-- **Saída**: guardar hash do token (ou o `jti` do JWT, que já existe nos claims) em vez do token
-  inteiro; ajustar os quatro métodos de consulta. Renomear `AcessToken` → `AccessToken` no mesmo
-  PR (quebra de schema: ver DT-08).
+Uma vez emitido, o JWT vale até expirar — no máximo 60 minutos. Isso vale **inclusive** depois de
+troca de senha, de detecção de reuso de refresh token e de remoção do usuário: os três revogam os
+refresh tokens, mas nenhum consegue cancelar um access token já em circulação. Quem tiver copiado
+um token continua autenticado pelo resto da validade dele.
 
-### DT-16 — `change-password` e `PUT /users` não checam quem é o solicitante
+Ficou de fora de propósito: fechar isso exige uma lista de invalidação consultada a **cada**
+requisição, o que troca uma verificação local de assinatura por uma ida ao banco em toda chamada
+autenticada. É decisão de arquitetura com custo permanente, não um ajuste.
 
-Dois endpoints autenticados agem sobre um usuário identificado **pelo corpo do request**, sem
-comparar com o claim `sub`:
+- **Arquivos**: `Orchestrator/UseCases/Security/TokenService.cs` (o claim `jti`, hoje emitido e
+  não usado, é o gancho previsto), `Orchestrator/Composition/JwtComposition.cs`
+- **Saída**: `[DECISÃO]` — ou aceitar a janela de 60 minutos e documentá-la como contrato, ou
+  encurtar `Jwt:ExpiresMinutes` (o que aumenta a frequência de refresh), ou introduzir a lista de
+  invalidação por `jti` com um cache em memória e pagar o custo. A coleção `Validation` **não**
+  serve como blacklist: ela é autorização de sessão de jogo, não de token.
 
-- `POST /users/change-password` (`Role:Player`) — `ChangePasswordRequest.UserId` vem do corpo.
-  Qualquer jogador autenticado troca a senha de qualquer usuário, desde que saiba a senha atual
-  daquele usuário. `ModifiedBy` também vem do corpo.
-- `PUT /users/{id}` (`Role:TeamLeader`, nível 3) — permite gravar `Role = "super adm"` (nível 5).
-  Escalonamento de privilégio para cima do próprio nível.
+### DT-27 — o limite de requisições depende do IP visto pelo Kestrel
 
-O padrão correto já existe no repositório: `ValidationController.IsCallerAuthorizedFor` compara
-`sub` com o id do corpo e devolve `Forbid()`.
+`RateLimitingComposition` particiona por `HttpContext.Connection.RemoteIpAddress`. Atrás de um
+proxy reverso ou balanceador — que é como isto será publicado — esse endereço é o **do proxy**, e
+não o do cliente: todos os usuários caem na mesma partição e o teto de 20 requisições por minuto
+vira um teto global para a aplicação inteira, derrubando usuário legítimo.
 
-- **Arquivos**: `Orchestrator/Presentation/UserController.cs`,
-  `Orchestrator/UseCases/ChangePasswordUseCase.cs`, `Orchestrator/UseCases/UpdateUserUseCase.cs`
-- **Saída**: derivar o id-alvo do claim `sub` em `change-password` (ou exigir `Role:Admin` para
-  trocar a senha de outro); em `PUT /users/{id}`, recusar papel-alvo maior que o papel do
-  solicitante. `ModifiedBy`/`CreatedBy` sempre do claim, nunca do corpo.
+Não foi resolvido aqui porque `ForwardedHeaders` exige saber a rede confiável do proxy, e
+configurar `KnownProxies`/`KnownNetworks` com valor errado é pior que não configurar: passa a
+aceitar o `X-Forwarded-For` que o cliente mandar, e aí qualquer um escolhe a própria partição e
+escapa do limite.
 
-### DT-18 — `User.Email` sem índice único
+Segundo efeito, menor: o estado do limitador vive em memória, por instância. Duas instâncias
+multiplicam o teto por dois, e reiniciar zera as janelas.
 
-A unicidade de e-mail é garantida em código (`FindByFilter` + `if`) em `CreateUserUseCase` e
-`UpdateUserUseCase`, sem índice único no Mongo. Duas criações simultâneas com o mesmo e-mail
-passam as duas, e o login (`FirstOrDefault` por e-mail) passa a depender de ordem de retorno.
-Nenhum índice é criado no startup — `User.Email` e `RefreshToken.UserId` são varredura de coleção.
-
-- **Saída**: criar índice único em `User.Email` (normalizado) e índice em `RefreshToken.UserId`,
-  de forma idempotente no startup. Decidir onde esse código vive — não existe ponto de
-  inicialização de banco hoje.
+- **Arquivos**: `Orchestrator/Program.cs`, `Orchestrator/Composition/RateLimitingComposition.cs`
+- **Saída**: `[DECISÃO]` — ao definir a topologia de deploy, configurar `UseForwardedHeaders` com
+  a rede do proxy **antes** de `UseRateLimiter`. Está no checklist de
+  [seguranca.md](./seguranca.md), item 7.
 
 ## Severidade média — arquitetura
 
@@ -151,27 +173,15 @@ indistinguível de sala vazia — o cliente não consegue diferenciar "não exis
 
 ### DT-17 — busca por Id via `Id.ToString() == id`
 
-`GetUserUseCase`, `UpdateUserUseCase`, `DeleteUserUseCase` e `ChangePasswordUseCase` filtram com
+`GetUserUseCase`, `UpdateUserUseCase` e `DeleteUserUseCase` filtram com
 `user => user.Id.ToString() == id`, delegando ao driver a tradução de `ToString()` sobre um `Guid`
-serializado como string. Funciona hoje, mas é frágil: depende do tradutor de expressão do
+serializado como string. (`ChangePasswordUseCase` saiu desta lista em 2026-09-23: ele passou a
+usar `Guid.TryParse` + `GetById`, que é exatamente a saída descrita abaixo.) Funciona hoje, mas é frágil: depende do tradutor de expressão do
 `MongoDB.Driver` e não usa índice de forma previsível. `BaseRepositoryNoSql.GetById` faz o certo
 (`Guid.TryParse` + `x.Id == guid`).
 
 - **Saída**: trocar por `Guid.TryParse` + comparação direta, ou usar `GetById` do repositório
   (que já existe e está sem uso nesses caminhos).
-
-### DT-19 — `ChangePasswordUseCase` injeta `IGenericRepository` direto
-
-Todos os outros casos de uso dependem de `I{Entidade}RepositoryNoSql`; este injeta
-`IGenericRepository` e monta a query genérica na mão. Fura a fronteira do Princípio I
-(caso de uso conhecendo a camada genérica de persistência) e dificulta o mock no teste.
-
-O `Update` direcionado com `$set` que ele faz **está correto** e é melhor que `ReplaceOne` — a
-saída é expor esse update no `IUserRepositoryNoSql`, não copiar a injeção genérica.
-
-- **Arquivo**: `Orchestrator/UseCases/ChangePasswordUseCase.cs`
-- **Saída**: adicionar um método específico (ex.: `UpdatePassword`) em `IUserRepositoryNoSql` /
-  `UserRepositoryNoSql` e injetar a interface da entidade.
 
 ### DT-15 — sem linter, formatter e cobertura no gate
 

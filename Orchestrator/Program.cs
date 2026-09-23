@@ -18,16 +18,33 @@ using Orchestrator.Infra.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Teto de 1 MB para o corpo de qualquer requisicao. Os requests desta API sao pequenos — o maior
+// e um PUT /users com uma lista de vinculos —, entao o padrao de 30 MB do Kestrel so serve para
+// alguem prender memoria e banda do servidor mandando corpo gigante em endpoint anonimo.
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 1 * 1024 * 1024);
+
+// HSTS: instrui o navegador a so falar https com este dominio pelo proximo ano. Configurado
+// sempre, mas ATIVADO so fora de desenvolvimento (ver UseHsts no pipeline) — em localhost ele
+// prenderia o navegador da pessoa em https para todo o dominio, inclusive outros projetos.
+builder.Services.AddHsts(options =>
+{
+    options.MaxAge = TimeSpan.FromDays(365);
+    options.IncludeSubDomains = true;
+});
+
 // Como Guid e DateTime são gravados no MongoDB. Global e irreversível — ver a nota do método.
 PersistenceComposition.RegisterBsonSerializers();
 
 // Lê a seção "Jwt" e derruba a subida se a chave for curta demais para HS256. Devolve as
 // configurações porque a autenticação precisa delas antes de a injeção de dependências existir.
-var jwtSettings = builder.Services.AddJwtSettings(builder.Configuration);
+// O segundo argumento recusa a chave de desenvolvimento versionada fora de Development.
+var jwtSettings = builder.Services.AddJwtSettings(
+    builder.Configuration, builder.Environment.IsDevelopment());
 
 builder.Services.AddJwtAuthentication(jwtSettings);
 builder.Services.AddRolePolicies();
-builder.Services.AddWebLayer();
+builder.Services.AddRateLimiting(builder.Configuration);
+builder.Services.AddWebLayer(builder.Configuration);
 builder.Services.AddMongoPersistence(builder.Configuration);
 builder.Services.AddUseCases();
 
@@ -40,6 +57,10 @@ var app = builder.Build();
 // o comportamento. Em particular, UseAuthentication tem de vir antes de UseAuthorization —
 // autorizar exige saber quem é o chamador, e é a autenticação que descobre isso.
 // -----------------------------------------------------------------------------------------------
+
+// Cabecalhos de seguranca primeiro, para valerem tambem nas respostas que nunca chegam a um
+// controller — 401, 403, 429 e pagina de erro. Ver Composition/SecurityHeaders.cs.
+app.UseSecurityHeaders();
 
 // Swagger só em desenvolvimento: em produção ele publicaria o mapa completo da API.
 if (app.Environment.IsDevelopment())
@@ -63,6 +84,9 @@ if (app.Environment.IsDevelopment())
 // Rider, e isso nao e um bom contrato de ambiente local.
 if (!app.Environment.IsDevelopment())
 {
+    // UseHsts antes do redirecionamento: os dois andam juntos, e o cabecalho so tem sentido numa
+    // resposta https. Em desenvolvimento nenhum dos dois entra.
+    app.UseHsts();
     app.UseHttpsRedirection();
 }
 
@@ -70,6 +94,12 @@ if (!app.Environment.IsDevelopment())
 // (preflight, um OPTIONS) não carrega credencial nenhuma. Se a autenticação a examinasse primeiro,
 // ela seria recusada e a requisição real nunca aconteceria.
 app.UseCors(WebComposition.CorsPolicyName);
+
+// Limite de requisicoes DEPOIS do CORS e ANTES da autenticacao, e a ordem e deliberada: depois do
+// CORS para que a resposta 429 carregue os cabecalhos que o navegador exige para entrega-la ao
+// javascript (sem eles o frontend ve um erro de rede opaco); antes da autenticacao porque validar
+// um JWT custa criptografia, e uma enxurrada nao deve pagar esse custo para ser recusada.
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

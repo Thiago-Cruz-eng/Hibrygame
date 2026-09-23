@@ -22,14 +22,15 @@ Multiplayer chess platform. ASP.NET Core 8 + SignalR + MongoDB + JWT.
 - **Database:** MongoDB (Guid IDs stored as string)
 - **Real-time:** SignalR (`/chesshub`)
 - **Auth:** JWT Bearer (HmacSha256)
-- **Tests:** xUnit + Moq (566 passing, 0 skipped)
+- **Tests:** xUnit + Moq (689 passing, 0 skipped)
+- **Edge defence:** `Microsoft.AspNetCore.RateLimiting` (shared framework) + security headers middleware
 
 ## Run
 ```bash
 dotnet restore
 dotnet build
 dotnet run --project Orchestrator   # Swagger at https://localhost:5001/swagger
-dotnet test                          # 566 tests, 0 skipped
+dotnet test                          # 689 tests, 0 skipped
 ```
 
 MongoDB on `localhost:27017`. Note: `Program.cs` reads `Mongo:ConnectionString` / `Mongo:Database`
@@ -193,8 +194,20 @@ Stored as Portuguese strings: `"jogador"`, `"jogador principal"`, `"lider de tim
 `"Role:Player"`, `"Role:MainPlayer"`, `"Role:TeamLeader"`, `"Role:Admin"`, `"Role:SuperAdmin"` — each requires role `>=` minimum via `MinimumRoleHandler`.
 
 ### Tokens
-- Access: JWT HS256, 60 min default
-- Refresh: random 64-byte base64, **hashed+salted** in DB, 30 days, **rotated on each refresh**, revocable (`ReplacedByTokenId` chain)
+- Access: JWT HS256, 60 min. Validation pins `ValidAlgorithms = [HmacSha256]`, `RequireExpirationTime`, `RequireSignedTokens`, `ClockSkew = 0`
+- Refresh: random 64-byte base64, **hashed+salted** in DB, 30 days, **rotated on each refresh**, revocable (`ReplacedByTokenId` chain). Presenting an already-revoked token is treated as replay: **every active token of that user is revoked**
+- Changing a password revokes the user's refresh tokens; deleting a user revokes them and drops the `Validation` records
+- The dev `Jwt:Key` is refused outside Development — set `Jwt__Key` from env/vault
+
+### Rate limiting and headers
+- `Composition/RateLimitingComposition.cs` — named policy `"auth"` (fixed window per remote IP, `RateLimiting:AuthPermitPerMinute`, default 20) on `/login`, `/register`, `/refresh-token`, `/users/change-password`; global limiter (`RateLimiting:GlobalPermitPerMinute`, default 300). Rejection is `429` with `{ success, message }` and `Retry-After`
+- `Composition/SecurityHeaders.cs` — `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, CSP outside `/swagger`, `Cache-Control: no-store` on the credential paths. HSTS outside Development
+- Pipeline order: `UseSecurityHeaders` → Swagger (dev) → `UseHsts`/`UseHttpsRedirection` (prod) → `UseCors` → `UseRateLimiter` → `UseAuthentication` → `UseAuthorization`
+
+### Access control on `/users`
+- `change-password` always targets the `sub` claim; body `userId`/`modifiedBy` are ignored
+- `PUT`/`DELETE /users/{id}` receive the caller's `RoleLevel` and refuse to act on — or grant — a role above it
+- `GET /users/{id}` is self-only unless the caller is `>= Admin`; refusal is **404**, not 403
 
 ### JWT in SignalR
 - WebSocket can't carry custom headers → SignalR JS client sends as `?access_token=` query string
@@ -277,9 +290,9 @@ Dev only — production must move `Jwt:Key` to env var / Key Vault.
 Full catalogue with severity, affected files and exit path:
 [docs/debito-tecnico.md](../docs/debito-tecnico.md). Check it **before** "fixing" something that
 looks wrong — it may be known debt or an item awaiting a human decision (`[DECISÃO]`).
-Highlights: `POST /users` is anonymous and accepts any role (DT-04); the access token is stored in
-cleartext in the `Validation` collection (DT-07); `change-password` and `PUT /users` don't check who
-is asking (DT-16); reconnecting loses the player's seat in the room (DT-21).
+Highlights after the 2026-09-23 security hardening (see [docs/seguranca.md](../docs/seguranca.md)):
+the access token is **not revocable** before it expires, up to 60 min (DT-26), and the rate limiter
+partitions by the IP the Kestrel sees, which needs `ForwardedHeaders` behind a proxy (DT-27).
 
 The engine bugs that used to be listed here (knight edge cases, `Position` without value equality,
 `ValidationService`) were fixed in the 2026-08-01 refactor — see
@@ -327,7 +340,7 @@ Scripts are PowerShell and require a `NNN-slug` branch — they fail on `main` b
 
 Before merge:
 - [ ] `dotnet build` 0 errors
-- [ ] `dotnet test` all green (539 expected pass, 0 skips) and `dotnet build` with 0 warnings
+- [ ] `dotnet test` all green (689 expected pass, 0 skips) and `dotnet build` with 0 warnings
 - [ ] Constitution respected — Principles I (layering) and II (server authority)
 - [ ] If FE contract changed: update `docs/FRONTEND_CHANGES.md` (append a dated history entry)
 - [ ] If debt was created or resolved: update `docs/debito-tecnico.md`

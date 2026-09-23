@@ -25,7 +25,7 @@ public class VerifyValidationRequest
     /// <summary>
     /// Usuário a verificar. Precisa coincidir com o <c>sub</c> do token, ou a resposta é 403.
     /// </summary>
-    [Required]
+    [Required, StringLength(64)]
     public string UserId { get; set; } = null!;
 }
 
@@ -40,7 +40,7 @@ public class VerifyValidationRequest
 public class GetValidationRequest
 {
     /// <summary>Usuário consultado. Conferido contra o <c>sub</c> do token.</summary>
-    [Required]
+    [Required, StringLength(64)]
     public string UserId { get; set; } = null!;
 }
 
@@ -51,22 +51,25 @@ public class GetValidationRequest
 public class UpdateValidationRequest
 {
     /// <summary>Usuário. Conferido contra o <c>sub</c> do token.</summary>
-    [Required]
+    [Required, StringLength(64)]
     public string UserId { get; set; } = null!;
 
-    /// <summary>Sala em que o jogador entrou.</summary>
-    [Required]
+    /// <summary>
+    /// Sala em que o jogador entrou. O teto de 64 é o mesmo que <c>ChessHub.CreateRoom</c> aceita:
+    /// nome maior que isso não corresponde a sala nenhuma.
+    /// </summary>
+    [Required, StringLength(64)]
     public string Room { get; set; } = null!;
 
     /// <summary>Cor atribuída: <c>"White"</c> ou <c>"Black"</c>. O valor não é validado.</summary>
-    [Required]
+    [Required, StringLength(16)]
     public string PieceColor { get; set; } = null!;
 
     /// <summary>
     /// E-mail do usuário. <b>Obrigatório no request e não usado na atualização</b> — o serviço
     /// localiza o registro por usuário e token, e grava apenas sala e cor. Ver DT-20.
     /// </summary>
-    [Required, EmailAddress]
+    [Required, EmailAddress, StringLength(254)]
     public string UserEmail { get; set; } = null!;
 }
 
@@ -82,22 +85,22 @@ public class UpdateValidationRequest
 public class CanMoveValidationRequest
 {
     /// <summary>Usuário. Conferido contra o <c>sub</c> do token.</summary>
-    [Required]
+    [Required, StringLength(64)]
     public string UserId { get; set; } = null!;
 
-    /// <summary>Sala. Entra no filtro.</summary>
-    [Required]
+    /// <summary>Sala. Entra no filtro. Mesmo teto de 64 de <c>ChessHub.CreateRoom</c>.</summary>
+    [Required, StringLength(64)]
     public string Room { get; set; } = null!;
 
     /// <summary>Cor a mover. Entra no filtro.</summary>
-    [Required]
+    [Required, StringLength(16)]
     public string PieceColor { get; set; } = null!;
 
     /// <summary>
     /// E-mail do usuário. <b>Obrigatório e ignorado</b>: o filtro de
     /// <c>GetValidationCanMove</c> usa token, usuário, sala e cor — não o e-mail. Ver DT-20.
     /// </summary>
-    [Required, EmailAddress]
+    [Required, EmailAddress, StringLength(254)]
     public string UserEmail { get; set; } = null!;
 
     /// <summary>
@@ -109,6 +112,6 @@ public class CanMoveValidationRequest
     /// parsing.
     /// </para>
     /// </summary>
-    [Required]
+    [Required, StringLength(32)]
     public string Day { get; set; } = null!;
 }

@@ -57,7 +57,8 @@ respeitado, mas nada no servidor o liga automaticamente — `Finish()` nunca é 
 | API | ASP.NET Core 8, controllers clássicos, Swashbuckle 6 (Swagger só em Development) |
 | Real-time | SignalR 1.1 — hub único `/chesshub`, estado `static` em processo |
 | Banco | MongoDB (`MongoDB.Driver` 3.10), `Guid` serializado como `string`, sem ORM e sem migrations |
-| Auth | JWT HS256 (`Microsoft.AspNetCore.Authentication.JwtBearer` 10) + refresh token rotativo |
+| Auth | JWT HS256 (`Microsoft.AspNetCore.Authentication.JwtBearer` 10) + refresh token rotativo com detecção de reuso |
+| Defesa de borda | `Microsoft.AspNetCore.RateLimiting` (framework compartilhado, sem pacote novo) — política `"auth"` nos endpoints de credencial + limitador global, ambos por IP; cabeçalhos de segurança em toda resposta |
 | Hash | PBKDF2 (`Rfc2898DeriveBytes`, SHA256, 100.000 iterações, salt 16B, chave 32B) |
 | Serialização | `System.Text.Json` com `ReferenceHandler.Preserve` na API. O motor não serializa nada — o contrato de fio é `ToString()` em `ChessHub.MapSquare`, PascalCase. `Newtonsoft.Json` foi removido |
 | Testes | xUnit 2.9 + Moq 4.20 (sem FluentAssertions) |
@@ -92,7 +93,7 @@ Orchestrator/
   Composition/              Registro de DI por assunto — Jwt, Authorization, Web, Persistence, UseCase
   Presentation/             UserController, ValidationController
   Program.cs                Índice da composição (chama Composition/) + pipeline de requisição
-Orchestrator.Test/          Domain/ UseCases/ Security/ Presentation/ + ChessHubTests + GameRoomTests (411 pass)
+Orchestrator.Test/          Domain/ UseCases/ Security/ Presentation/ + ChessHubTests + ChessHubHardeningTests + GameRoomTests (534 pass)
 .specify/                   Constituição + templates + scripts + extensão git do Spec Kit
 specs/                      Especificações de feature do Spec Kit (spec.md, plan.md, tasks.md, contracts/)
 .agents/                    Skills, mapa funcional e memória de descoberta
@@ -129,8 +130,17 @@ docs/                       README de arquitetura, contrato de FE e débito téc
   `Position.TryFromAlgebraic`/`FromAlgebraic`, nunca com aritmética manual espalhada.
 - **Sem migration** — mudança de schema é retrocompatível: campo novo é opcional ou
   `[BsonIgnoreIfNull]`. Não existe script de migração.
-- **Segredo fora do repositório** — `Jwt:Key` no `appsettings.json` é valor de desenvolvimento.
+- **Segredo fora do repositório** — `Jwt:Key` no `appsettings.json` é valor de desenvolvimento, e
+  **a aplicação recusa subir com ele fora de Development** (`JwtComposition.DevelopmentKeyPlaceholder`).
   Endpoint REST não recebe token em URL; a exceção `?access_token=` vale só para `/chesshub`.
+- **Identidade vem do token, nunca do corpo** — id de usuário-alvo, autor de auditoria
+  (`CreatedBy`/`ModifiedBy`) e nome de jogador no hub saem de claim (`sub`, `name`). Campo
+  equivalente no corpo do request é mantido por compatibilidade e **ignorado**. Regra de alçada
+  (não agir sobre quem está acima do próprio nível, não conceder papel acima dele) mora no caso de
+  uso, que recebe o nível por parâmetro. Ver [`docs/seguranca.md`](docs/seguranca.md).
+- **Endpoint que recebe credencial declara o teto** — `[EnableRateLimiting(RateLimitingComposition.AuthPolicyName)]`
+  em `/login`, `/register`, `/refresh-token` e `/users/change-password`. Nada aplica isso por
+  convenção, e esquecer não quebra nada visivelmente: só deixa a porta sem teto.
 
 ### Áreas críticas (maior risco de regressão)
 
@@ -182,9 +192,9 @@ repositórios são mockados com Moq.
 dotnet restore
 dotnet build                                  # 4 projetos, 0 erros e 0 warnings esperado
 dotnet run --project Orchestrator             # Swagger em https://localhost:5001/swagger
-dotnet test                                   # 566 aprovados, 0 ignorados
+dotnet test                                   # 689 aprovados, 0 ignorados
 dotnet test Hibrygame.Test                    # só a engine (155 pass)
-dotnet test Orchestrator.Test                 # só a API (411 pass)
+dotnet test Orchestrator.Test                 # só a API (534 pass)
 ```
 
 O quality gate é `dotnet build` + `dotnet test` verdes. `Directory.Build.props` liga
@@ -304,4 +314,5 @@ marcadores `<!-- SPECKIT START -->` e `<!-- SPECKIT END -->` no `CLAUDE.md` da r
 | [`docs/FRONTEND_CHANGES.md`](docs/FRONTEND_CHANGES.md) | Contrato consumido pelo front-end e histórico de mudanças |
 | [`docs/guia-do-desenvolvedor.md`](docs/guia-do-desenvolvedor.md) | Guia de tarefa para quem está chegando: receitas passo a passo (endpoint novo, campo em entidade, regra de xadrez, método de hub, repositório), armadilhas do repositório e onde não mexer |
 | [`docs/debito-tecnico.md`](docs/debito-tecnico.md) | Débito conhecido, severidade e itens que exigem decisão humana |
+| [`docs/seguranca.md`](docs/seguranca.md) | Controles de segurança implementados mapeados a OWASP/ASVS, checklist de produção e eventos de log a monitorar |
 | [`.editorconfig`](.editorconfig) | Convenções de formatação e nomenclatura, com o critério de severidade explicado no cabeçalho |

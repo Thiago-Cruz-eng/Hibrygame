@@ -17,7 +17,7 @@ Multiplayer chess platform. ASP.NET Core 8 backend with SignalR real-time gamepl
 Hibrygame.sln
 ├── Hibrygame/                 # Chess engine — pure C# library, no web/db deps
 │   └── Logic/                 # Board, Position, Piece (Pawn/Knight/Bishop/Rook/Queen/King), Move, Common
-├── Hibrygame.Test/            # Engine tests (146 passing)
+├── Hibrygame.Test/            # Engine tests (155 passing)
 ├── Orchestrator/              # ASP.NET Core Web API
 │   ├── Domain/                # User, RefreshToken, UserAssignment, Validation, AuditInformation, BaseEntity
 │   ├── Infra/
@@ -73,8 +73,9 @@ dotnet run --project Orchestrator
 ### Tests
 ```bash
 dotnet test
-# Hibrygame.Test:    146 pass
-# Orchestrator.Test: 380 pass
+# Hibrygame.Test:    155 pass
+# Orchestrator.Test: 534 pass
+# Total:             689 pass, 0 skipped
 ```
 
 ## Architecture
@@ -109,9 +110,24 @@ All services registered in `Program.cs`:
 - Use cases: scoped, one class per action.
 
 ### Authentication
-- **JWT Bearer**, symmetric HmacSha256 with `Jwt:Key`.
+- **JWT Bearer**, symmetric HmacSha256 with `Jwt:Key`. Validation pins the algorithm
+  (`ValidAlgorithms = [HmacSha256]`) and requires both a signature and an `exp` claim. The dev key
+  shipped in `appsettings.json` is **refused outside Development** — set `Jwt__Key` from env/vault.
 - Login flow: `POST /login` → access token (60 min) + refresh token (30 days).
 - Refresh: `POST /refresh-token` → rotates refresh token, revokes old one (`ReplacedByTokenId` chain).
+  Presenting an **already-revoked** token is treated as replay: every active token of that user is
+  revoked and the session dies.
+- Changing a password revokes the user's refresh tokens; deleting a user revokes them and drops the
+  user's `Validation` records.
+- **Rate limiting** (per remote IP, `Microsoft.AspNetCore.RateLimiting`): `RateLimiting:AuthPermitPerMinute`
+  (default 20/min) on `/login`, `/register`, `/refresh-token` and `/users/change-password`, plus a
+  global `RateLimiting:GlobalPermitPerMinute` (default 300/min). Rejection is `429` with
+  `{ "success": false, "message": "Too many requests" }` and a `Retry-After` header.
+- **Security headers** on every response: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+  `Referrer-Policy: no-referrer`, `Permissions-Policy`, CSP (except under `/swagger`), and
+  `Cache-Control: no-store` on the three credential paths. HSTS outside Development.
+- Full control map, production checklist and the security events worth monitoring:
+  [docs/seguranca.md](docs/seguranca.md).
 - Role hierarchy (`UseCases/Security/Authorization/RoleHierarchy.cs`):
   ```
   Player (1) < MainPlayer (2) < TeamLeader (3) < Admin (4) < SuperAdmin (5)
@@ -121,20 +137,32 @@ All services registered in `Program.cs`:
 
 ## HTTP API
 
-### Auth (anonymous)
+### Auth (anonymous, rate limited)
 | Method | Path                          | Body                                | Response                    |
 |--------|-------------------------------|-------------------------------------|-----------------------------|
 | POST   | `/login`                      | `LoginRequest`                      | `LoginResponse`             |
+| POST   | `/register`                   | `RegisterRequest`                   | `RegisterResponse`          |
 | POST   | `/refresh-token`              | `RefreshTokenRequest`               | `RefreshTokenResponse`      |
-| POST   | `/users`                      | `CreateUserRequest`                 | `CreateUserResponse`        |
 
 ### Users (require role policy)
 | Method | Path                          | Min role     | Body                  | Response               |
 |--------|-------------------------------|--------------|-----------------------|------------------------|
+| POST   | `/users`                      | Admin        | `CreateUserRequest`   | `CreateUserResponse`   |
 | GET    | `/users/{id}`                 | Player       | —                     | `GetUserResponse`      |
 | PUT    | `/users/{id}`                 | TeamLeader   | `UpdateUserRequest`   | `UpdateUserResponse`   |
 | DELETE | `/users/{id}`                 | Admin        | —                     | `DeleteUserResponse`   |
 | POST   | `/users/change-password`      | Player       | `ChangePasswordRequest` | `ChangePasswordResponse` |
+
+Access control beyond the policy, all enforced server-side:
+
+- `POST /users` — cannot create a role above the caller's own; `CreatedBy` comes from the `sub` claim.
+- `GET /users/{id}` — self only, unless the caller is `>= Admin`. Refusal is **404**, not 403: a 403
+  would confirm that the id exists.
+- `PUT /users/{id}` — cannot modify a user whose current role outranks the caller, nor assign a role
+  above the caller's own. `ModifiedBy` comes from the `sub` claim.
+- `DELETE /users/{id}` — cannot delete a user who outranks the caller.
+- `POST /users/change-password` — always targets the `sub` claim. Body `userId`/`modifiedBy` are
+  accepted for contract compatibility and **ignored**.
 
 ### Validation (require Player, JWT in `Authorization` header)
 | Method | Path                          | Body                                                        | Response                                                    |
@@ -263,7 +291,13 @@ Layout: `Column=7` is White's back rank (rank 1), `Column=0` is Black's back ran
 2. ~~**Knight L-pattern bug.**~~ **Resolvido.** `GetMovesKnight_AfterOneMove_Correctly` não está mais ignorado — a suíte roda com **0 ignorados**. A expectativa do teste estava geometricamente errada e foi corrigida; a geometria do cavalo passou a sair de `Move.KnightOffsets`, fonte única. Ver [docs/refactor-2026-08-01.md](docs/refactor-2026-08-01.md).
 3. **No promotion / castling / en-passant.** Pawn promotion and castling logic not implemented. Pawn `HasAlreadyOneMove` flag set, but no two-square en-passant capture.
 4. **`ReferenceHandler.Preserve`** on JSON serialization adds `$id` / `$ref` — FE must handle.
-5. **JWT key in `appsettings.json`** — OK for dev. Production must use Azure Key Vault / env vars.
+5. **JWT key in `appsettings.json`** — OK for dev; the app refuses to start with it outside
+   Development. Production must use Azure Key Vault / env vars (`Jwt__Key`).
+6. **Access tokens are not revocable** — a token stays valid until it expires (max 60 min), even
+   after a password change or a user deletion. See DT-26.
+7. **Rate limiting partitions by the IP Kestrel sees** — behind a reverse proxy this needs
+   `ForwardedHeaders`, or every client shares one bucket. See DT-27 and
+   [docs/seguranca.md](docs/seguranca.md).
 
 ## Documentation index
 
@@ -271,6 +305,8 @@ Layout: `Column=7` is White's back rank (rank 1), `Column=0` is Black's back ran
 - [docs/guia-do-desenvolvedor.md](docs/guia-do-desenvolvedor.md) — **comece por aqui se você é novo no repositório**: receitas passo a passo (endpoint novo, campo em entidade, regra de xadrez, método de hub, repositório), as armadilhas conhecidas e onde não mexer sem conversar
 - [docs/FRONTEND_CHANGES.md](docs/FRONTEND_CHANGES.md) — frontend migration contract (hub naming, auth, payloads)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — deep architecture dive (request flow, hub state machine, persistence)
+- [docs/seguranca.md](docs/seguranca.md) — security controls mapped to OWASP Top 10 / ASVS, production checklist, and the log events worth monitoring
+- [docs/debito-tecnico.md](docs/debito-tecnico.md) — known debt, severity, and the items waiting on a human decision
 - [docs/fluxo-de-trabalho.md](docs/fluxo-de-trabalho.md) — como abrir, testar e mergear uma demanda: back+front, só back, só front; onde cada teste mora
 - [docs/workflow-cenarios.md](docs/workflow-cenarios.md) — os mesmos fluxos aplicados a cinco demandas realistas, comando a comando, mais a lista completa de quality gates
 - [docs/fluxo-req-res.md](docs/fluxo-req-res.md) — partida de dois jogadores do login ao xeque-mate: cada endpoint, cada invocação de hub e cada evento, com payloads capturados de execução real

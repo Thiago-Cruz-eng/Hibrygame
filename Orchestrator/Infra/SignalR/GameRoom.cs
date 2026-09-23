@@ -20,6 +20,31 @@ public class GameRoom
     private readonly SemaphoreSlim _gate = new(1, 1);
 
     public string Name { get; }
+
+    /// <summary>
+    /// Id do usuário que criou a sala (claim <c>sub</c>), ou <c>null</c> quando não foi possível
+    /// identificá-lo.
+    ///
+    /// <para>
+    /// Serve ao teto de salas por usuário em <c>ChessHub.CreateRoom</c>. Não tem efeito nenhum
+    /// sobre a partida: a cor e a autoridade de jogar continuam vindo do assento em
+    /// <see cref="Players"/>, que é por conexão. Criador não é jogador.
+    /// </para>
+    ///
+    /// <para>
+    /// <c>null</c> em teste, onde o <c>HubCallerContext</c> mockado não traz usuário — e sala sem
+    /// criador conhecido fica fora tanto da contagem quanto da recuperação de salas abandonadas.
+    /// </para>
+    /// </summary>
+    public string? CreatedBy { get; }
+
+    /// <summary>
+    /// Quando a sala foi criada, em UTC. É o que permite distinguir uma sala recém-criada, ainda
+    /// esperando o criador entrar, de uma sala abandonada — ver a recuperação em
+    /// <c>ChessHub.CreateRoom</c>.
+    /// </summary>
+    public DateTime CreatedAt { get; } = DateTime.UtcNow;
+
     public Board Board { get; } = new();
     public ConcurrentDictionary<string, PlayerSlot> Players { get; } = new();
     public ColorEnum CurrentTurn { get; private set; } = ColorEnum.White;
@@ -42,9 +67,14 @@ public class GameRoom
     /// </summary>
     public GameOutcome Outcome { get; private set; } = GameOutcome.InProgress;
 
-    public GameRoom(string name)
+    /// <param name="createdBy">
+    /// Quem criou a sala. Opcional para não obrigar todo teste a inventar um usuário — ver
+    /// <see cref="CreatedBy"/>.
+    /// </param>
+    public GameRoom(string name, string? createdBy = null)
     {
         Name = name;
+        CreatedBy = createdBy;
     }
 
     /// <summary>Executa <paramref name="action"/> com acesso exclusivo ao tabuleiro da sala.</summary>
