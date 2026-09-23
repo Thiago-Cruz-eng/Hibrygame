@@ -3,8 +3,9 @@ name: partida-em-tempo-real-signalr
 description: >
   Hub /chesshub e ciclo de vida da partida: criação e entrada em sala, atribuição de cor,
   início de jogo, as seis checagens obrigatórias de MakeMove (partida, identidade, turno,
-  posse, legalidade recalculada, auto-xeque), eventos emitidos, formato de BoardSnapshot,
-  estado static em processo e como testar hub. Use ao adicionar ou alterar método de hub,
+  posse, legalidade recalculada, auto-xeque), validação do nome de sala, tetos de criação,
+  descarte da sala gasta, nome do jogador vindo do claim, eventos emitidos, formato de
+  BoardSnapshot, estado static em processo e como testar hub. Use ao adicionar ou alterar método de hub,
   mexer em ChessHub ou GameRoom, tratar turno, sala, jogador, desconexão, snapshot de
   tabuleiro ou evento de tempo real.
 metadata:
@@ -35,12 +36,59 @@ Registro: `app.MapHub<ChessHub>("/chesshub")` em `Program.cs`. Autorização:
 ## Ciclo de vida da sala
 
 ```
-CreateRoom(room)          → GameRoom novo no dicionário static
-JoinRoom(name, room)       → TryAssignColor: 1º jogador = White, 2º = Black, 3º = recusado
+CreateRoom(room)          → valida o nome, confere os tetos, GameRoom novo no dicionário static
+JoinRoom(name, room, cor)  → TryAssignColor: 1º jogador = White, 2º = Black, 3º = recusado
 StartGame(room)            → exige IsFull (2 jogadores); Board.StartBoard + MakePieceInInitialState
 MakeMove(room, from, to)   → valida, aplica, SwitchTurn, emite BoardChanged
-LeaveRoom(room) / desconexão → remove jogador, emite PlayerLeft
+LeaveRoom(room) / desconexão → remove jogador, emite PlayerLeft, descarta a sala se ela se esgotou
 ```
+
+### Nome de sala: validado antes de virar chave
+
+`CreateRoom` apara o nome e exige `^[\p{L}\p{N} _-]{1,64}$` — letras e dígitos de **qualquer**
+alfabeto, espaço, `-` e `_`, de 1 a 64 caracteres. Nome inválido devolve
+`CreateRoomResponse.Rejected(...)`: `Success = false`, `Room = ""` e `Message`.
+
+Não é preciosismo. O nome circula como **chave de grupo do SignalR**, aparece na tela de todos os
+jogadores do lobby e entra em log. Texto livre nesses três lugares é convite a HTML injetado na
+interface alheia, a nome de 10 MB e a forja de linha de log.
+
+O nome **aparado** é o que vira chave, e é ele que volta em `Room`: `"  sala  "` cria `"sala"`. O
+cliente deve usar o `Room` da resposta, não o texto que digitou.
+
+### Tetos de criação
+
+| Constante | Valor | O que limita |
+|---|---|---|
+| `MaxRooms` | 500 | salas no processo inteiro |
+| `MaxPendingRoomsPerUser` | 5 | salas **não iniciadas** por criador |
+| `AbandonedRoomGrace` | 30 s | carência antes de uma sala vazia e nunca iniciada virar lixo |
+
+O criador é o claim `sub`, guardado em `GameRoom.CreatedBy`. **Criador não é jogador**: a cor e a
+autoridade de mover continuam vindo do assento em `Players`, que é por `ConnectionId`.
+
+A carência existe por uma janela real do lobby: criar sala e entrar nela são duas chamadas
+separadas, com o usuário escolhendo a cor no meio. Sem ela, `ReclaimAbandonedRooms` apagaria a sala
+que a pessoa acabou de criar, entre os dois cliques. Passada a carência, uma sala vazia e nunca
+iniciada é lixo — ninguém entrou e ninguém vai entrar — e sai na próxima criação daquele usuário.
+
+Sala com `CreatedBy == null` (o hub sem usuário resolvido, que é o caso do teste) fica fora tanto
+da contagem quanto da recuperação.
+
+### Identidade do usuário no hub
+
+```csharp
+var sub = Context.User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;   // correto
+var sub = Context.UserIdentifier;                                        // SEMPRE null aqui
+```
+
+`MapInboundClaims` está desligado (ver a skill `autenticacao-e-autorizacao`), então `sub` chega com
+o nome `sub` e não é mapeado para o claim que `UserIdentifier` lê. Procure o claim pelo nome.
+
+`JoinRoom` usa o claim `name` como nome exibido, caindo no parâmetro `playerName` só se o claim
+faltar — o que não acontece com token emitido por este servidor. O valor é truncado em 64
+caracteres. A assinatura foi mantida porque é contrato com o frontend. Antes o `playerName` era
+string livre: dava para entrar numa sala se apresentando com o nome do adversário.
 
 Detalhes que importam:
 
@@ -52,9 +100,15 @@ Detalhes que importam:
   emite `GameStarted` de novo e devolve `Success = true`. Chamar duas vezes não reseta o
   tabuleiro.
 - **`OnDisconnectedAsync` varre todas as salas** e remove o `ConnectionId` de qualquer uma,
-  emitindo `PlayerLeft`. Não remove a sala vazia: salas vazias ficam no dicionário para sempre
-  (vazamento lento, aceitável hoje).
-- **Fim de partida não existe.** `Finish()` nunca é chamado (DT-13). `Finished` só é lido.
+  emitindo `PlayerLeft`. Junto com `LeaveRoom`, chama `DiscardIfSpent`: a sala sai do dicionário
+  quando fica **vazia E (iniciada OU terminada)**. As duas condições são necessárias. Sala iniciada
+  e vazia é uma partida cujos dois jogadores foram embora — não há o que retomar, porque a
+  reentrada é por `ConnectionId`, não por identidade. Já a sala **nunca iniciada** e vazia é o
+  estado normal entre criar e entrar, e apagar ali quebraria o fluxo do lobby; dessas cuida a
+  carência de `CreateRoom`.
+- **Fim de partida existe** desde o refactor de 2026-08-01: `ApplyMove` avalia
+  `Move.EvaluateOutcome` do ponto de vista de quem recebeu a vez e chama `GameRoom.SetOutcome`,
+  que marca `Finished` em mate e afogamento. Era a DT-13.
 
 ## As seis checagens de `MakeMove` (NON-NEGOTIABLE)
 
@@ -165,10 +219,10 @@ teste com sua `Message` exata — é o que impede alguém remover uma checagem s
 
 ## Restrições conhecidas
 
-- `CreateRoom.AlreadyExisted` não significa "a sala já existia" e sim "a sala tem jogador"
-  (DT-14).
+- `CreateRoom` pode **recusar**: `Success = false` com `Message` quando o nome não serve ou um teto
+  foi atingido. Cliente que só lê `Room` vê string vazia.
 - `JoinRoom` devolve objeto vazio (`JoinRoomResponse.Empty()`) em falha, além de emitir o evento —
   o cliente precisa checar `Color == null`.
-- Não há kick, pausa, spectator nem limite de salas.
-- Nada liga usuário autenticado a `PlayerSlot`: o `playerName` de `JoinRoom` é string livre e não
-  é validada contra o JWT.
+- Não há kick, pausa nem spectator.
+- O usuário autenticado liga-se à sala por `GameRoom.CreatedBy` (para os tetos) e ao assento pelo
+  nome do claim — mas a **cor** continua sendo do `ConnectionId`, não do usuário.

@@ -21,7 +21,7 @@ public class RefreshTokenRequest
     /// justamente quando o access token já expirou.
     /// </para>
     /// </summary>
-    [Required]
+    [Required, StringLength(64)]
     public string UserId { get; set; } = null!;
 
     /// <summary>
@@ -29,6 +29,6 @@ public class RefreshTokenRequest
     /// só o hash dele, então a conferência é feita re-derivando o hash — ver
     /// <c>RefreshTokenUseCase</c>.
     /// </summary>
-    [Required]
+    [Required, StringLength(256)]
     public string RefreshToken { get; set; } = null!;
 }

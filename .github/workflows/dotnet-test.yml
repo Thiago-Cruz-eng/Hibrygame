@@ -50,16 +50,21 @@ jobs:
           --collect:"XPlat Code Coverage"
           --results-directory ./TestResults
 
-      # Piso por projeto: nenhum pode cair abaixo de 75% de linhas.
+      # Piso por projeto: nenhum pode cair abaixo de 85% de linhas.
       #
-      # Hoje o motor está em 96,3% e o Orchestrator em 76,5% — o piso é a menor das duas,
+      # Hoje o motor está em 96,3% e o Orchestrator em 87,5% — o piso é a menor das duas,
       # arredondada para baixo. É catraca, não meta: subiu, suba o piso no mesmo PR.
+      #
+      # Subiu de 75% para 85% no hardening de segurança de 2026-09-23: o Orchestrator saiu de
+      # 76,5% para 87,5% ao ganhar teste de middleware, de inicializador de índice e do
+      # repositório de usuário. Deixar o piso em 75% depois disso permitiria devolver dez pontos
+      # de cobertura sem que nada reclamasse.
       - name: Piso de cobertura
         run: |
           python3 - <<'PY'
           import glob, sys, xml.etree.ElementTree as ET
 
-          FLOOR = 0.75
+          FLOOR = 0.85
           files = glob.glob('TestResults/**/coverage.cobertura.xml', recursive=True)
           if not files:
               sys.exit('Nenhum relatório de cobertura encontrado — o passo de teste coletou algo?')

@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text.RegularExpressions;
 using Hibrygame;
 using Hibrygame.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -7,22 +9,157 @@ using Microsoft.AspNetCore.SignalR;
 namespace Orchestrator.Infra.SignalR;
 
 [Authorize(Policy = "Role:Player")]
-public class ChessHub : Hub
+public partial class ChessHub : Hub
 {
     private static readonly ConcurrentDictionary<string, GameRoom> Rooms = new();
 
+    /// <summary>
+    /// Teto de salas no processo inteiro.
+    ///
+    /// <para>
+    /// O dicionario e <c>static</c> e nunca encolhe sozinho: sem teto, criar sala e uma forma
+    /// gratuita de consumir memoria do servidor ate derruba-lo, e cada <c>GameRoom</c> carrega um
+    /// tabuleiro de 64 casas. O numero e folgado — nunca houve nem perto disso em uso real — e
+    /// existe para que exista um limite, nao para apertar ninguem.
+    /// </para>
+    /// </summary>
+    private const int MaxRooms = 500;
+
+    /// <summary>
+    /// Teto de salas <b>ainda nao iniciadas</b> por usuario.
+    ///
+    /// <para>
+    /// Sala iniciada nao conta: ela tem dois jogadores e some do dicionario quando os dois saem.
+    /// O que se limita aqui e a sala que fica pendurada esperando adversario — e que, sem teto,
+    /// um cliente cria em laco para entupir o lobby de todo mundo.
+    /// </para>
+    /// </summary>
+    private const int MaxPendingRoomsPerUser = 5;
+
+    /// <summary>
+    /// Quanto tempo uma sala vazia e nunca iniciada e considerada "ainda em uso".
+    ///
+    /// <para>
+    /// Existe por causa de uma janela real do fluxo do lobby: criar sala e entrar nela sao duas
+    /// chamadas separadas, com o usuario escolhendo a cor no meio. Entre uma e outra a sala esta
+    /// vazia, e recuperar salas vazias sem esta carencia apagaria a sala que a pessoa acabou de
+    /// criar, no intervalo entre os dois cliques.
+    /// </para>
+    ///
+    /// <para>
+    /// Passada a carencia, uma sala vazia e nunca iniciada e lixo: ninguem entrou e ninguem vai
+    /// entrar. Ela deixa de contar para o teto do criador e sai do dicionario na proxima criacao
+    /// dele.
+    /// </para>
+    /// </summary>
+    private static readonly TimeSpan AbandonedRoomGrace = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Nomes de sala aceitos: letras e digitos de qualquer alfabeto, espaco, hifen e sublinhado,
+    /// de 1 a 64 caracteres.
+    ///
+    /// <para>
+    /// O nome da sala circula como chave de grupo do SignalR, aparece na tela de todos os
+    /// jogadores do lobby e entra em log. Texto livre nesses tres lugares e convite a HTML
+    /// injetado na interface alheia, a nome de 10 MB e a forja de linha de log. A lista permissiva
+    /// de letras Unicode (<c>\p{L}</c>) mantem acentuacao e outros alfabetos funcionando.
+    /// </para>
+    /// </summary>
+    [GeneratedRegex(@"^[\p{L}\p{N} _-]{1,64}$")]
+    private static partial Regex RoomNamePattern();
+
+    /// <summary>
+    /// Cria a sala, se o nome servir e o chamador nao estiver acima dos tetos.
+    /// </summary>
+    /// <param name="room">
+    /// Nome pedido. Espacos nas pontas sao removidos antes de qualquer coisa — e o nome ja
+    /// aparado que vira chave, para que <c>"sala"</c> e <c>"sala "</c> nao virem duas salas
+    /// visualmente identicas.
+    /// </param>
+    /// <returns>
+    /// <c>Success = false</c> com <c>Message</c> quando o nome nao serve ou um teto foi atingido.
+    /// <c>AlreadyExisted</c> continua significando "ja havia uma sala com este nome".
+    /// </returns>
     public Task<CreateRoomResponse> CreateRoom(string room)
     {
+        var name = (room ?? string.Empty).Trim();
+
+        if (!RoomNamePattern().IsMatch(name))
+        {
+            return Task.FromResult(CreateRoomResponse.Rejected(
+                "Room name must be 1-64 characters, using letters, digits, space, '-' or '_'."));
+        }
+
+        var creator = CallerUserId();
+
+        // Salas abandonadas do proprio chamador saem antes da contagem: elas nao representam
+        // ninguem esperando partida. So as dele — varrer as dos outros mexeria em estado que
+        // esta chamada nao tem por que tocar.
+        if (creator is not null) ReclaimAbandonedRooms(creator);
+
+        if (Rooms.Count >= MaxRooms)
+            return Task.FromResult(CreateRoomResponse.Rejected("The server is at its room limit."));
+
+        if (creator is not null && CountPendingRooms(creator) >= MaxPendingRoomsPerUser)
+        {
+            return Task.FromResult(CreateRoomResponse.Rejected(
+                "You already have too many rooms waiting for players."));
+        }
+
         // TryAdd responde exatamente o que o lobby precisa saber. A versao anterior
         // comparava `created != Rooms[room]`, sempre a mesma referencia, logo sempre
         // falso: a sala so era reportada como existente se ja tivesse jogadores.
-        var alreadyExisted = !Rooms.TryAdd(room, new GameRoom(room));
+        var alreadyExisted = !Rooms.TryAdd(name, new GameRoom(name, creator));
 
         return Task.FromResult(new CreateRoomResponse
         {
-            Room = Rooms[room].Name,
+            Success = true,
+            Room = name,
             AlreadyExisted = alreadyExisted
         });
+    }
+
+    /// <summary>
+    /// Quantas salas do usuario estao esperando adversario.
+    /// </summary>
+    private static int CountPendingRooms(string userId) =>
+        Rooms.Values.Count(gameRoom =>
+            gameRoom.CreatedBy == userId && !gameRoom.Started && !gameRoom.Finished);
+
+    /// <summary>
+    /// Remove as salas do usuario que estao vazias, nunca iniciadas e alem da carencia.
+    /// </summary>
+    private static void ReclaimAbandonedRooms(string userId)
+    {
+        var cutoff = DateTime.UtcNow - AbandonedRoomGrace;
+
+        foreach (var (name, gameRoom) in Rooms)
+        {
+            if (gameRoom.CreatedBy == userId
+                && !gameRoom.Started
+                && !gameRoom.Finished
+                && gameRoom.Players.IsEmpty
+                && gameRoom.CreatedAt < cutoff)
+            {
+                Rooms.TryRemove(name, out _);
+            }
+        }
+    }
+
+    /// <summary>
+    /// O id do usuario autenticado nesta conexao, ou <c>null</c>.
+    ///
+    /// <para>
+    /// <b>Nao use <c>Context.UserIdentifier</c>:</b> ele devolve o claim que o ASP.NET considera
+    /// o nome do usuario, e como <c>MapInboundClaims</c> esta desligado (ver
+    /// <c>JwtComposition</c>) o <c>sub</c> chega com o nome <c>sub</c> e nao e mapeado — o que faz
+    /// <c>UserIdentifier</c> ser sempre <c>null</c>. O claim tem de ser procurado pelo nome.
+    /// </para>
+    /// </summary>
+    private string? CallerUserId()
+    {
+        var sub = Context.User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        return string.IsNullOrWhiteSpace(sub) ? null : sub;
     }
 
     public Task<List<string>> GetAvailableRooms()
@@ -47,14 +184,20 @@ public class ChessHub : Hub
     /// </summary>
     public async Task<JoinRoomResponse> JoinRoom(string playerName, string room, string? preferredColor)
     {
-        if (!Rooms.TryGetValue(room, out var gameRoom))
+        // Nome maior que o teto nao corresponde a sala nenhuma — CreateRoom nao aceita criar uma
+        // assim. Recusar antes da busca evita levar texto arbitrariamente grande adiante.
+        if (room is null || room.Length > MaxRoomNameLength || !Rooms.TryGetValue(room, out var gameRoom))
         {
             await Clients.Caller.SendAsync("RoomNotFound", room);
             return JoinRoomResponse.Empty();
         }
 
+        // O nome exibido vem do token, nao do cliente: era string livre, e um jogador podia
+        // entrar na sala se apresentando com o nome do adversario.
+        var displayName = ResolvePlayerName(playerName);
+
         var preferred = ParseColor(preferredColor);
-        var color = gameRoom.TryAssignColor(Context.ConnectionId, playerName, preferred);
+        var color = gameRoom.TryAssignColor(Context.ConnectionId, displayName, preferred);
         if (color is null)
         {
             await Clients.Caller.SendAsync("RoomFull", "The room is full. Please try another room.");
@@ -65,7 +208,7 @@ public class ChessHub : Hub
         await Clients.Group(room).SendAsync("PlayerJoined", new
         {
             Room = room,
-            Player = playerName,
+            Player = displayName,
             Color = color.ToString(),
             Players = gameRoom.Players.Values.Select(p => new { p.Name, Color = p.Color.ToString() })
         });
@@ -73,13 +216,38 @@ public class ChessHub : Hub
         return new JoinRoomResponse
         {
             ConnectionId = Context.ConnectionId,
-            Player = playerName,
+            Player = displayName,
             Room = room,
             Color = color.ToString(),
             AssignedColor = color.ToString(),
             PreferenceHonoured = preferred is null || preferred == color
         };
     }
+
+    /// <summary>Teto do nome de sala. Espelha o quantificador de <see cref="RoomNamePattern"/>.</summary>
+    private const int MaxRoomNameLength = 64;
+
+    /// <summary>
+    /// O nome com que o jogador aparece para a sala.
+    ///
+    /// <para>
+    /// <b>Preferencia absoluta pelo claim <c>name</c> do token.</b> O parametro
+    /// <paramref name="requested"/> continua na assinatura porque e contrato com o frontend, mas
+    /// ele so e usado quando o token nao traz nome — o que nao acontece com token emitido por
+    /// este servidor (<c>TokenService</c> sempre inclui <c>name</c>). Sem isso, o nome exibido era
+    /// texto livre do cliente: dava para entrar numa sala se apresentando como o adversario.
+    /// </para>
+    /// </summary>
+    private string ResolvePlayerName(string? requested)
+    {
+        var fromToken = Context.User?.FindFirst("name")?.Value;
+        var chosen = string.IsNullOrWhiteSpace(fromToken) ? requested : fromToken;
+
+        return Truncate((chosen ?? string.Empty).Trim(), MaxRoomNameLength);
+    }
+
+    private static string Truncate(string value, int maxLength) =>
+        value.Length <= maxLength ? value : value[..maxLength];
 
     private static ColorEnum? ParseColor(string? value) => value?.Trim().ToLowerInvariant() switch
     {
@@ -126,6 +294,31 @@ public class ChessHub : Hub
                 ConnectionId = Context.ConnectionId,
                 Players = gameRoom.Players.Values.Select(p => new { p.Name, Color = p.Color.ToString() })
             });
+
+            DiscardIfSpent(room, gameRoom);
+        }
+    }
+
+    /// <summary>
+    /// Tira do dicionario a sala que acabou de esvaziar e ja nao serve para mais nada.
+    ///
+    /// <para>
+    /// <b>Exige as duas condicoes:</b> estar vazia e ja ter comecado (ou terminado). Sala
+    /// iniciada e vazia e uma partida cujos dois jogadores foram embora — nao ha o que retomar,
+    /// porque nao ha reentrada por identidade, so por <c>ConnectionId</c>. Ja a sala <b>nunca
+    /// iniciada</b> e vazia e o estado normal entre criar e entrar, e apagar ali quebraria o
+    /// fluxo do lobby; dessas cuida a recuperacao por carencia em <see cref="CreateRoom"/>.
+    /// </para>
+    ///
+    /// <para>
+    /// Antes nenhuma sala saia: o dicionario so crescia enquanto o processo vivesse.
+    /// </para>
+    /// </summary>
+    private static void DiscardIfSpent(string room, GameRoom gameRoom)
+    {
+        if (gameRoom.Players.IsEmpty && (gameRoom.Started || gameRoom.Finished))
+        {
+            Rooms.TryRemove(room, out _);
         }
     }
 
@@ -364,6 +557,8 @@ public class ChessHub : Hub
                     Player = slot.Name,
                     Players = gameRoom.Players.Values.Select(p => new { p.Name, Color = p.Color.ToString() })
                 });
+
+                DiscardIfSpent(name, gameRoom);
             }
         }
         await base.OnDisconnectedAsync(exception);
@@ -410,8 +605,28 @@ public class ChessHub : Hub
 
     public class CreateRoomResponse
     {
+        /// <summary>
+        /// A sala foi criada, ou ja existia e pode ser usada.
+        ///
+        /// <para>
+        /// Campo novo. Antes esta resposta nao tinha como recusar nada — toda chamada criava a
+        /// sala. Cliente antigo que ignore este campo ve <c>Room</c> vazio na recusa, que era o
+        /// unico sinal disponivel.
+        /// </para>
+        /// </summary>
+        public bool Success { get; set; }
+
+        /// <summary>Motivo da recusa, em ingles como o resto das mensagens. <c>null</c> no sucesso.</summary>
+        public string? Message { get; set; }
+
+        /// <summary>Nome da sala, ja aparado. Vazio quando a criacao foi recusada.</summary>
         public string Room { get; set; } = string.Empty;
+
+        /// <summary>Ja havia uma sala com este nome.</summary>
         public bool AlreadyExisted { get; set; }
+
+        public static CreateRoomResponse Rejected(string message) =>
+            new() { Success = false, Message = message, Room = string.Empty };
     }
 
     public class JoinRoomResponse

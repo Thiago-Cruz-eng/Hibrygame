@@ -3,6 +3,7 @@ using Moq;
 using Orchestrator.Domain;
 using Orchestrator.Infra.Interfaces;
 using Orchestrator.UseCases;
+using Orchestrator.UseCases.Security;
 using Xunit;
 
 namespace Orchestrator.Test.UseCases;
@@ -75,21 +76,38 @@ public class ValidationServiceTests
     }
 
     [Fact]
-    public async Task CreateValidation_ValidDto_SavesCorrectAccessToken()
+    public async Task CreateValidation_ValidDto_StoresTheTokenDigest_NotTheToken()
     {
-        // Arrange
+        // Era a DT-07: o access token ia para a coleção em claro, e quem lesse a coleção saía com
+        // sessões prontas para usar. Agora vai o resumo SHA-256.
         Validation? savedValidation = null;
         _validationRepositoryMock
             .Setup(r => r.Save(It.IsAny<Validation>(), It.IsAny<CancellationToken>()))
             .Callback<Validation, CancellationToken>((v, _) => savedValidation = v)
             .Returns(Task.CompletedTask);
 
-        // Act
         await _sut.CreateValidation(BuildDto(accessToken: "my-token"));
 
-        // Assert
         Assert.NotNull(savedValidation);
-        Assert.Equal("my-token", savedValidation!.AcessToken);
+        Assert.NotEqual("my-token", savedValidation!.AcessToken);
+        Assert.Equal(TokenDigest.Compute("my-token"), savedValidation.AcessToken);
+    }
+
+    [Fact]
+    public async Task CreateValidation_TheDigestIsDeterministic()
+    {
+        // Precisa ser: o filtro do Mongo compara por igualdade, então o mesmo token tem de
+        // produzir sempre o mesmo texto. É a diferença em relação ao PBKDF2 com salt.
+        var digests = new List<string>();
+        _validationRepositoryMock
+            .Setup(r => r.Save(It.IsAny<Validation>(), It.IsAny<CancellationToken>()))
+            .Callback<Validation, CancellationToken>((v, _) => digests.Add(v.AcessToken))
+            .Returns(Task.CompletedTask);
+
+        await _sut.CreateValidation(BuildDto(accessToken: "mesmo-token"));
+        await _sut.CreateValidation(BuildDto(accessToken: "mesmo-token"));
+
+        Assert.Equal(digests[0], digests[1]);
     }
 
     // ---------------------------------------------------------------
@@ -285,5 +303,132 @@ public class ValidationServiceTests
 
         // Assert
         Assert.False(result);
+    }
+
+    // ---------------------------------------------------------------
+    // O resumo do token entra no filtro, nunca o token
+    // ---------------------------------------------------------------
+
+    [Fact]
+    public async Task GetValidationByUserToken_FiltersByTheDigest_NotTheRawToken()
+    {
+        System.Linq.Expressions.Expression<Func<Validation, bool>>? captured = null;
+        _validationRepositoryMock
+            .Setup(r => r.FindByFilter(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Validation, bool>>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<System.Linq.Expressions.Expression<Func<Validation, bool>>, CancellationToken>(
+                (filter, _) => captured = filter)
+            .ReturnsAsync(new[] { BuildValidation(accessToken: TokenDigest.Compute("tok-abc")) });
+
+        await _sut.GetValidationByUserToken("user-1", "tok-abc");
+
+        // O predicado capturado é executado em memória contra dois registros: só o que guarda o
+        // RESUMO casa. Um registro com o token em claro — como os gravados antes desta mudança —
+        // não casa mais, e é essa a quebra de compatibilidade documentada.
+        Assert.NotNull(captured);
+        var predicate = captured!.Compile();
+
+        Assert.True(predicate(BuildValidation(accessToken: TokenDigest.Compute("tok-abc"))));
+        Assert.False(predicate(BuildValidation(accessToken: "tok-abc")));
+    }
+
+    [Fact]
+    public async Task GetValidationCanMove_FiltersByTheDigest_NotTheRawToken()
+    {
+        System.Linq.Expressions.Expression<Func<Validation, bool>>? captured = null;
+        _validationRepositoryMock
+            .Setup(r => r.FindByFilter(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Validation, bool>>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<System.Linq.Expressions.Expression<Func<Validation, bool>>, CancellationToken>(
+                (filter, _) => captured = filter)
+            .ReturnsAsync(Array.Empty<Validation>());
+
+        await _sut.GetValidationCanMove("user-1", "tok-abc", "White", "room-1");
+
+        Assert.NotNull(captured);
+        var predicate = captured!.Compile();
+
+        Assert.True(predicate(BuildValidation(accessToken: TokenDigest.Compute("tok-abc"))));
+        Assert.False(predicate(BuildValidation(accessToken: "tok-abc")));
+    }
+
+    // ---------------------------------------------------------------
+    // Texto do cliente nao entra cru no log (CWE-117)
+    // ---------------------------------------------------------------
+
+    /// <summary>
+    /// Faz o repositorio falhar, que e o unico caminho em que estes metodos registram log.
+    /// </summary>
+    private void FailTheRepository()
+        => _validationRepositoryMock
+            .Setup(r => r.FindByFilter(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Validation, bool>>>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("banco fora do ar"));
+
+    /// <summary>O texto de todas as linhas de log de erro registradas.</summary>
+    private List<string> ErrorLines()
+    {
+        var lines = new List<string>();
+
+        _loggerMock.Verify(
+            l => l.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((state, _) => CaptureLine(state, lines)),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.AtLeastOnce);
+
+        return lines;
+    }
+
+    private static bool CaptureLine(object? state, List<string> lines)
+    {
+        lines.Add(state?.ToString() ?? string.Empty);
+        return true;
+    }
+
+    /// <summary>Um userId com quebra de linha — a forja de entrada de log em estado puro.</summary>
+    private const string ForgedUserId = "user-1\n2026-09-23 info: usuario adm removido";
+
+    [Fact]
+    public async Task GetValidationCanMove_OnFailure_DoesNotLogTheRawUserId()
+    {
+        // O userId vem do corpo do request, exatamente como a sala. Era o achado do CodeQL: so a
+        // sala estava sanitizada.
+        FailTheRepository();
+
+        await _sut.GetValidationCanMove(ForgedUserId, "tok", "White", "sala\nforjada");
+
+        Assert.All(ErrorLines(), line =>
+        {
+            Assert.DoesNotContain('\n', line);
+            Assert.DoesNotContain('\r', line);
+        });
+    }
+
+    [Fact]
+    public async Task UpdateValidationByUserToken_OnFailure_DoesNotLogTheRawUserId()
+    {
+        FailTheRepository();
+
+        await _sut.UpdateValidationByUserToken(ForgedUserId, "tok", "White", "sala\nforjada");
+
+        Assert.All(ErrorLines(), line => Assert.DoesNotContain('\n', line));
+    }
+
+    [Fact]
+    public async Task CreateValidation_OnFailure_DoesNotLogTheRawUserId()
+    {
+        _validationRepositoryMock
+            .Setup(r => r.Save(It.IsAny<Validation>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("banco fora do ar"));
+
+        await _sut.CreateValidation(BuildDto(userId: ForgedUserId));
+
+        Assert.All(ErrorLines(), line => Assert.DoesNotContain('\n', line));
     }
 }

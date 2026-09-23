@@ -23,6 +23,15 @@ namespace Orchestrator.UseCases;
 /// O cliente <b>tem de guardar o token novo</b> devolvido aqui. Continuar usando o antigo produz
 /// "Invalid refresh token" a partir da segunda chamada.
 /// </para>
+///
+/// <para>
+/// <b>Reuso de token já rotacionado derruba a cadeia inteira.</b> Um refresh token revogado sendo
+/// apresentado significa uma de duas coisas: ou o cliente legítimo está repetindo uma chamada, ou
+/// alguém copiou o valor. Não há como distinguir, e o custo dos dois enganos é assimétrico — pedir
+/// um login novo ao usuário legítimo é um incômodo; deixar o ladrão renovar por 30 dias é a conta
+/// perdida. Então, ao detectar reuso, <b>todos</b> os tokens ativos daquele usuário são revogados
+/// e a sessão morre nos dois lados. Era o gancho previsto em <c>ReplacedByTokenId</c>.
+/// </para>
 /// </summary>
 public class RefreshTokenUseCase
 {
@@ -67,12 +76,29 @@ public class RefreshTokenUseCase
             if (user is null)
                 return new RefreshTokenResponse { Message = "User not found", Success = false };
 
-            var matchingToken = await FindMatchingToken(userId, req.RefreshToken);
+            var refreshTokens = await _refreshTokenRepository.FindByFilter(token => token.UserId == userId);
 
-            // Mesma mensagem para "não existe nenhum token assim" e "existe mas já foi revogado ou
-            // expirou": qualquer distinção informaria quem está tentando adivinhar tokens.
-            if (matchingToken is null || !matchingToken.IsActive)
+            // Separado por estado ANTES de qualquer PBKDF2: os ativos são o caminho feliz e
+            // costumam ser um só, enquanto os revogados se acumulam a cada rotação. Testar a lista
+            // inteira faria o custo de um refresh crescer para sempre — um usuário que renova há
+            // meses acumula centenas de registros a 100.000 iterações cada.
+            var activeTokens = refreshTokens
+                .Where(token => token.RevokedAt is null && token.ExpiresAt > DateTime.UtcNow)
+                .ToList();
+
+            var matchingToken = FindMatchingToken(activeTokens, req.RefreshToken);
+
+            if (matchingToken is null)
+            {
+                // Não casou com nenhum ativo. Antes de recusar, vale saber se casa com um
+                // REVOGADO: aí não é palpite errado, é um token que já foi gasto voltando —
+                // sinal de vazamento.
+                await HandleNoActiveMatchAsync(userId, req.RefreshToken, refreshTokens, activeTokens);
+
+                // Mesma mensagem para "não existe nenhum token assim", "já foi revogado" e
+                // "expirou": qualquer distinção informaria quem está tentando adivinhar tokens.
                 return new RefreshTokenResponse { Message = "Invalid refresh token", Success = false };
+            }
 
             var accessTokenResult = _tokenService.CreateAccessToken(user);
             var newRefreshTokenResult = _tokenService.CreateRefreshToken(user);
@@ -105,7 +131,8 @@ public class RefreshTokenUseCase
     }
 
     /// <summary>
-    /// Encontra, entre os refresh tokens do usuário, aquele que corresponde ao valor apresentado.
+    /// Encontra, entre <paramref name="candidates"/>, o token que corresponde ao valor
+    /// apresentado.
     ///
     /// <para>
     /// <b>Por que varrer em vez de consultar direto:</b> o banco guarda hashes com salt, e cada
@@ -114,19 +141,53 @@ public class RefreshTokenUseCase
     /// </para>
     ///
     /// <para>
-    /// <b>Consequência de custo, e ela é real:</b> cada teste é um PBKDF2 de 100.000 iterações
-    /// (dezenas de milissegundos). Como os tokens revogados <b>não</b> são removidos da coleção,
-    /// a lista cresce a cada refresh: um usuário que renova há meses acumula centenas de registros,
-    /// e um refresh dele passa a custar segundos. Duas saídas, se isso incomodar: limpar tokens
-    /// revogados e expirados periodicamente, ou filtrar a consulta por <c>IsActive</c> antes de
-    /// testar. Nenhuma das duas existe hoje.
+    /// <b>É por isso que quem chama filtra antes.</b> Cada teste é um PBKDF2 de 100.000 iterações
+    /// (dezenas de milissegundos), e os tokens revogados não são removidos da coleção. O caminho
+    /// feliz percorre só os ativos; os revogados só são percorridos quando nenhum ativo casou, que
+    /// é o caminho da detecção de reuso — e aí o custo se justifica.
     /// </para>
     /// </summary>
-    private async Task<RefreshToken?> FindMatchingToken(Guid userId, string rawToken)
-    {
-        var refreshTokens = await _refreshTokenRepository.FindByFilter(token => token.UserId == userId);
-
-        return refreshTokens.FirstOrDefault(token =>
+    private RefreshToken? FindMatchingToken(IEnumerable<RefreshToken> candidates, string rawToken) =>
+        candidates.FirstOrDefault(token =>
             _hashingService.Verify(rawToken, token.TokenHash, token.Salt));
+
+    /// <summary>
+    /// Decide o que fazer quando o valor apresentado não corresponde a nenhum token ativo.
+    ///
+    /// <para>
+    /// Se ele corresponder a um token <b>revogado</b>, é replay: o valor circulou depois de ter
+    /// sido gasto. A resposta é revogar todas as sessões ativas do usuário — ver a nota da classe
+    /// sobre a assimetria de custo entre os dois enganos possíveis.
+    /// </para>
+    /// </summary>
+    private async Task HandleNoActiveMatchAsync(
+        Guid userId,
+        string rawToken,
+        IEnumerable<RefreshToken> allTokens,
+        List<RefreshToken> activeTokens)
+    {
+        var replayed = FindMatchingToken(allTokens.Where(token => token.RevokedAt is not null), rawToken);
+
+        if (replayed is null)
+        {
+            // Nem ativo nem revogado: palpite, token de outro usuário, ou token já apagado.
+            _logger.LogWarning("Invalid refresh token presented for user {UserId}", userId);
+            return;
+        }
+
+        _logger.LogWarning("Refresh token reuse detected for user {UserId}", userId);
+
+        // Revogações independentes entre si, disparadas juntas: uma por vez multiplicaria a
+        // latência do banco pelo número de sessões abertas, justamente no caminho em que se quer
+        // fechar tudo depressa.
+        var revocations = activeTokens.Select(token =>
+        {
+            token.Revoke("Reuse detected");
+            return _refreshTokenRepository.Update(token.Id.ToString(), token);
+        }).ToList();
+
+        if (revocations.Count == 0) return;
+
+        await Task.WhenAll(revocations);
     }
 }

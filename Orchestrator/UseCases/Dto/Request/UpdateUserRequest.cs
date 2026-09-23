@@ -19,25 +19,26 @@ namespace Orchestrator.UseCases.Dto.Request;
 public class UpdateUserRequest
 {
     /// <summary>Nome novo. Obrigatório mesmo quando não está mudando.</summary>
-    [Required]
+    [Required, StringLength(100, MinimumLength = 1)]
     public string Name { get; set; } = null!;
 
     /// <summary>
     /// E-mail novo. O caso de uso recusa se já pertencer a <b>outro</b> usuário; reenviar o próprio
     /// e-mail atual é aceito.
     /// </summary>
-    [Required, EmailAddress]
+    [Required, EmailAddress, StringLength(254)]
     public string Email { get; set; } = null!;
 
     /// <summary>
     /// Papel novo, entre os cinco válidos.
     ///
     /// <para>
-    /// <b>Nada confere a alçada de quem está pedindo</b> — é por aqui que um usuário pode se
-    /// promover, se alcançar o endpoint (DT-16).
+    /// <b>Limitado pela alçada de quem pede.</b> <c>UpdateUserUseCase</c> recebe o nível do
+    /// chamador e recusa papel acima dele — um <c>lider de time</c> não promove ninguém a
+    /// <c>adm</c>. Era por aqui que alguém subia de nível sozinho (DT-16).
     /// </para>
     /// </summary>
-    [Required]
+    [Required, StringLength(32)]
     public string Role { get; set; } = null!;
 
     /// <summary>
@@ -47,9 +48,9 @@ public class UpdateUserRequest
     public List<UserAssignmentDto> Assignments { get; set; } = new();
 
     /// <summary>
-    /// Quem está alterando, para a auditoria. <b>Vem do cliente</b> e não do token — mesma
-    /// observação de <see cref="CreateUserRequest.CreatedBy"/>.
+    /// <b>Ignorado.</b> A auditoria grava o claim <c>sub</c> de quem chamou, nunca o que vem no
+    /// corpo. Mantido no DTO, sem <c>[Required]</c>, só para não quebrar o cliente atual.
     /// </summary>
-    [Required]
+    [StringLength(100)]
     public string ModifiedBy { get; set; } = null!;
 }

@@ -3,6 +3,8 @@ using System.Net;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Orchestrator.Composition;
 using Orchestrator.UseCases;
 using Orchestrator.UseCases.Dto.Request;
 using Orchestrator.UseCases.Dto.Response;
@@ -20,9 +22,21 @@ namespace Orchestrator.Presentation;
 /// </para>
 ///
 /// <para>
-/// <b>A exceção é <see cref="CreateUser"/></b>, que faz checagens de autorização antes de delegar.
-/// Elas estão aqui, e não no caso de uso, porque dependem de quem está chamando — informação que
-/// vive no token HTTP e que o caso de uso, por não conhecer HTTP, não tem como obter.
+/// <b>A exceção são as checagens de autorização</b> em <see cref="CreateUser"/>,
+/// <see cref="GetUser"/>, <see cref="UpdateUser"/>, <see cref="DeleteUser"/> e
+/// <see cref="ChangePassword"/>. Elas estão aqui, e não no caso de uso, porque dependem de quem
+/// está chamando — informação que vive no token HTTP e que o caso de uso, por não conhecer HTTP,
+/// não tem como obter. O que o controller faz é <b>extrair</b> a identidade e o nível do token; a
+/// regra que depende de ler o banco (o papel atual do alvo) mora no caso de uso, que recebe o
+/// nível por parâmetro.
+/// </para>
+///
+/// <para>
+/// <b>Os quatro endpoints que lidam com credencial</b> — <c>/login</c>, <c>/register</c>,
+/// <c>/refresh-token</c> e <c>/users/change-password</c> — carregam
+/// <c>[EnableRateLimiting]</c> com a política estreita. Endpoint de credencial novo precisa
+/// declarar o atributo: nada o aplica por convenção, e esquecer não quebra nada visivelmente —
+/// apenas deixa a porta sem teto. Ver <see cref="RateLimitingComposition"/>.
 /// </para>
 ///
 /// <para>
@@ -79,6 +93,7 @@ public class UserController : ControllerBase
     /// </summary>
     /// <returns>200 com a sessão, ou <b>401</b> quando as credenciais não conferem.</returns>
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingComposition.AuthPolicyName)]
     [HttpPost("/login")]
     [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(LoginResponse))]
     public async Task<IActionResult> LoginUser(LoginRequest req)
@@ -102,6 +117,7 @@ public class UserController : ControllerBase
     /// </para>
     /// </summary>
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingComposition.AuthPolicyName)]
     [HttpPost("/refresh-token")]
     [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(RefreshTokenResponse))]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest req)
@@ -121,6 +137,7 @@ public class UserController : ControllerBase
     /// fazer login logo depois.
     /// </summary>
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingComposition.AuthPolicyName)]
     [HttpPost("/register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest req)
     {
@@ -183,16 +200,31 @@ public class UserController : ControllerBase
     /// <c>GET /users/{id}</c> — devolve um usuário.
     ///
     /// <para>
-    /// <b>Qualquer jogador autenticado lê qualquer usuário</b>, não só o próprio. A resposta não
-    /// inclui hash de senha nem salt (ver <see cref="GetUserResponse"/>), então o que se expõe é
-    /// nome, e-mail, papel e vínculos.
+    /// <b>Só a própria conta, ou quem for ao menos <c>adm</c>.</b> Antes qualquer jogador
+    /// autenticado lia qualquer usuário: com os ids sendo Guid, isso não era uma listagem, mas
+    /// bastava conhecer um id para obter nome, e-mail, papel e vínculos de outra pessoa. A
+    /// resposta nunca incluiu hash de senha nem salt (ver <see cref="GetUserResponse"/>).
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Recusa como 404, e não 403</b>, de propósito: 403 confirmaria que aquele id existe, e
+    /// confirmar existência é metade do trabalho de quem está sondando. Para quem não tem
+    /// permissão, "não existe" e "não é seu" são a mesma resposta.
     /// </para>
     /// </summary>
-    /// <returns>200 com o usuário, ou 404 — que cobre tanto "não existe" quanto falha na consulta.</returns>
+    /// <returns>200 com o usuário, ou 404 — que cobre não existir, não ser seu, e falha na consulta.</returns>
     [Authorize(Policy = "Role:Player")]
     [HttpGet("/users/{id}")]
     public async Task<IActionResult> GetUser(string id)
     {
+        var callerId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        if (string.IsNullOrEmpty(callerId)) return NotFound();
+
+        var isSelf = string.Equals(callerId, id, StringComparison.Ordinal);
+        var isAdministrator = TryGetCallerRoleLevel(out var callerLevel) && callerLevel >= RoleLevel.Admin;
+
+        if (!isSelf && !isAdministrator) return NotFound();
+
         var result = await _getUserUseCase.GetAsync(id);
         if (result is null)
         {
@@ -205,9 +237,14 @@ public class UserController : ControllerBase
     /// <c>PUT /users/{id}</c> — substitui os dados do usuário.
     ///
     /// <para>
-    /// <b>Não confere se quem chama é o dono da conta</b> (DT-16): um <c>lider de time</c> pode
-    /// alterar outro usuário, inclusive o papel dele. O caminho de correção é o mesmo aplicado em
-    /// <see cref="CreateUser"/> — comparar com o claim <c>sub</c> e limitar por nível.
+    /// <b>Limitado por alçada nas duas pontas</b> (era a DT-16): o caso de uso recebe o nível do
+    /// chamador e recusa tanto alterar quem está acima dele quanto conceder papel acima do dele.
+    /// A checagem não cabe inteira aqui porque uma das metades depende de ler o usuário alvo no
+    /// banco, e controller não consulta banco.
+    /// </para>
+    ///
+    /// <para>
+    /// <b><c>ModifiedBy</c> do corpo é ignorado</b>: a auditoria grava o claim <c>sub</c>.
     /// </para>
     ///
     /// <para>
@@ -222,7 +259,12 @@ public class UserController : ControllerBase
     [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(UpdateUserResponse))]
     public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserRequest req)
     {
-        var result = await _updateUserUseCase.UpdateAsync(id, req);
+        var callerId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        if (string.IsNullOrEmpty(callerId)) return Forbid();
+
+        if (!TryGetCallerRoleLevel(out var callerLevel)) return Forbid();
+
+        var result = await _updateUserUseCase.UpdateAsync(id, req, callerLevel, callerId);
         if (!result.Success)
         {
             return NotFound(result);
@@ -234,8 +276,14 @@ public class UserController : ControllerBase
     /// <c>DELETE /users/{id}</c> — remove o usuário, em definitivo.
     ///
     /// <para>
-    /// Remoção física, sem exclusão lógica e sem como desfazer. Refresh tokens e registros de
-    /// validação do usuário <b>não</b> são limpos — ver <c>DeleteUserUseCase</c>.
+    /// Remoção física, sem exclusão lógica e sem como desfazer. Os refresh tokens do usuário são
+    /// revogados e os registros de validação removidos junto — ver <c>DeleteUserUseCase</c>.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Ninguém apaga quem está acima de si:</b> o nível do chamador vai para o caso de uso, que
+    /// compara com o papel atual do alvo. A policy sozinha não faz isso — ela garante apenas que
+    /// o chamador é ao menos <c>adm</c>, sem saber quem ele quer apagar.
     /// </para>
     /// </summary>
     [Authorize(Policy = "Role:Admin")]
@@ -243,7 +291,12 @@ public class UserController : ControllerBase
     [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(DeleteUserResponse))]
     public async Task<IActionResult> DeleteUser(string id)
     {
-        var result = await _deleteUserUseCase.DeleteAsync(id);
+        var callerId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        if (string.IsNullOrEmpty(callerId)) return Forbid();
+
+        if (!TryGetCallerRoleLevel(out var callerLevel)) return Forbid();
+
+        var result = await _deleteUserUseCase.DeleteAsync(id, callerLevel, callerId);
         if (!result.Success)
         {
             return NotFound(result);
@@ -252,20 +305,31 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// <c>POST /users/change-password</c> — troca a senha, exigindo a senha atual.
+    /// <c>POST /users/change-password</c> — troca a <b>própria</b> senha, exigindo a atual.
     ///
     /// <para>
-    /// <b>Não confere se o <c>UserId</c> do corpo é o do token</b> (DT-16). A exigência da senha
-    /// atual é o que limita o dano.
+    /// <b>O alvo é sempre o claim <c>sub</c>.</b> <c>ChangePasswordRequest.UserId</c> e
+    /// <c>ModifiedBy</c> são ignorados — continuam no DTO só para não quebrar o cliente atual.
+    /// Era a DT-16: qualquer jogador autenticado trocava a senha de qualquer usuário, bastando
+    /// saber a senha atual dele.
+    /// </para>
+    ///
+    /// <para>
+    /// Trocar a senha revoga os refresh tokens do usuário, então as outras sessões morrem — ver
+    /// <c>ChangePasswordUseCase</c>.
     /// </para>
     /// </summary>
     /// <returns>200, ou <b>401</b> — a falha esperada aqui é senha atual errada.</returns>
     [Authorize(Policy = "Role:Player")]
+    [EnableRateLimiting(RateLimitingComposition.AuthPolicyName)]
     [HttpPost("/users/change-password")]
     [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(ChangePasswordResponse))]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
     {
-        var result = await _changePasswordUseCase.ChangeAsync(req);
+        var callerId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        if (string.IsNullOrEmpty(callerId)) return Forbid();
+
+        var result = await _changePasswordUseCase.ChangeAsync(callerId, req);
         if (!result.Success)
         {
             return Unauthorized(result);

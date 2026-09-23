@@ -29,8 +29,9 @@ namespace Orchestrator.Domain;
 /// </para>
 /// <list type="bullet">
 ///   <item><description>
-///   <see cref="AcessToken"/> guarda o access token <b>em claro</b>. Diferente de
-///   <see cref="RefreshToken"/>, que guarda hash, aqui quem lê a coleção lê tokens usáveis;
+///   <see cref="AcessToken"/> guardava o access token <b>em claro</b>, e quem lesse a coleção
+///   saía com sessões prontas para usar. Desde o endurecimento de 2026-09-23 o campo guarda um
+///   resumo SHA-256 (<c>TokenDigest</c>), gravado e comparado por <c>ValidationService</c>;
 ///   </description></item>
 ///   <item><description>
 ///   <c>ValidationService.GetValidationCanMove</c> recebe e-mail e dia e <b>ignora os dois</b>
@@ -50,7 +51,14 @@ namespace Orchestrator.Domain;
 public class Validation : BaseEntity
 {
     /// <summary>
-    /// O access token do usuário, <b>em claro</b>.
+    /// <b>Resumo SHA-256</b> do access token do usuário — nunca o token em si.
+    ///
+    /// <para>
+    /// O resumo é determinístico e sem salt, de propósito: o filtro do Mongo compara por
+    /// igualdade, então o mesmo token precisa produzir sempre o mesmo texto. Quem calcula é
+    /// <c>TokenDigest</c>, e é lá que está a explicação de por que SHA-256 basta para um segredo
+    /// de alta entropia.
+    /// </para>
     ///
     /// <para>
     /// O nome tem um erro de digitação — deveria ser <c>AccessToken</c>, com dois "c". Está

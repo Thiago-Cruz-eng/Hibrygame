@@ -319,4 +319,47 @@ public class GameRoomTests
         // Assert
         Assert.True(room.Finished);
     }
+
+    // ---------------------------------------------------------------
+    // Procedencia da sala
+    // ---------------------------------------------------------------
+
+    [Fact]
+    public void CreatedBy_WhenNotInformed_IsNull()
+    {
+        // Sala sem criador conhecido fica fora da contagem por usuario e da recuperacao de salas
+        // abandonadas — e o caso do hub sem usuario resolvido.
+        var room = new GameRoom("room-sem-criador");
+
+        Assert.Null(room.CreatedBy);
+    }
+
+    [Fact]
+    public void CreatedBy_WhenInformed_IsKept()
+    {
+        var room = new GameRoom("room-com-criador", "user-42");
+
+        Assert.Equal("user-42", room.CreatedBy);
+    }
+
+    [Fact]
+    public void CreatedBy_IsNotAPlayer()
+    {
+        // Criar nao e jogar: a cor e a autoridade de mover continuam vindo do assento, que e por
+        // conexao. Sem isso, quem cria a sala entraria nela sem passar por TryAssignColor.
+        var room = new GameRoom("room-criador-nao-joga", "user-42");
+
+        Assert.Empty(room.Players);
+        Assert.False(room.IsFull);
+    }
+
+    [Fact]
+    public void CreatedAt_IsSetOnConstruction()
+    {
+        var before = DateTime.UtcNow;
+        var room = new GameRoom("room-com-data");
+        var after = DateTime.UtcNow;
+
+        Assert.InRange(room.CreatedAt, before, after);
+    }
 }
