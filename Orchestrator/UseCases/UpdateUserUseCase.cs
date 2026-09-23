@@ -83,8 +83,10 @@ public class UpdateUserUseCase
             // silenciosa. Tratá-lo como "acima de todos" travaria a correção do próprio registro.
             if (RoleHierarchy.TryGetLevel(user.Role, out var targetLevel) && targetLevel > callerLevel)
             {
+                // callerId e string vinda do claim `sub`; user.Id e Guid e nao precisa.
                 _logger.LogWarning(
-                    "User {CallerId} tried to modify user {TargetId}, who outranks them", callerId, user.Id);
+                    "User {CallerId} tried to modify user {TargetId}, who outranks them",
+                    LogSanitizer.Sanitize(callerId), user.Id);
 
                 return new UpdateUserResponse
                 {
@@ -111,7 +113,8 @@ public class UpdateUserUseCase
             if (roleLevel > callerLevel)
             {
                 _logger.LogWarning(
-                    "User {CallerId} tried to assign role {Role}, above their own level", callerId, roleLevel);
+                    "User {CallerId} tried to assign role {Role}, above their own level",
+                    LogSanitizer.Sanitize(callerId), roleLevel);
 
                 return new UpdateUserResponse
                 {

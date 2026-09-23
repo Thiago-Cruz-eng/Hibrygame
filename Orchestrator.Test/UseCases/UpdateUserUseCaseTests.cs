@@ -320,6 +320,61 @@ public class UpdateUserUseCaseTests
     }
 
     [Fact]
+    public async Task UpdateAsync_RebuildsTheAssignmentsFromTheRequest()
+    {
+        // Todos os outros testes deste arquivo mandam Assignments VAZIO, e com a lista vazia a
+        // conversao DTO -> dominio nunca executa. Este cobre o caminho em que ela executa.
+        //
+        // O autor nao entra na asserção de proposito: UserAssignment recebe `createdBy` e o
+        // DESCARTA — esta entidade nao tem auditoria, e isso esta documentado nela. O que se
+        // verifica aqui e que o vinculo chega ao usuario com os campos certos.
+        var user = BuildUser();
+        SetupUserFoundNoCollision(user);
+        _userRepositoryMock
+            .Setup(r => r.Update(It.IsAny<string>(), It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var request = BuildRequest(modifiedBy: "forjado-pelo-cliente");
+        request.Assignments =
+        [
+            new UserAssignmentDto
+            {
+                TeamName = "Time A",
+                TeamId = Guid.NewGuid().ToString(),
+                RoleName = "jogador",
+                RoleId = Guid.NewGuid().ToString()
+            }
+        ];
+
+        var result = await _sut.UpdateAsync(user.Id.ToString(), request, CallerLevel, CallerId);
+
+        Assert.True(result.Success);
+        var assignment = Assert.Single(user.Assignments);
+        Assert.Equal("Time A", assignment.TeamName);
+        Assert.Equal("jogador", assignment.RoleName);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WithAnEmptyAssignmentList_WipesTheExistingOnes()
+    {
+        // E substituicao, nao alteracao parcial: mandar a lista vazia APAGA os vinculos. Esta e a
+        // armadilha do endpoint, e sem teste ela e invisivel.
+        var user = BuildUser();
+        user.ChangeAssignments(
+            [UserAssignment.Create("Time Antigo", "t1", "jogador", "r1", [], "seed")], "seed");
+
+        SetupUserFoundNoCollision(user);
+        _userRepositoryMock
+            .Setup(r => r.Update(It.IsAny<string>(), It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await _sut.UpdateAsync(user.Id.ToString(), BuildRequest(), CallerLevel, CallerId);
+
+        Assert.True(result.Success);
+        Assert.Empty(user.Assignments);
+    }
+
+    [Fact]
     public async Task UpdateAsync_AuditsTheCallerFromTheToken_NotTheBody()
     {
         var user = BuildUser();

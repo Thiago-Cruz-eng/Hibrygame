@@ -67,6 +67,15 @@ public class GameRoom
     /// </summary>
     public GameOutcome Outcome { get; private set; } = GameOutcome.InProgress;
 
+    /// <summary>
+    /// Cria a sala com o tabuleiro vazio, sem jogadores e sem partida iniciada.
+    ///
+    /// <para>
+    /// O tabuleiro só ganha peças em <see cref="Start"/>, chamado por <c>ChessHub.StartGame</c>
+    /// quando a sala enche. Construir a sala não começa partida nenhuma.
+    /// </para>
+    /// </summary>
+    /// <param name="name">Nome da sala, já validado e aparado por <c>ChessHub.CreateRoom</c>.</param>
     /// <param name="createdBy">
     /// Quem criou a sala. Opcional para não obrigar todo teste a inventar um usuário — ver
     /// <see cref="CreatedBy"/>.

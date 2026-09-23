@@ -16,6 +16,20 @@ namespace Orchestrator.UseCases;
 /// O template estruturado (<c>"... sala {Room}"</c>) não protege disso sozinho: ele evita a
 /// concatenação, mas o valor continua sendo escrito como texto no destino final.
 /// </para>
+///
+/// <para>
+/// <b>Quando aplicar.</b> Todo parâmetro de log que seja <c>string</c> e tenha atravessado a
+/// fronteira HTTP — corpo de request, rota, query, <b>ou claim de token</b>. Claim é menos
+/// arriscado (o token é assinado por este servidor), mas a análise estática não distingue um
+/// do outro, e nem deveria: se um dia o claim passar a carregar texto livre, a proteção já
+/// está no lugar.
+/// </para>
+///
+/// <para>
+/// <b>Quando NÃO aplicar.</b> Valor que não é texto livre — <see cref="Guid"/>, <c>int</c>,
+/// <c>enum</c>, constante do próprio código. Um <c>Guid</c> não tem como carregar um
+/// <c>\n</c>, e sanitizá-lo só acrescenta ruído a quem lê o código.
+/// </para>
 /// </summary>
 public static class LogSanitizer
 {

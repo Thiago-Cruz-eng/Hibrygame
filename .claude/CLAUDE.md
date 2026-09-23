@@ -22,7 +22,7 @@ Multiplayer chess platform. ASP.NET Core 8 + SignalR + MongoDB + JWT.
 - **Database:** MongoDB (Guid IDs stored as string)
 - **Real-time:** SignalR (`/chesshub`)
 - **Auth:** JWT Bearer (HmacSha256)
-- **Tests:** xUnit + Moq (689 passing, 0 skipped)
+- **Tests:** xUnit + Moq (760 passing, 0 skipped)
 - **Edge defence:** `Microsoft.AspNetCore.RateLimiting` (shared framework) + security headers middleware
 
 ## Run
@@ -30,7 +30,7 @@ Multiplayer chess platform. ASP.NET Core 8 + SignalR + MongoDB + JWT.
 dotnet restore
 dotnet build
 dotnet run --project Orchestrator   # Swagger at https://localhost:5001/swagger
-dotnet test                          # 689 tests, 0 skipped
+dotnet test                          # 760 tests, 0 skipped
 ```
 
 MongoDB on `localhost:27017`. Note: `Program.cs` reads `Mongo:ConnectionString` / `Mongo:Database`
@@ -340,7 +340,7 @@ Scripts are PowerShell and require a `NNN-slug` branch — they fail on `main` b
 
 Before merge:
 - [ ] `dotnet build` 0 errors
-- [ ] `dotnet test` all green (689 expected pass, 0 skips) and `dotnet build` with 0 warnings
+- [ ] `dotnet test` all green (760 expected pass, 0 skips) and `dotnet build` with 0 warnings
 - [ ] Constitution respected — Principles I (layering) and II (server authority)
 - [ ] If FE contract changed: update `docs/FRONTEND_CHANGES.md` (append a dated history entry)
 - [ ] If debt was created or resolved: update `docs/debito-tecnico.md`

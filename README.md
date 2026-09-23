@@ -74,8 +74,8 @@ dotnet run --project Orchestrator
 ```bash
 dotnet test
 # Hibrygame.Test:    155 pass
-# Orchestrator.Test: 534 pass
-# Total:             689 pass, 0 skipped
+# Orchestrator.Test: 605 pass
+# Total:             760 pass, 0 skipped
 ```
 
 ## Architecture

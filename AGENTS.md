@@ -93,7 +93,7 @@ Orchestrator/
   Composition/              Registro de DI por assunto — Jwt, Authorization, Web, Persistence, UseCase
   Presentation/             UserController, ValidationController
   Program.cs                Índice da composição (chama Composition/) + pipeline de requisição
-Orchestrator.Test/          Domain/ UseCases/ Security/ Presentation/ + ChessHubTests + ChessHubHardeningTests + GameRoomTests (534 pass)
+Orchestrator.Test/          Composition/ Domain/ Infra/ UseCases/ Security/ Presentation/ + ChessHubTests + ChessHubHardeningTests + GameRoomTests (605 pass)
 .specify/                   Constituição + templates + scripts + extensão git do Spec Kit
 specs/                      Especificações de feature do Spec Kit (spec.md, plan.md, tasks.md, contracts/)
 .agents/                    Skills, mapa funcional e memória de descoberta
@@ -192,9 +192,9 @@ repositórios são mockados com Moq.
 dotnet restore
 dotnet build                                  # 4 projetos, 0 erros e 0 warnings esperado
 dotnet run --project Orchestrator             # Swagger em https://localhost:5001/swagger
-dotnet test                                   # 689 aprovados, 0 ignorados
+dotnet test                                   # 760 aprovados, 0 ignorados
 dotnet test Hibrygame.Test                    # só a engine (155 pass)
-dotnet test Orchestrator.Test                 # só a API (534 pass)
+dotnet test Orchestrator.Test                 # só a API (605 pass)
 ```
 
 O quality gate é `dotnet build` + `dotnet test` verdes. `Directory.Build.props` liga

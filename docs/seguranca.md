@@ -78,7 +78,7 @@ ou token.
 |---|---|
 | Consultas por expressão LINQ tipada, traduzidas pelo driver — não há concatenação de filtro | `GenericRepository` |
 | Nome de sala restrito a `^[\p{L}\p{N} _-]{1,64}$` antes de virar chave de grupo, texto de tela e linha de log | `ChessHub.RoomNamePattern` |
-| Texto livre sanitizado antes de entrar em log (CWE-117) | `LogSanitizer` |
+| Todo parâmetro de log que seja `string` vinda de HTTP — corpo, rota ou **claim** — sanitizado antes de entrar em log (CWE-117) | `LogSanitizer`, aplicado em `ValidationService`, `UpdateUserUseCase` e `DeleteUserUseCase` |
 | Limites de tamanho em todo campo de texto de request | DTOs de `UseCases/Dto/Request/` |
 
 ### A04 / API4 — Desenho inseguro e consumo de recursos

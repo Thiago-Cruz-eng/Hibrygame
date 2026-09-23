@@ -353,4 +353,82 @@ public class ValidationServiceTests
         Assert.True(predicate(BuildValidation(accessToken: TokenDigest.Compute("tok-abc"))));
         Assert.False(predicate(BuildValidation(accessToken: "tok-abc")));
     }
+
+    // ---------------------------------------------------------------
+    // Texto do cliente nao entra cru no log (CWE-117)
+    // ---------------------------------------------------------------
+
+    /// <summary>
+    /// Faz o repositorio falhar, que e o unico caminho em que estes metodos registram log.
+    /// </summary>
+    private void FailTheRepository()
+        => _validationRepositoryMock
+            .Setup(r => r.FindByFilter(
+                It.IsAny<System.Linq.Expressions.Expression<Func<Validation, bool>>>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("banco fora do ar"));
+
+    /// <summary>O texto de todas as linhas de log de erro registradas.</summary>
+    private List<string> ErrorLines()
+    {
+        var lines = new List<string>();
+
+        _loggerMock.Verify(
+            l => l.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((state, _) => CaptureLine(state, lines)),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.AtLeastOnce);
+
+        return lines;
+    }
+
+    private static bool CaptureLine(object? state, List<string> lines)
+    {
+        lines.Add(state?.ToString() ?? string.Empty);
+        return true;
+    }
+
+    /// <summary>Um userId com quebra de linha — a forja de entrada de log em estado puro.</summary>
+    private const string ForgedUserId = "user-1\n2026-09-23 info: usuario adm removido";
+
+    [Fact]
+    public async Task GetValidationCanMove_OnFailure_DoesNotLogTheRawUserId()
+    {
+        // O userId vem do corpo do request, exatamente como a sala. Era o achado do CodeQL: so a
+        // sala estava sanitizada.
+        FailTheRepository();
+
+        await _sut.GetValidationCanMove(ForgedUserId, "tok", "White", "sala\nforjada");
+
+        Assert.All(ErrorLines(), line =>
+        {
+            Assert.DoesNotContain('\n', line);
+            Assert.DoesNotContain('\r', line);
+        });
+    }
+
+    [Fact]
+    public async Task UpdateValidationByUserToken_OnFailure_DoesNotLogTheRawUserId()
+    {
+        FailTheRepository();
+
+        await _sut.UpdateValidationByUserToken(ForgedUserId, "tok", "White", "sala\nforjada");
+
+        Assert.All(ErrorLines(), line => Assert.DoesNotContain('\n', line));
+    }
+
+    [Fact]
+    public async Task CreateValidation_OnFailure_DoesNotLogTheRawUserId()
+    {
+        _validationRepositoryMock
+            .Setup(r => r.Save(It.IsAny<Validation>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("banco fora do ar"));
+
+        await _sut.CreateValidation(BuildDto(userId: ForgedUserId));
+
+        Assert.All(ErrorLines(), line => Assert.DoesNotContain('\n', line));
+    }
 }

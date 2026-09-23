@@ -287,5 +287,9 @@ Em teste de controller, mocke `IAuthenticationService` em `HttpContext.RequestSe
 - Não há revogação de access token: uma vez emitido, vale até expirar (DT-26). `Validation`
   **não** é usada como blacklist — ela é autorização de sessão de jogo, não de token.
 - **Log de segurança não carrega e-mail, senha nem token.** Os eventos e o que cada um significa
-  estão em `docs/seguranca.md`. Texto livre do usuário que entre em log passa por
-  `UseCases/LogSanitizer.cs` — sem isso, um valor com `\n` forja linhas de log inteiras (CWE-117).
+  estão em `docs/seguranca.md`.
+- **Todo parâmetro de log que seja `string` e tenha atravessado a fronteira HTTP passa por
+  `UseCases/LogSanitizer.cs`** — corpo de request, rota, query **e claim**. Sem isso, um valor
+  com `\n` forja linhas de log inteiras (CWE-117). Claim é menos arriscado que corpo, mas a
+  análise estática não distingue um do outro, e nem deveria. `Guid`, `int` e `enum` ficam de
+  fora: não têm como carregar caractere de controle, e sanitizá-los só acrescenta ruído.

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Http;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -548,11 +549,177 @@ public class CompositionTests
     }
 
     [Fact]
-    public void FixedWindowByClient_UsesAOneMinuteWindowAndNoQueue()
+    public void FixedWindowByClient_KeepsThePartitionKey()
     {
         var partition = RateLimitingComposition.FixedWindowByClient("k", 20);
 
         Assert.Equal("k", partition.PartitionKey);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(20)]
+    public async Task AddRateLimiting_ReadsThePermitLimitsFromConfiguration(int permit)
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["RateLimiting:AuthPermitPerMinute"] = permit.ToString(),
+                ["RateLimiting:GlobalPermitPerMinute"] = permit.ToString(),
+            })
+            .Build();
+
+        var options = ResolveRateLimiterOptions(configuration);
+
+        // O limitador global é o único dos dois que dá para exercitar sem o pipeline inteiro:
+        // gastar o teto e ver a próxima tentativa ser recusada prova que o número saiu da
+        // configuração e chegou ao limitador.
+        var context = new DefaultHttpContext();
+        context.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("198.51.100.1");
+
+        for (var i = 0; i < permit; i++)
+        {
+            using var granted = await options.GlobalLimiter!.AcquireAsync(context, 1);
+            Assert.True(granted.IsAcquired);
+        }
+
+        using var refused = await options.GlobalLimiter!.AcquireAsync(context, 1);
+
+        // QueueLimit = 0: o excesso é recusado na hora, não enfileirado. Espera é exatamente o
+        // recurso que um ataque de volume quer consumir.
+        Assert.False(refused.IsAcquired);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("nao-e-numero")]
+    [InlineData("0")]
+    [InlineData("-5")]
+    public async Task AddRateLimiting_WithAnUnusableConfiguredValue_FallsBackToTheDefault(string? raw)
+    {
+        // Configuração errada não pode desligar a proteção sem ninguém perceber. Um `0` aceito
+        // literalmente recusaria toda requisição; um valor ausente deixaria a porta aberta.
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["RateLimiting:GlobalPermitPerMinute"] = raw,
+            })
+            .Build();
+
+        var options = ResolveRateLimiterOptions(configuration);
+
+        var context = new DefaultHttpContext();
+        context.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("198.51.100.2");
+
+        using var lease = await options.GlobalLimiter!.AcquireAsync(context, 1);
+
+        Assert.True(lease.IsAcquired);
+        Assert.Equal(
+            RateLimitingComposition.DefaultGlobalPermitPerMinute,
+            options.GlobalLimiter.GetStatistics(context)!.CurrentAvailablePermits + 1);
+    }
+
+    [Fact]
+    public void AddRateLimiting_PartitionsTheGlobalLimiterByClient()
+    {
+        var options = ResolveRateLimiterOptions();
+
+        var first = new DefaultHttpContext();
+        first.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("198.51.100.10");
+        var second = new DefaultHttpContext();
+        second.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("198.51.100.11");
+
+        var before = options.GlobalLimiter!.GetStatistics(second)!.CurrentAvailablePermits;
+        using var lease = options.GlobalLimiter.AttemptAcquire(first, 1);
+
+        // Um IP gastar o teto não pode consumir o de outro — senão o limite vira uma forma de
+        // negar serviço a todo mundo a partir de uma única máquina.
+        Assert.Equal(before, options.GlobalLimiter.GetStatistics(second)!.CurrentAvailablePermits);
+    }
+
+    // --- OnRejected: o 429 que o cliente recebe ---
+
+    /// <summary>
+    /// Um arrendamento recusado, com ou sem o metadado de tempo restante.
+    ///
+    /// <para>
+    /// <see cref="RateLimitLease"/> é abstrata e os limitadores reais não deixam construir uma
+    /// recusa sob demanda — daí o dublê. Ele é o mínimo que <c>OnRejected</c> consulta.
+    /// </para>
+    /// </summary>
+    private sealed class RefusedLease : RateLimitLease
+    {
+        private readonly TimeSpan? _retryAfter;
+
+        public RefusedLease(TimeSpan? retryAfter = null) => _retryAfter = retryAfter;
+
+        public override bool IsAcquired => false;
+
+        public override IEnumerable<string> MetadataNames =>
+            _retryAfter is null ? [] : [MetadataName.RetryAfter.Name];
+
+        public override bool TryGetMetadata(string metadataName, out object? metadata)
+        {
+            if (_retryAfter is not null && metadataName == MetadataName.RetryAfter.Name)
+            {
+                metadata = _retryAfter.Value;
+                return true;
+            }
+
+            metadata = null;
+            return false;
+        }
+    }
+
+    /// <summary>Roda o <c>OnRejected</c> configurado e devolve a resposta que ele escreveu.</summary>
+    private static async Task<(HttpResponse Response, string Body)> RunOnRejected(TimeSpan? retryAfter)
+    {
+        var options = ResolveRateLimiterOptions();
+
+        var httpContext = new DefaultHttpContext();
+        var body = new MemoryStream();
+        httpContext.Response.Body = body;
+
+        await options.OnRejected!(
+            new OnRejectedContext { HttpContext = httpContext, Lease = new RefusedLease(retryAfter) },
+            CancellationToken.None);
+
+        return (httpContext.Response, System.Text.Encoding.UTF8.GetString(body.ToArray()));
+    }
+
+    [Fact]
+    public async Task OnRejected_AnswersWith429AndTheSameShapeAsEveryOtherError()
+    {
+        var (response, body) = await RunOnRejected(TimeSpan.FromSeconds(42));
+
+        Assert.Equal(StatusCodes.Status429TooManyRequests, response.StatusCode);
+        Assert.Equal("application/json", response.ContentType);
+
+        // Mesmo formato de { success, message } que o frontend já trata: 429 não deve exigir um
+        // caminho de leitura próprio.
+        Assert.Equal("{\"success\":false,\"message\":\"Too many requests\"}", body);
+    }
+
+    [Fact]
+    public async Task OnRejected_TellsTheClientHowLongToWait()
+    {
+        var (response, _) = await RunOnRejected(TimeSpan.FromSeconds(41.2));
+
+        // Arredondado para cima: mandar 41 faria o cliente tentar antes de a janela virar e levar
+        // outro 429.
+        Assert.Equal("42", response.Headers.RetryAfter);
+    }
+
+    [Fact]
+    public async Task OnRejected_WithoutTheMetadata_OmitsRetryAfter()
+    {
+        // Só a janela fixa informa o tempo restante. Sem o metadado, o cabeçalho é omitido em vez
+        // de chutado — um Retry-After inventado é pior que nenhum.
+        var (response, body) = await RunOnRejected(retryAfter: null);
+
+        Assert.False(response.Headers.ContainsKey("Retry-After"));
+        Assert.Equal(StatusCodes.Status429TooManyRequests, response.StatusCode);
+        Assert.Contains("Too many requests", body);
     }
 
     // ---------------------------------------------------------------

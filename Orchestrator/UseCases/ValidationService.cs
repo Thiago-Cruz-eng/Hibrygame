@@ -70,7 +70,10 @@ public class ValidationService : IValidationService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Erro ao criar validacao para o usuario {UserId}", req.UserId);
+            // UserId e texto livre neste DTO — quem chama e que sabe de onde ele veio.
+            _logger.LogError(e,
+                "Erro ao criar validacao para o usuario {UserId}",
+                LogSanitizer.Sanitize(req.UserId));
             return false;
         }
     }
@@ -95,11 +98,12 @@ public class ValidationService : IValidationService
         }
         catch (Exception e)
         {
-            // A sala vem de texto livre do cliente: sanitizada antes de entrar no log, senão
-            // um nome com quebra de linha forja entradas de log inteiras. Ver LogSanitizer.
+            // Os DOIS vem de texto livre do corpo do request, nao so a sala: sanitizados antes
+            // de entrar no log, senao um valor com quebra de linha forja entradas de log
+            // inteiras. Ver LogSanitizer.
             _logger.LogError(e,
                 "Erro ao verificar permissao de lance do usuario {UserId} na sala {Room}",
-                userId, LogSanitizer.Sanitize(room));
+                LogSanitizer.Sanitize(userId), LogSanitizer.Sanitize(room));
             return false;
         }
     }
@@ -139,7 +143,7 @@ public class ValidationService : IValidationService
         {
             _logger.LogError(e,
                 "Erro ao atualizar validacao do usuario {UserId} para a sala {Room}",
-                userId, LogSanitizer.Sanitize(room));
+                LogSanitizer.Sanitize(userId), LogSanitizer.Sanitize(room));
             return false;
         }
     }

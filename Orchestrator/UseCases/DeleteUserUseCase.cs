@@ -78,7 +78,8 @@ public class DeleteUserUseCase
             if (RoleHierarchy.TryGetLevel(user.Role, out var targetLevel) && targetLevel > callerLevel)
             {
                 _logger.LogWarning(
-                    "User {CallerId} tried to delete user {TargetId}, who outranks them", callerId, user.Id);
+                    "User {CallerId} tried to delete user {TargetId}, who outranks them",
+                    LogSanitizer.Sanitize(callerId), user.Id);
 
                 return new DeleteUserResponse
                 {
@@ -95,7 +96,8 @@ public class DeleteUserUseCase
 
             // Quem apagou quem, com os dois ids. É o registro que uma investigação procura
             // primeiro, e remoção física não deixa outro rastro.
-            _logger.LogInformation("User {TargetId} deleted by {CallerId}", user.Id, callerId);
+            _logger.LogInformation(
+                "User {TargetId} deleted by {CallerId}", user.Id, LogSanitizer.Sanitize(callerId));
 
             return new DeleteUserResponse { Message = "User deleted", Success = true };
         }

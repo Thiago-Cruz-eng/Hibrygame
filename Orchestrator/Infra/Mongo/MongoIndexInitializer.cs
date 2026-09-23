@@ -91,7 +91,16 @@ public class MongoIndexInitializer : IHostedService
             _logger.LogInformation(
                 "Índice {IndexName} garantido na coleção {Collection}.", options.Name, collectionName);
         }
-        catch (Exception e)
+        // Dois tipos, e apenas dois. `MongoException` é a raiz de toda a família do driver —
+        // `MongoCommandException` (o servidor recusou criar o índice, que é o caso do e-mail
+        // duplicado), `MongoAuthenticationException`, `MongoConnectionException`. `TimeoutException`
+        // é o que a seleção de servidor estoura quando não há banco no endereço configurado, e ela
+        // NÃO herda de MongoException.
+        //
+        // Um `catch (Exception)` aqui engoliria também o que é defeito de programação —
+        // NullReference num campo novo, InvalidOperation numa definição de índice mal montada — e
+        // esses têm de subir e derrubar a subida, porque são erro nosso e não do ambiente.
+        catch (Exception e) when (e is MongoException or TimeoutException)
         {
             _logger.LogError(e,
                 "Falha ao criar o índice {IndexName} na coleção {Collection}. {Advice}",

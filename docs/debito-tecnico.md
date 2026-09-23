@@ -15,7 +15,7 @@ Item marcado `[DECISÃO]` exige definição humana antes de qualquer implementa�
 
 **Última revisão:** 2026-09-23, no **endurecimento de segurança pré-produção** — auditoria OWASP
 Top 10 2021 / API Security Top 10 2023 / ASVS aplicada ao `Orchestrator`, com `dotnet test` em
-689 aprovados / 0 ignorados. O relatório de controles, o checklist de produção e as limitações
+760 aprovados / 0 ignorados. O relatório de controles, o checklist de produção e as limitações
 que **permanecem** estão em [seguranca.md](./seguranca.md).
 
 Saíram desta lista nesta rodada:
